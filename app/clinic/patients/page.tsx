@@ -61,7 +61,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
               <th className="px-4 py-3 text-start font-medium">מטופל</th>
               <th className="px-4 py-3 text-start font-medium">ניתוח</th>
               <th className="px-4 py-3 text-start font-medium">מוכנות</th>
-              <th className="px-4 py-3 text-start font-medium">חסם מרכזי</th>
+              <th className="px-4 py-3 text-start font-medium">שלב נוכחי</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -85,7 +85,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
                     <ReadinessPill state={j.summary.readinessState} />
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-muted">{j.summary.topBlocker?.label ?? "—"}</td>
+                <td className="px-4 py-3 text-sm text-muted">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>
               </tr>
             ))}
             {rows.length === 0 && (

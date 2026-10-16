@@ -60,7 +60,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
 
       {summary.blockers.length > 0 && (
         <section className="mt-8">
-          <h2 className="eyebrow mb-2">מה חוסם את המוכנות</h2>
+          <h2 className="eyebrow mb-2">שלב נוכחי</h2>
           <ul className="card divide-y divide-line">
             {summary.blockers.map((b) => (
               <li key={b.task.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
