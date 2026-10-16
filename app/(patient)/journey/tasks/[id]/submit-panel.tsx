@@ -30,9 +30,9 @@ export function SubmitPanel({
     start(async () => {
       let path: string | undefined;
       let name: string | undefined;
-      if (requiresEvidence) {
-        const file = fileRef.current?.files?.[0];
-        if (!file) return setError("יש לבחור קובץ");
+      // v0: the file is optional so the whole flow can be demoed without real documents.
+      const file = requiresEvidence ? fileRef.current?.files?.[0] : undefined;
+      if (file) {
         if (file.size > MAX_BYTES) return setError("הקובץ גדול מדי (עד 10MB)");
         const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "bin";
         path = `${journeyId}/${taskId}/${crypto.randomUUID()}.${ext}`;
@@ -51,7 +51,7 @@ export function SubmitPanel({
     <section className="mt-8 space-y-4">
       {requiresEvidence && (
         <div>
-          <label className="lbl">קובץ (תמונה או PDF)</label>
+          <label className="lbl">קובץ (תמונה או PDF, לא חובה בגרסת הדמו)</label>
           <input ref={fileRef} type="file" accept="image/*,application/pdf" capture={undefined} className="sr-only" id="file"
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)} />
           <label htmlFor="file" className="btn w-full cursor-pointer justify-start">

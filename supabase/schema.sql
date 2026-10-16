@@ -208,10 +208,6 @@ begin
     raise exception 'task is locked';
   end if;
 
-  if old.requires_evidence and new.evidence_path is null then
-    raise exception 'evidence required';
-  end if;
-
   if new.status <> (case when old.requires_evidence or old.requires_review then 'submitted' else 'accepted' end) then
     raise exception 'invalid status transition';
   end if;

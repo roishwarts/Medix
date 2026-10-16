@@ -21,8 +21,7 @@ export default async function JourneyPage() {
 
   return (
     <main>
-      <p className="eyebrow">{journey.template_name}</p>
-      <h1 className="display mt-1 text-3xl">
+      <h1 className="display text-3xl">
         {surgeryPassed ? "הניתוח הושלם" : summary.daysToSurgery === 0 ? "הניתוח היום" : `הניתוח ${relativeDays(journey.surgery_date)}`}
       </h1>
       <p className="mt-1 text-muted">{formatDateLong(journey.surgery_date)}</p>

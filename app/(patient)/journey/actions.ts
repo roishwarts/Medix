@@ -14,7 +14,6 @@ export async function submitTask(taskId: string, input: { path?: string; name?: 
     .eq("id", taskId)
     .maybeSingle();
   if (!task) return { error: "המשימה לא נמצאה" };
-  if (task.requires_evidence && !input.path) return { error: "יש לצרף קובץ" };
 
   const needsReview = task.requires_evidence || task.requires_review;
   const { error } = await supabase
