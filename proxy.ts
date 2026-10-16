@@ -28,7 +28,8 @@ export async function proxy(request: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-  if (data.user && isLogin) {
+  // `error` is set when a signed-in user has no profile; don't bounce them back, or we loop forever.
+  if (data.user && isLogin && !request.nextUrl.searchParams.has("error")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
