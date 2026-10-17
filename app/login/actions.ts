@@ -14,7 +14,9 @@ export async function login(_: { error?: string } | undefined, formData: FormDat
     email: `${username}@${LOGIN_DOMAIN}`,
     password,
   });
-  if (error) return { error: "שם משתמש או סיסמה שגויים" };
+  if (error) {
+    return { error: /banned/i.test(error.message) ? "החשבון הושבת. יש לפנות למנהל." : "שם משתמש או סיסמה שגויים" };
+  }
   redirect("/");
 }
 

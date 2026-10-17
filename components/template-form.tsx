@@ -4,14 +4,21 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TaskEditor } from "@/components/editor/task-editor";
 import type { EditorTask } from "@/components/editor/types";
-import { deleteTemplate, saveTemplate } from "../actions";
+import type { TemplateInput } from "@/lib/template-payload";
 
+// Shared by the clinic (doctor) and the admin panel; each passes its own server actions.
 export function TemplateForm({
   templateId,
   initial,
+  saveAction,
+  deleteAction,
+  basePath,
 }: {
   templateId: string | null;
   initial: { name: string; procedure: string; description: string; tasks: EditorTask[] };
+  saveAction: (input: TemplateInput) => Promise<{ error?: string; id?: string }>;
+  deleteAction: (id: string) => Promise<{ error?: string }>;
+  basePath: string; // e.g. "/clinic/templates"
 }) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
@@ -26,9 +33,9 @@ export function TemplateForm({
     setError(null);
     setSaved(false);
     start(async () => {
-      const res = await saveTemplate({ id: templateId, name, procedure, description, tasks });
+      const res = await saveAction({ id: templateId, name, procedure, description, tasks });
       if (res.error) return setError(res.error);
-      if (!templateId && res.id) router.replace(`/clinic/templates/${res.id}`);
+      if (!templateId && res.id) router.replace(`${basePath}/${res.id}`);
       else { setSaved(true); router.refresh(); }
     });
   }
@@ -36,9 +43,9 @@ export function TemplateForm({
   function remove() {
     if (!templateId || !confirm("למחוק את התבנית? מטופלים קיימים לא יושפעו.")) return;
     start(async () => {
-      const res = await deleteTemplate(templateId);
+      const res = await deleteAction(templateId);
       if (res.error) setError(res.error);
-      else router.replace("/clinic/templates");
+      else router.replace(basePath);
     });
   }
 

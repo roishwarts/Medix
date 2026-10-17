@@ -17,10 +17,11 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   if (!auth.user) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name")
+    .select("id, clinic_id, role, full_name, disabled")
     .eq("id", auth.user.id)
     .maybeSingle();
-  return (data as Profile | null) ?? null;
+  if (!data || data.disabled) return null;
+  return data as Profile;
 });
 
 export async function requireProfile(roles?: Profile["role"][]): Promise<Profile> {

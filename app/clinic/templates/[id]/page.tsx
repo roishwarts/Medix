@@ -4,7 +4,8 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EditorTask } from "@/components/editor/types";
 import { Icon } from "@/components/ui";
-import { TemplateForm } from "./form";
+import { TemplateForm } from "@/components/template-form";
+import { deleteTemplate, saveTemplate } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,9 @@ export default async function TemplatePage({
         key={id + (from ?? "")}
         templateId={isNew ? null : id}
         initial={{ name, procedure, description, tasks }}
+        saveAction={saveTemplate}
+        deleteAction={deleteTemplate}
+        basePath="/clinic/templates"
       />
     </main>
   );

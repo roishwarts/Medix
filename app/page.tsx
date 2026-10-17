@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
-import { requireProfile } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/admin";
 
 export default async function Home() {
-  const profile = await requireProfile();
+  const profile = await getProfile();
+  if (!profile) {
+    if (await getPlatformAdmin()) redirect("/admin");
+    redirect("/login?error=profile");
+  }
   redirect(profile.role === "patient" || profile.role === "caregiver" ? "/journey" : "/clinic");
 }

@@ -1,0 +1,64 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/admin";
+import { israelParts } from "@/lib/dates";
+import { Icon } from "@/components/ui";
+import { UserRow } from "./user-row";
+import { AddUserForm } from "./add-user-form";
+import { AddTemplate } from "./add-template";
+
+export const dynamic = "force-dynamic";
+
+export default async function ClinicPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { db } = await requireAdmin();
+  const { data: clinic } = await db.from("clinics").select("id, name, created_at").eq("id", id).maybeSingle();
+  if (!clinic) notFound();
+
+  const [{ data: people }, { data: templates }, { data: bases }, { count: patientCount }] = await Promise.all([
+    db.from("profiles").select("id, full_name, role, disabled").eq("clinic_id", id).in("role", ["doctor", "staff"]).order("role"),
+    db.from("templates").select("id, name").eq("clinic_id", id).eq("is_base", false).order("name"),
+    db.from("templates").select("id, name").eq("is_base", true).order("name"),
+    db.from("patients").select("id", { count: "exact", head: true }).eq("clinic_id", id),
+  ]);
+
+  const users = await Promise.all(
+    (people ?? []).map(async (p) => {
+      const { data } = await db.auth.admin.getUserById(p.id);
+      return { ...p, username: data.user?.email?.split("@")[0] ?? "" };
+    }),
+  );
+
+  return (
+    <main>
+      <Link href="/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+        <Icon name="arrow" size={14} /> כל המרפאות
+      </Link>
+      <h1 className="display text-4xl">{clinic.name}</h1>
+      <p className="mt-1 text-muted">
+        נוצרה {israelParts(clinic.created_at).date.split("-").reverse().join(".")} · <span className="num">{patientCount ?? 0}</span> מטופלים
+      </p>
+
+      <section className="mt-10">
+        <h2 className="eyebrow mb-3">משתמשי צוות</h2>
+        <div className="card divide-y divide-line">
+          {users.map((u) => (
+            <UserRow key={u.id} id={u.id} name={u.full_name} username={u.username} role={u.role} disabled={u.disabled} />
+          ))}
+          {users.length === 0 && <p className="px-4 py-6 text-center text-muted">אין משתמשים.</p>}
+        </div>
+        <AddUserForm clinicId={id} />
+      </section>
+
+      <section className="mt-10">
+        <h2 className="eyebrow mb-3">תבניות של המרפאה</h2>
+        <div className="card divide-y divide-line">
+          {(templates ?? []).map((t) => <p key={t.id} className="px-4 py-3">{t.name}</p>)}
+          {(templates ?? []).length === 0 && <p className="px-4 py-6 text-center text-muted">אין תבניות.</p>}
+        </div>
+        <p className="mt-2 text-xs text-muted">הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.</p>
+        <AddTemplate clinicId={id} bases={bases ?? []} />
+      </section>
+    </main>
+  );
+}
