@@ -42,7 +42,7 @@ export default async function JourneyPage() {
       {!surgeryPassed && (
         <section className="mt-8">
           {now ? (
-            <Link href={`/journey/tasks/${now.id}`} className="card block border-s-4 border-s-accent p-5 transition hover:border-line-strong">
+            <Link href={`/journey/tasks/${now.id}`} className="card block border-accent-line p-5 transition hover:border-accent">
               <p className="eyebrow text-accent">עכשיו</p>
               <h2 className="display mt-1 text-2xl">{now.title}</h2>
               {now.state === "rejected" && now.review_note && (

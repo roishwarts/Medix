@@ -12,7 +12,7 @@ const CHIP: Record<CalTone, string> = {
   ok: "bg-ok-soft text-ok",
   bad: "bg-bad-soft text-bad",
   warn: "bg-warn-soft text-warn",
-  neutral: "bg-[#e8e4d9] text-ink",
+  neutral: "bg-paper text-ink ring-1 ring-inset ring-line",
   accent: "bg-accent text-surface",
 };
 

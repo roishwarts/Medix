@@ -1,26 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #f3f0e9;
-  --color-surface: #fbfaf6;
-  --color-ink: #14201b;
-  --color-muted: #66706a;
-  --color-line: #dcd7ca;
-  --color-line-strong: #bdb7a7;
-  --color-accent: #cf5429;
-  --color-accent-soft: #f6e3da;
-  --color-ok: #2c7a5a;
-  --color-ok-soft: #dcebe3;
-  --color-warn: #a96f0c;
-  --color-warn-soft: #f4e6c8;
-  --color-bad: #b3261e;
-  --color-bad-soft: #f4d9d5;
-  --font-sans: var(--font-heebo), system-ui, sans-serif;
-  --font-display: var(--font-frank), Georgia, serif;
+  /* page + surfaces are pure white; "paper" is only a faint fill for hover and inactive areas */
+  --color-page: #ffffff;
+  --color-paper: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-ink: #111827;
+  --color-muted: #667085;
+  --color-line: #e7eaee;
+  --color-line-strong: #cfd4da;
+  --color-accent: #0e7c86;
+  --color-accent-soft: #e6f3f4;
+  --color-accent-line: #cfe5e7;
+  --color-ok: #12805c;
+  --color-ok-soft: #e6f4ee;
+  --color-warn: #b25e09;
+  --color-warn-soft: #fdf1de;
+  --color-bad: #c0362c;
+  --color-bad-soft: #fbe8e6;
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
+  --font-display: var(--font-rubik), system-ui, sans-serif;
 }
 
 html {
-  background: var(--color-paper);
+  background: var(--color-page);
   color: var(--color-ink);
 }
 body {
@@ -37,13 +40,13 @@ h1, h2, h3 {
 @layer components {
   .display {
     font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
   }
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
-    border-radius: 6px;
+    border-radius: 8px;
   }
   .eyebrow {
     font-size: 0.75rem;
@@ -58,7 +61,7 @@ h1, h2, h3 {
     gap: 0.5rem;
     min-height: 44px;
     padding: 0 1.1rem;
-    border-radius: 4px;
+    border-radius: 6px;
     font-weight: 500;
     border: 1px solid var(--color-ink);
     background: transparent;
@@ -69,7 +72,7 @@ h1, h2, h3 {
   .btn:hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .btn-primary { background: var(--color-ink); color: var(--color-surface); }
-  .btn-primary:hover { background: #26352e; }
+  .btn-primary:hover { background: #2a3445; }
   .btn-danger { border-color: var(--color-bad); color: var(--color-bad); }
   .btn-danger:hover { background: var(--color-bad-soft); }
   .btn-sm { min-height: 36px; padding: 0 0.8rem; font-size: 0.9rem; }
@@ -99,7 +102,7 @@ h1, h2, h3 {
   .pill-ok { background: var(--color-ok-soft); color: var(--color-ok); }
   .pill-warn { background: var(--color-warn-soft); color: var(--color-warn); }
   .pill-bad { background: var(--color-bad-soft); color: var(--color-bad); }
-  .pill-neutral { background: #e8e4d9; color: var(--color-muted); }
+  .pill-neutral { background: #f1f3f5; color: var(--color-muted); }
   .num { font-variant-numeric: tabular-nums; }
 }
 

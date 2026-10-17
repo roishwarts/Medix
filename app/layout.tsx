@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo, Frank_Ruhl_Libre } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 
-const heebo = Heebo({ subsets: ["hebrew", "latin"], variable: "--font-heebo", display: "swap" });
-const frank = Frank_Ruhl_Libre({
+const rubik = Rubik({
   subsets: ["hebrew", "latin"],
-  variable: "--font-frank",
-  weight: ["500", "700"],
+  variable: "--font-rubik",
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -20,7 +19,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${frank.variable}`}>
+    <html lang="he" dir="rtl" className={rubik.variable}>
       <body>{children}</body>
     </html>
   );

@@ -38,7 +38,7 @@ export function JourneyEditForm({
         <input id="date" type="date" className="field" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
       <TaskEditor tasks={tasks} onChange={setTasks} journeyMode />
-      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-paper/95 px-5 py-4 backdrop-blur">
+      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-5 py-4 backdrop-blur">
         <button className="btn btn-primary" onClick={save} disabled={pending}>{pending ? "שומר…" : "שמירת שינויים"}</button>
         {error && <span role="alert" className="text-sm text-bad">{error}</span>}
       </div>

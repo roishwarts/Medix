@@ -68,7 +68,7 @@ export function TemplateForm({
 
       <TaskEditor tasks={tasks} onChange={(t) => { setTasks(t); setSaved(false); }} />
 
-      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-paper/95 px-5 py-4 backdrop-blur">
+      <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-5 py-4 backdrop-blur">
         <button className="btn btn-primary" onClick={save} disabled={pending}>{pending ? "שומר…" : "שמירת תבנית"}</button>
         {templateId && <button className="btn btn-danger btn-sm" onClick={remove} disabled={pending}>מחיקה</button>}
         {saved && <span className="text-sm text-ok">נשמר</span>}
