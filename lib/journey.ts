@@ -23,6 +23,7 @@ export type TaskRow = {
   evidence_name: string | null;
   patient_note: string | null;
   review_note: string | null;
+  submitted_by: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
 };

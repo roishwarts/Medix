@@ -3,5 +3,5 @@ import { requireProfile } from "@/lib/auth";
 
 export default async function Home() {
   const profile = await requireProfile();
-  redirect(profile.role === "patient" ? "/journey" : "/clinic");
+  redirect(profile.role === "patient" || profile.role === "caregiver" ? "/journey" : "/clinic");
 }

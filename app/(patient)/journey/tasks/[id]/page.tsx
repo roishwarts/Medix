@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourneys } from "@/lib/queries";
+import { getCaregiverLink, getProfile } from "@/lib/auth";
 import { OWNER_LABEL } from "@/lib/journey";
 import { formatDate, relativeDays } from "@/lib/dates";
 import { Icon, TaskStatePill } from "@/components/ui";
@@ -22,8 +23,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     fileUrl = data?.signedUrl ?? null;
   }
 
+  const profile = await getProfile();
+  const caregiver = profile?.role === "caregiver" ? await getCaregiverLink() : null;
+  const mayAct = profile?.role === "patient" || !!caregiver?.can_act;
   const mine = task.owner === "patient";
-  const canSubmit = mine && (task.state === "todo" || task.state === "rejected");
+  const canSubmit = mayAct && mine && (task.state === "todo" || task.state === "rejected");
 
   return (
     <main>

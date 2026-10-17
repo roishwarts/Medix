@@ -5,7 +5,7 @@ Hebrew-only, RTL. Stack: Next.js (App Router) + Supabase (Auth, Postgres + RLS, 
 
 ## Setup
 1. Supabase SQL editor: run `supabase/schema.sql`, then `supabase/seed.sql` (demo data only).
-   Then run `supabase/patch-calendar.sql` (appointments + calendar; safe to re-run).
+   Then run `supabase/patch-calendar.sql` (appointments + calendar) and `supabase/patch-caregivers.sql` (family access), in that order. Both are safe to re-run.
 2. Environment variables (locally in `.env.local`, and in Vercel → Settings → Environment Variables):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

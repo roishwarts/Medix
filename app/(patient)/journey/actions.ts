@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 
 export async function submitTask(taskId: string, input: { path?: string; name?: string; note?: string }) {
-  await requireProfile(["patient"]);
+  await requireProfile(["patient", "caregiver"]);
   const supabase = await createClient();
 
   const { data: task } = await supabase

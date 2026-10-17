@@ -8,6 +8,7 @@ import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dat
 import { Icon, ReadinessBar, ReadinessPill, TaskStatePill } from "@/components/ui";
 import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
+import { CaregiverList } from "@/components/caregiver-list";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,12 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
   const { summary } = journey;
 
   const supabase = await createClient();
+  const { data: caregivers } = await supabase
+    .from("patient_caregivers")
+    .select("id, user_id, full_name, relation, can_act, created_at")
+    .eq("patient_id", journey.patient_id)
+    .order("created_at");
+  const cgByUser = new Map((caregivers ?? []).map((c) => [c.user_id as string, c]));
   const urls = new Map<string, string>();
   await Promise.all(
     summary.tasks
@@ -74,6 +81,21 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       )}
 
       <section className="mt-10">
+        <h2 className="eyebrow mb-3">בני משפחה</h2>
+        <CaregiverList
+          isPatient={false}
+          items={(caregivers ?? []).map((c) => ({
+            id: c.id,
+            name: c.full_name,
+            relation: c.relation,
+            canAct: c.can_act,
+            since: israelParts(c.created_at).date.split("-").reverse().join("."),
+          }))}
+        />
+        <p className="mt-2 text-xs text-muted">בני משפחה מוזמנים על ידי המטופל. הצוות יכול להסיר גישה.</p>
+      </section>
+
+      <section className="mt-10">
         <h2 className="eyebrow mb-3">כל המשימות</h2>
         <div className="card divide-y divide-line">
           {summary.tasks.map((t) => (
@@ -95,7 +117,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                 <TaskStatePill state={t.state} overdue={t.overdue} />
               </div>
 
-              {(t.patient_note || t.evidence_name || t.review_note) && (
+              {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (
                 <div className="mt-3 space-y-1 text-sm">
                   {t.evidence_name && (
                     <p className="flex items-center gap-2">
@@ -103,6 +125,11 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                       {urls.get(t.id) ? (
                         <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="underline underline-offset-4">{t.evidence_name}</a>
                       ) : t.evidence_name}
+                    </p>
+                  )}
+                  {t.submitted_by && cgByUser.get(t.submitted_by) && (
+                    <p className="text-muted">
+                      הוגש על ידי {cgByUser.get(t.submitted_by)!.full_name} ({cgByUser.get(t.submitted_by)!.relation})
                     </p>
                   )}
                   {t.patient_note && <p className="text-muted">הערת המטופל: {t.patient_note}</p>}
