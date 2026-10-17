@@ -2,7 +2,7 @@ import { createClient } from "./supabase/server";
 import { summarize, type JourneySummary, type TaskRow } from "./journey";
 
 export const TASK_COLUMNS =
-  "id, journey_id, title, description, owner, due_offset_days, requires_evidence, requires_review, mandatory, position, depends_on, status, evidence_path, evidence_name, patient_note, review_note, submitted_at, reviewed_at";
+  "id, journey_id, title, description, owner, due_offset_days, requires_evidence, requires_review, mandatory, position, depends_on, kind, location, scheduled_at, status, evidence_path, evidence_name, patient_note, review_note, submitted_at, reviewed_at";
 
 export type JourneyInfo = {
   id: string;

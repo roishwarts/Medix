@@ -46,6 +46,9 @@ export default async function TemplatePage({
       requires_evidence: r.requires_evidence,
       requires_review: r.requires_review,
       mandatory: r.mandatory,
+      kind: r.kind ?? "task",
+      location: r.location ?? "",
+      scheduled_local: "",
       depends_on: (r.depends_on as string[]).map((d) => idMap.get(d)).filter((d): d is string => !!d),
     }));
   }

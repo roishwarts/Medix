@@ -61,7 +61,7 @@ export function TaskEditor({
                 <button type="button" className="min-w-0 flex-1 py-1 text-start" onClick={() => setOpen(isOpen ? null : t.id)} aria-expanded={isOpen}>
                   <span className="block truncate font-medium">{t.title || "משימה חדשה"}</span>
                   <span className="block truncate text-xs text-muted">
-                    {t.owner === "patient" ? "מטופל" : t.owner === "staff" ? "צוות" : "רופא"} ·{" "}
+                    {t.kind === "appointment" ? "תור · " : ""}{t.owner === "patient" ? "מטופל" : t.owner === "staff" ? "צוות" : "רופא"} ·{" "}
                     {after ? `${-t.due_offset_days} ימים אחרי הניתוח` : t.due_offset_days === 0 ? "ביום הניתוח" : `${t.due_offset_days} ימים לפני`}
                     {t.depends_on.length > 0 && ` · תלוי ב-${t.depends_on.length}`}
                     {!t.mandatory && " · רשות"}
@@ -85,6 +85,13 @@ export function TaskEditor({
                     <textarea className="field" value={t.description} onChange={(e) => update(t.id, { description: e.target.value })} />
                   </div>
                   <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="lbl">סוג</label>
+                      <select className="field" value={t.kind} onChange={(e) => update(t.id, { kind: e.target.value as EditorTask["kind"] })}>
+                        <option value="task">משימה</option>
+                        <option value="appointment">תור במרפאה</option>
+                      </select>
+                    </div>
                     <div>
                       <label className="lbl">באחריות</label>
                       <select className="field" value={t.owner} onChange={(e) => update(t.id, { owner: e.target.value as EditorTask["owner"] })}>
@@ -110,6 +117,20 @@ export function TaskEditor({
                       </select>
                     </div>
                   </div>
+                  {t.kind === "appointment" && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="lbl">מיקום</label>
+                        <input className="field" value={t.location} onChange={(e) => update(t.id, { location: e.target.value })} placeholder="למשל: המרפאה, קומה 2" />
+                      </div>
+                      {journeyMode && (
+                        <div>
+                          <label className="lbl">מועד התור (תאריך ושעה)</label>
+                          <input type="datetime-local" className="field num" dir="ltr" value={t.scheduled_local} onChange={(e) => update(t.id, { scheduled_local: e.target.value })} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-ink" checked={t.mandatory} onChange={(e) => update(t.id, { mandatory: e.target.checked })} /> חובה (נספר במוכנות)</label>
                     <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-ink" checked={t.requires_evidence} onChange={(e) => update(t.id, { requires_evidence: e.target.checked, requires_review: e.target.checked || t.requires_review })} /> דורש העלאת מסמך</label>

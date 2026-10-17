@@ -10,6 +10,9 @@ export type EditorTask = {
   requires_review: boolean;
   mandatory: boolean;
   depends_on: string[];
+  kind: "task" | "appointment";
+  location: string;
+  scheduled_local: string; // journey mode only: "YYYY-MM-DDTHH:mm" in Israel time, or ""
   status?: Status; // journey mode only
 };
 
@@ -24,6 +27,9 @@ export function newTask(): EditorTask {
     requires_review: false,
     mandatory: true,
     depends_on: [],
+    kind: "task",
+    location: "",
+    scheduled_local: "",
   };
 }
 

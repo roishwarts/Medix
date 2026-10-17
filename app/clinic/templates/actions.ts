@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { findCycle, type EditorTask } from "@/components/editor/types";
+import { israelLocalToIso } from "@/lib/dates";
 
 function validate(tasks: EditorTask[]): string | null {
   if (tasks.length === 0) return "יש להוסיף לפחות משימה אחת";
@@ -24,6 +25,12 @@ function payload(tasks: EditorTask[]) {
     requires_review: t.requires_review || t.requires_evidence,
     mandatory: t.mandatory,
     depends_on: t.depends_on,
+    kind: t.kind,
+    location: t.kind === "appointment" ? t.location.trim() : "",
+    scheduled_at:
+      t.kind === "appointment" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t.scheduled_local)
+        ? israelLocalToIso(t.scheduled_local)
+        : null,
   }));
 }
 

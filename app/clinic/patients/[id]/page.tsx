@@ -4,9 +4,10 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
 import { OWNER_LABEL } from "@/lib/journey";
-import { formatDate, formatDateLong, relativeDays } from "@/lib/dates";
+import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";
 import { Icon, ReadinessBar, ReadinessPill, TaskStatePill } from "@/components/ui";
 import { TaskReview } from "./task-review";
+import { ScheduleControl } from "./schedule-control";
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +85,10 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                     {!t.mandatory && <span className="pill pill-neutral">רשות</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">
-                    {OWNER_LABEL[t.owner]} · יעד {formatDate(t.dueDate)}
+                    {t.kind === "appointment" ? "תור" : OWNER_LABEL[t.owner]} ·{" "}
+                    {t.kind === "appointment"
+                      ? t.scheduled_at ? `${formatDate(t.eventDate)} ${t.eventTime}` : "טרם נקבע מועד"
+                      : `יעד ${formatDate(t.dueDate)}`}
                     {t.state === "locked" && ` · ממתין ל: ${t.blockedBy.map((b) => b.title).join(", ")}`}
                   </p>
                 </div>
@@ -106,6 +110,13 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
                 </div>
               )}
 
+              {t.kind === "appointment" && t.state !== "done" && (
+                <ScheduleControl
+                  taskId={t.id}
+                  initialLocal={t.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(t.scheduled_at)) : ""}
+                  initialLocation={t.location ?? ""}
+                />
+              )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
             </div>
           ))}

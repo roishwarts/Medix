@@ -40,13 +40,17 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
       <dl className="mt-6 grid grid-cols-2 gap-4 border-y border-line py-4 text-sm">
         <div>
-          <dt className="eyebrow">מועד יעד</dt>
-          <dd className="mt-0.5 font-medium">{formatDate(task.dueDate)} · {relativeDays(task.dueDate)}</dd>
+          <dt className="eyebrow">{task.kind === "appointment" ? "מועד התור" : "מועד יעד"}</dt>
+          <dd className="mt-0.5 font-medium">
+            {formatDate(task.eventDate)}
+            {task.eventTime && <> · <span className="num">{task.eventTime}</span></>} · {relativeDays(task.eventDate)}
+            {task.kind === "appointment" && task.location && <span className="block font-normal text-muted">{task.location}</span>}
+          </dd>
         </div>
         <div>
           <dt className="eyebrow">נדרש</dt>
           <dd className="mt-0.5 font-medium">
-            {task.requires_evidence ? "העלאת מסמך" : task.requires_review ? "אישור הצוות" : mine ? "סימון שבוצע" : "טיפול הצוות"}
+            {task.kind === "appointment" ? "הגעה למרפאה" : task.requires_evidence ? "העלאת מסמך" : task.requires_review ? "אישור הצוות" : mine ? "סימון שבוצע" : "טיפול הצוות"}
           </dd>
         </div>
       </dl>

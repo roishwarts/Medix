@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { nowTask, OWNER_LABEL, type Task } from "@/lib/journey";
-import { formatDate, formatDateLong, relativeDays } from "@/lib/dates";
+import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { Icon, ReadinessBar } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,8 @@ export default async function JourneyPage() {
   const now = nowTask(summary.tasks);
   const waiting = summary.tasks.filter((t) => t.owner === "patient" && t.state === "review");
   const surgeryPassed = summary.daysToSurgery < 0;
+  const t0 = today();
+  const nextAppt = summary.tasks.find((t) => t.kind === "appointment" && t.state !== "done" && t.eventDate >= t0);
 
   const preop = summary.tasks.filter((t) => t.preop);
   const postop = summary.tasks.filter((t) => !t.preop);
@@ -75,6 +77,22 @@ export default async function JourneyPage() {
         </section>
       )}
 
+      {/* NEXT APPOINTMENT */}
+      {!surgeryPassed && nextAppt && (
+        <Link href={`/journey/tasks/${nextAppt.id}`} className="card mt-4 flex items-center justify-between gap-4 p-4 hover:border-line-strong">
+          <div className="min-w-0">
+            <p className="eyebrow">התור הקרוב</p>
+            <p className="mt-0.5 font-medium">{nextAppt.title}</p>
+            <p className="text-sm text-muted">
+              {formatDateLong(nextAppt.eventDate)}
+              {nextAppt.eventTime && <> · <span className="num">{nextAppt.eventTime}</span></>}
+              {nextAppt.location && <> · {nextAppt.location}</>}
+            </p>
+          </div>
+          <span className="text-sm text-muted">{relativeDays(nextAppt.eventDate, t0)}</span>
+        </Link>
+      )}
+
       {/* TIMELINE */}
       <section className="mt-10">
         <h2 className="eyebrow mb-4">המסע שלך</h2>
@@ -121,6 +139,7 @@ function TimelineItem({ task, isNow, last }: { task: Task; isNow: boolean; last:
     : state === "review" ? "ממתין לבדיקת הצוות"
     : state === "locked" ? `ייפתח אחרי: ${task.blockedBy.map((b) => b.title).join(", ")}`
     : state === "rejected" ? "הוחזר לתיקון"
+    : task.kind === "appointment" ? `${overdue ? "באיחור · " : ""}${formatDate(task.eventDate)}${task.eventTime ? ` · ${task.eventTime}` : ""}${task.location ? ` · ${task.location}` : ""}`
     : overdue ? `באיחור · היה עד ${formatDate(task.dueDate)}`
     : `עד ${formatDate(task.dueDate)}`;
 

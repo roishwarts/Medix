@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { EditorTask } from "@/components/editor/types";
 import type { TaskRow } from "@/lib/journey";
 import { Icon } from "@/components/ui";
+import { israelParts } from "@/lib/dates";
 import { JourneyEditForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,9 @@ export default async function EditJourneyPage({ params }: { params: Promise<{ id
     requires_review: r.requires_review,
     mandatory: r.mandatory,
     depends_on: r.depends_on,
+    kind: r.kind,
+    location: r.location ?? "",
+    scheduled_local: r.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(r.scheduled_at)) : "",
     status: r.status,
   }));
 

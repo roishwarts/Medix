@@ -1,4 +1,4 @@
-import { addDays, diffDays, today as getToday } from "./dates";
+import { addDays, diffDays, israelParts, today as getToday } from "./dates";
 
 export type Owner = "patient" | "staff" | "doctor";
 export type Status = "pending" | "submitted" | "accepted" | "rejected";
@@ -16,6 +16,9 @@ export type TaskRow = {
   position: number;
   depends_on: string[];
   status: Status;
+  kind: "task" | "appointment";
+  location: string | null;
+  scheduled_at: string | null;
   evidence_path: string | null;
   evidence_name: string | null;
   patient_note: string | null;
@@ -30,6 +33,9 @@ export type TaskState = "done" | "locked" | "review" | "rejected" | "todo";
 
 export type Task = TaskRow & {
   dueDate: string;
+  // When it happens: the scheduled appointment time if set, otherwise the deadline.
+  eventDate: string;
+  eventTime: string | null;
   state: TaskState;
   overdue: boolean;
   blockedBy: TaskRow[];
@@ -73,11 +79,16 @@ export function computeTasks(rows: TaskRow[], surgeryDate: string, today = getTo
       else if (r.status === "submitted") state = "review";
       else if (r.status === "rejected") state = "rejected";
       else state = "todo";
+      const sched = r.scheduled_at ? israelParts(r.scheduled_at) : null;
+      const eventDate = sched?.date ?? dueDate;
+      const when = r.kind === "appointment" ? eventDate : dueDate;
       return {
         ...r,
         dueDate,
+        eventDate,
+        eventTime: sched?.time ?? null,
         state,
-        overdue: (state === "todo" || state === "rejected") && dueDate < today,
+        overdue: (state === "todo" || state === "rejected") && when < today,
         blockedBy,
         preop: r.due_offset_days >= 0,
       };

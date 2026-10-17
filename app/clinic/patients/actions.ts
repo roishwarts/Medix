@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LOGIN_DOMAIN, requireProfile } from "@/lib/auth";
+import { israelLocalToIso } from "@/lib/dates";
 
 export async function reviewTask(taskId: string, decision: "accept" | "reject" | "reopen", note?: string) {
   const profile = await requireProfile(["staff", "doctor"]);
@@ -79,4 +80,20 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
 
   revalidatePath("/clinic", "layout");
   redirect(`/clinic/patients/${journeyId}`);
+}
+
+export async function scheduleTask(taskId: string, local: string, location: string) {
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  if (local && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local)) return { error: "תאריך או שעה לא תקינים" };
+
+  const { error } = await supabase
+    .from("journey_tasks")
+    .update({ scheduled_at: local ? israelLocalToIso(local) : null, location: location.trim() || null })
+    .eq("id", taskId)
+    .eq("kind", "appointment");
+  if (error) return { error: "השמירה נכשלה" };
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return {};
 }
