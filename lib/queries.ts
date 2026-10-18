@@ -15,48 +15,18 @@ export type JourneyInfo = {
 export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-export async function loadJourneys(): Promise<PatientJourney[]> {
-  const supabase = await createClient();
-  const { data: journeys } = await supabase
-    .from("journeys")
-    .select("id, patient_id, surgery_date, template_name, patients(id, full_name, phone)")
-    .order("surgery_date");
-  if (!journeys?.length) return [];
+const JOURNEY_SELECT = `id, patient_id, surgery_date, template_name, patients(id, full_name, phone), journey_tasks(${TASK_COLUMNS})`;
 
-  const { data: tasks } = await supabase
-    .from("journey_tasks")
-    .select(TASK_COLUMNS)
-    .in("journey_id", journeys.map((j) => j.id));
+type JourneyRow = {
+  id: string;
+  patient_id: string;
+  surgery_date: string;
+  template_name: string;
+  patients: JourneyInfo["patient"] | JourneyInfo["patient"][] | null;
+  journey_tasks: TaskRow[] | null;
+};
 
-  const byJourney = new Map<string, TaskRow[]>();
-  for (const t of (tasks ?? []) as TaskRow[]) {
-    const list = byJourney.get(t.journey_id) ?? [];
-    list.push(t);
-    byJourney.set(t.journey_id, list);
-  }
-
-  return journeys.map((j) => {
-    const patient = (Array.isArray(j.patients) ? j.patients[0] : j.patients) as JourneyInfo["patient"];
-    return {
-      id: j.id,
-      patient_id: j.patient_id,
-      surgery_date: j.surgery_date,
-      template_name: j.template_name,
-      patient,
-      summary: summarize(byJourney.get(j.id) ?? [], j.surgery_date),
-    };
-  });
-}
-
-export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {
-  const supabase = await createClient();
-  const { data: j } = await supabase
-    .from("journeys")
-    .select("id, patient_id, surgery_date, template_name, patients(id, full_name, phone)")
-    .eq("id", journeyId)
-    .maybeSingle();
-  if (!j) return null;
-  const { data: tasks } = await supabase.from("journey_tasks").select(TASK_COLUMNS).eq("journey_id", journeyId);
+function toJourney(j: JourneyRow): PatientJourney {
   const patient = (Array.isArray(j.patients) ? j.patients[0] : j.patients) as JourneyInfo["patient"];
   return {
     id: j.id,
@@ -64,6 +34,20 @@ export async function loadJourney(journeyId: string): Promise<PatientJourney | n
     surgery_date: j.surgery_date,
     template_name: j.template_name,
     patient,
-    summary: summarize((tasks ?? []) as TaskRow[], j.surgery_date),
+    summary: summarize(j.journey_tasks ?? [], j.surgery_date),
   };
+}
+
+// All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
+// Journeys and their tasks come back in a single request.
+export async function loadJourneys(): Promise<PatientJourney[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("journeys").select(JOURNEY_SELECT).order("surgery_date");
+  return ((data ?? []) as unknown as JourneyRow[]).map(toJourney);
+}
+
+export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("journeys").select(JOURNEY_SELECT).eq("id", journeyId).maybeSingle();
+  return data ? toJourney(data as unknown as JourneyRow) : null;
 }

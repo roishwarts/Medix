@@ -19,18 +19,19 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const { data } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const signedIn = !!data?.claims?.sub;
   const isLogin = request.nextUrl.pathname.startsWith("/login");
   const isPublic = isLogin || request.nextUrl.pathname.startsWith("/invite/");
 
-  if (!data.user && !isPublic) {
+  if (!signedIn && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
     return NextResponse.redirect(url);
   }
   // `error` is set when a signed-in user has no profile; don't bounce them back, or we loop forever.
-  if (data.user && isLogin && !request.nextUrl.searchParams.has("error")) {
+  if (signedIn && isLogin && !request.nextUrl.searchParams.has("error")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

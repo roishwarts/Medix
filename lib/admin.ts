@@ -1,17 +1,16 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "./supabase/server";
 import { createAdminClient } from "./supabase/admin";
+import { getAuthUserId } from "./auth";
 
 // The platform owner. Checked on the server with the service role; no database policy exposes this table.
 export const getPlatformAdmin = cache(async () => {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return null;
+  const userId = await getAuthUserId();
+  if (!userId) return null;
   const db = createAdminClient();
   if (!db) return null;
-  const { data: row } = await db.from("platform_admins").select("user_id").eq("user_id", data.user.id).maybeSingle();
-  return row ? { userId: data.user.id, db } : null;
+  const { data: row } = await db.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle();
+  return row ? { userId, db } : null;
 });
 
 export async function requireAdmin() {

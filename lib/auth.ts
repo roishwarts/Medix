@@ -7,21 +7,37 @@ export type Profile = {
   clinic_id: string;
   role: "patient" | "caregiver" | "staff" | "doctor";
   full_name: string;
+  clinic_name: string;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
 
-export const getProfile = cache(async (): Promise<Profile | null> => {
+// The signed-in user's id, read from the verified session token. This avoids a round trip to the
+// auth server on every request when the project signs tokens with asymmetric keys.
+export const getAuthUserId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims?.sub ?? null;
+});
+
+export const getProfile = cache(async (): Promise<Profile | null> => {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
+  const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name, disabled")
-    .eq("id", auth.user.id)
+    .select("id, clinic_id, role, full_name, disabled, clinics(name)")
+    .eq("id", userId)
     .maybeSingle();
   if (!data || data.disabled) return null;
-  return data as Profile;
+  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string } | null;
+  return {
+    id: data.id,
+    clinic_id: data.clinic_id,
+    role: data.role,
+    full_name: data.full_name,
+    clinic_name: clinic?.name ?? "",
+  };
 });
 
 export async function requireProfile(roles?: Profile["role"][]): Promise<Profile> {
@@ -41,13 +57,13 @@ export type CaregiverLink = {
 
 // For a signed-in caregiver: which patient they follow and whether they may act for them.
 export const getCaregiverLink = cache(async (): Promise<CaregiverLink | null> => {
+  const userId = await getAuthUserId();
+  if (!userId) return null;
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
   const { data } = await supabase
     .from("patient_caregivers")
     .select("id, patient_id, relation, can_act, patients(full_name)")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", userId)
     .maybeSingle();
   if (!data) return null;
   const patient = (Array.isArray(data.patients) ? data.patients[0] : data.patients) as { full_name: string } | null;
@@ -61,10 +77,4 @@ export const getCaregiverLink = cache(async (): Promise<CaregiverLink | null> =>
 });
 
 // The clinic's display name, shown as the title of every signed-in screen.
-export const getClinicName = cache(async (): Promise<string> => {
-  const profile = await getProfile();
-  if (!profile) return "";
-  const supabase = await createClient();
-  const { data } = await supabase.from("clinics").select("name").eq("id", profile.clinic_id).maybeSingle();
-  return data?.name ?? "";
-});
+export const getClinicName = cache(async (): Promise<string> => (await getProfile())?.clinic_name ?? "");
