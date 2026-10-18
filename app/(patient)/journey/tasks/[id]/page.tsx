@@ -32,7 +32,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   return (
     <main>
       <Link href="/journey" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-        <Icon name="arrow" size={14} /> חזרה למסע
+        <Icon name="arrow" size={14} /> חזרה לראשי
       </Link>
 
       <div className="flex items-center gap-2">
