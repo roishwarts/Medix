@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
-import { NavLoading } from "@/components/nav-loading";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
@@ -21,10 +20,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={rubik.variable}>
-      <body>
-        <NavLoading />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
