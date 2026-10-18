@@ -59,3 +59,12 @@ export const getCaregiverLink = cache(async (): Promise<CaregiverLink | null> =>
     can_act: data.can_act,
   };
 });
+
+// The clinic's display name, shown as the title of every signed-in screen.
+export const getClinicName = cache(async (): Promise<string> => {
+  const profile = await getProfile();
+  if (!profile) return "";
+  const supabase = await createClient();
+  const { data } = await supabase.from("clinics").select("name").eq("id", profile.clinic_id).maybeSingle();
+  return data?.name ?? "";
+});

@@ -10,7 +10,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "מסע המטופל",
+  title: "כניסה",
   description: "ניהול הכנה לפרוצדורה רפואית",
   robots: { index: false, follow: false },
 };

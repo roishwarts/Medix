@@ -1,23 +1,31 @@
-import { requireProfile } from "@/lib/auth";
+import type { Metadata } from "next";
+import { getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/ui";
 import { NavLink } from "@/components/nav-link";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const name = await getClinicName();
+  return { title: name || "כניסה" };
+}
+
 export default async function ClinicLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile(["staff", "doctor"]);
+  const clinicName = await getClinicName();
   return (
     <div className="min-h-dvh">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5">
+          <div className="flex items-center gap-8">
+          <span className="display hidden text-lg md:block">{clinicName}</span>
           <nav className="flex gap-6">
             <NavLink href="/clinic" exact>פעולות השבוע</NavLink>
             <NavLink href="/clinic/patients">מטופלים</NavLink>
             <NavLink href="/clinic/calendar">יומן</NavLink>
             {profile.role === "doctor" && <NavLink href="/clinic/templates">תבניות</NavLink>}
           </nav>
+          </div>
           <div className="flex items-center gap-2">
-            <span className="hidden text-sm text-muted sm:block">
-              {profile.full_name} · {profile.role === "doctor" ? "רופא" : "צוות"}
-            </span>
+            <span className="hidden text-sm text-muted sm:block">שלום {profile.full_name}</span>
             <LogoutButton />
           </div>
         </div>

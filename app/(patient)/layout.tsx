@@ -1,17 +1,25 @@
-import { getCaregiverLink, requireProfile } from "@/lib/auth";
+import type { Metadata } from "next";
+import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/ui";
 import { NavLink } from "@/components/nav-link";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const name = await getClinicName();
+  return { title: name || "כניסה" };
+}
 
 export default async function PatientLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile(["patient", "caregiver"]);
   const caregiver = profile.role === "caregiver" ? await getCaregiverLink() : null;
+  const clinicName = await getClinicName();
   return (
     <div className="mx-auto min-h-dvh w-full max-w-xl px-5 pb-16">
       <header className="flex items-center justify-between pt-4">
-        <span className="text-sm text-muted">{profile.full_name}</span>
+        <span className="display text-xl">{clinicName}</span>
         <LogoutButton />
       </header>
-      <nav className="mb-6 flex gap-6 border-b border-line">
+      <p className="mt-1 text-sm text-muted">שלום {profile.full_name}</p>
+      <nav className="mb-6 mt-4 flex gap-6 border-b border-line">
         <NavLink href="/journey">המסע</NavLink>
         <NavLink href="/calendar">יומן</NavLink>
         {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
