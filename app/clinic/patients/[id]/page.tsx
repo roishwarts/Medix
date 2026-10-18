@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
 import { OWNER_LABEL } from "@/lib/journey";
 import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";
-import { Icon, ReadinessBar, ReadinessPill, TaskStatePill } from "@/components/ui";
+import { Icon, ReadinessBar, TaskStatePill } from "@/components/ui";
 import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
@@ -55,10 +55,7 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
           </p>
         </div>
         <div className="w-full max-w-xs">
-          <div className="flex items-baseline justify-between">
-            <span className="display num text-5xl">{summary.readiness}%</span>
-            <ReadinessPill state={summary.readinessState} />
-          </div>
+          <span className="display num text-5xl">{summary.readiness}%</span>
           <div className="mt-2"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
           {profile.role === "doctor" && (
             <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm mt-4 w-full">עריכת המסלול של המטופל</Link>

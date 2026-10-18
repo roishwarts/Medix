@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { formatDate, today } from "@/lib/dates";
-import { ReadinessBar, ReadinessPill } from "@/components/ui";
+import { ReadinessBar } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +82,6 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
                   <div className="flex items-center gap-3">
                     <span className="num w-10 font-medium">{j.summary.readiness}%</span>
                     <div className="w-20"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
-                    <ReadinessPill state={j.summary.readinessState} />
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-muted">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>

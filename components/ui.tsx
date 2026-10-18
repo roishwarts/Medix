@@ -25,26 +25,6 @@ export function LogoutButton() {
   );
 }
 
-const READINESS_LABEL: Record<Readiness, string> = {
-  ready: "מוכן",
-  in_progress: "בהכנה",
-  not_ready: "לא מוכן",
-};
-const READINESS_CLASS: Record<Readiness, string> = {
-  ready: "pill-ok",
-  in_progress: "pill-info",
-  not_ready: "pill-bad",
-};
-
-export function ReadinessPill({ state }: { state: Readiness }) {
-  return (
-    <span className={`pill ${READINESS_CLASS[state]}`}>
-      <span className="size-1.5 rounded-full bg-current" />
-      {READINESS_LABEL[state]}
-    </span>
-  );
-}
-
 export function ReadinessBar({ value, state }: { value: number; state: Readiness }) {
   const color = state === "ready" ? "bg-ok" : state === "not_ready" ? "bg-bad" : "bg-accent";
   return (
