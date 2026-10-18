@@ -8,18 +8,18 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const { token } = await params;
   const admin = createAdminClient();
 
-  let invite: { relation: string; can_act: boolean; patientFirstName: string } | null = null;
+  let invite: { name: string; relation: string; can_act: boolean; patientFirstName: string } | null = null;
   if (admin) {
     const { data } = await admin
       .from("caregiver_invites")
-      .select("relation, can_act, patients(full_name)")
+      .select("invitee_name, relation, can_act, patients(full_name)")
       .eq("token_hash", hashToken(token))
       .is("used_at", null)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
     if (data) {
       const p = (Array.isArray(data.patients) ? data.patients[0] : data.patients) as { full_name: string } | null;
-      invite = { relation: data.relation, can_act: data.can_act, patientFirstName: (p?.full_name ?? "").split(" ")[0] };
+      invite = { name: data.invitee_name ?? "", relation: data.relation, can_act: data.can_act, patientFirstName: (p?.full_name ?? "").split(" ")[0] };
     }
   }
 
@@ -32,7 +32,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
           <p className="mb-8 text-muted">
             כ{invite.relation}. {invite.can_act ? "תוכל/י לראות את המסע ולעזור בו." : "תוכל/י לראות את המסע."} צריך רק לבחור שם משתמש וסיסמה.
           </p>
-          <AcceptForm token={token} />
+          <AcceptForm token={token} defaultName={invite.name} />
         </>
       ) : (
         <>

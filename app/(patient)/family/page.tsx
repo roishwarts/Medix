@@ -14,7 +14,7 @@ export default async function FamilyPage() {
     supabase.from("patient_caregivers").select("id, full_name, relation, can_act, created_at").order("created_at"),
     supabase
       .from("caregiver_invites")
-      .select("id, relation, can_act, expires_at")
+      .select("id, invitee_name, relation, can_act, expires_at")
       .is("used_at", null)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false }),
@@ -48,7 +48,7 @@ export default async function FamilyPage() {
           <h2 className="eyebrow mb-3">הזמנות שממתינות</h2>
           <ul className="card divide-y divide-line">
             {invites!.map((i) => (
-              <InviteRow key={i.id} id={i.id} relation={i.relation} canAct={i.can_act}
+              <InviteRow key={i.id} id={i.id} name={i.invitee_name ?? ""} relation={i.relation} canAct={i.can_act}
                 expires={israelParts(i.expires_at).date.split("-").reverse().join(".")} />
             ))}
           </ul>

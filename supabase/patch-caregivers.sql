@@ -36,6 +36,7 @@ create table if not exists caregiver_invites (
   created_at timestamptz not null default now()
 );
 create index if not exists caregiver_invites_patient on caregiver_invites(patient_id);
+alter table caregiver_invites add column if not exists invitee_name text;
 
 -- ---------------------------------------------------------------- helpers
 

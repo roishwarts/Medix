@@ -17,10 +17,10 @@ export function InviteForm() {
   }
 
   if (state?.link) {
-    const text = `הוזמנת לעקוב אחרי המסע הרפואי שלי. ההזמנה תקפה ל-7 ימים: ${state.link}`;
+    const text = `היי ${state.name}, הוזמנת לעקוב אחרי התהליך הרפואי שלי. ההזמנה תקפה ל-7 ימים: ${state.link}`;
     return (
       <div className="card space-y-4 p-4">
-        <p className="font-medium">ההזמנה ל{state.relation} מוכנה</p>
+        <p className="font-medium">ההזמנה ל{state.name} ({state.relation}) מוכנה</p>
         <p className="text-sm text-muted">הקישור מוצג רק עכשיו. שלח/י אותו ישירות לאדם שאת/ה רוצה לשתף. הוא תקף ל-7 ימים ופועל פעם אחת.</p>
         <input readOnly dir="ltr" className="field text-sm" value={state.link} onFocus={(e) => e.currentTarget.select()} />
         <div className="flex flex-wrap gap-2">
@@ -34,6 +34,10 @@ export function InviteForm() {
 
   return (
     <form action={action} className="card space-y-4 p-4">
+      <div>
+        <label htmlFor="invitee_name" className="lbl">שם</label>
+        <input id="invitee_name" name="invitee_name" className="field" maxLength={60} autoComplete="off" required />
+      </div>
       <div>
         <label htmlFor="relation" className="lbl">קרבה</label>
         <input id="relation" name="relation" className="field" placeholder="למשל: בת, בן זוג, אח" maxLength={40} required />

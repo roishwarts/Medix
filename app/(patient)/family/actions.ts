@@ -8,16 +8,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
 import { hashToken } from "@/lib/invite";
 
-export type InviteState = { error?: string; link?: string; relation?: string } | undefined;
+export type InviteState = { error?: string; link?: string; relation?: string; name?: string } | undefined;
 
 const INVITE_DAYS = 7;
 
 export async function createInvite(_: InviteState, formData: FormData): Promise<InviteState> {
   const profile = await requireProfile(["patient"]);
+  const inviteeName = String(formData.get("invitee_name") ?? "").trim();
   const relation = String(formData.get("relation") ?? "").trim();
   const canAct = formData.get("can_act") === "on";
   const consent = formData.get("consent") === "on";
 
+  if (!inviteeName || inviteeName.length > 60) return { error: "יש לכתוב את שם בן המשפחה" };
   if (!relation || relation.length > 40) return { error: "יש לכתוב קרבה (למשל: בת, בן זוג)" };
   if (!consent) return { error: "יש לאשר שאת/ה מסכימ/ה לשתף את פרטי המסע" };
 
@@ -37,6 +39,7 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
     clinic_id: patient.clinic_id,
     patient_id: patient.id,
     created_by: profile.id,
+    invitee_name: inviteeName,
     relation,
     can_act: canAct,
     token_hash: hashToken(token),
@@ -48,7 +51,7 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
   const proto = h.get("x-forwarded-proto") ?? "https";
   const host = h.get("x-forwarded-host") ?? h.get("host");
   revalidatePath("/family");
-  return { link: `${proto}://${host}/invite/${token}`, relation };
+  return { link: `${proto}://${host}/invite/${token}`, relation, name: inviteeName };
 }
 
 export async function revokeInvite(id: string) {

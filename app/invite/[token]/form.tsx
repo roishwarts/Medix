@@ -3,13 +3,13 @@
 import { useActionState } from "react";
 import { acceptInvite } from "./actions";
 
-export function AcceptForm({ token }: { token: string }) {
+export function AcceptForm({ token, defaultName }: { token: string; defaultName: string }) {
   const [state, action, pending] = useActionState(acceptInvite.bind(null, token), undefined);
   return (
     <form action={action} className="space-y-4">
       <div>
         <label htmlFor="full_name" className="lbl">השם שלך</label>
-        <input id="full_name" name="full_name" className="field" autoComplete="name" required />
+        <input id="full_name" name="full_name" className="field" autoComplete="name" defaultValue={defaultName} required />
       </div>
       <div>
         <label htmlFor="username" className="lbl">שם משתמש לבחירתך</label>
