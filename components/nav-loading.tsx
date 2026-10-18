@@ -3,21 +3,19 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-// A thin bar at the top that starts the moment an internal link is clicked and finishes when the new page shows.
+// A small spinner that appears the moment an internal link is clicked and disappears when the new page shows.
 function Bar() {
   const pathname = usePathname();
   const search = useSearchParams().toString();
-  const [phase, setPhase] = useState<"idle" | "loading" | "done">("idle");
+  const [loading, setLoading] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // New page arrived: finish the bar.
+  // New page arrived: hide the spinner.
   useEffect(() => {
-    setPhase((p) => (p === "loading" ? "done" : p));
-    const t = setTimeout(() => setPhase("idle"), 350);
-    return () => clearTimeout(t);
+    setLoading(false);
   }, [pathname, search]);
 
-  // A click on an internal link: start the bar.
+  // A click on an internal link: show the spinner right away.
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -26,32 +24,29 @@ function Bar() {
       const url = new URL(a.href, location.href);
       if (url.origin !== location.origin) return;
       if (url.pathname === location.pathname && url.search === location.search) return;
-      setPhase("loading");
+      setLoading(true);
       clearTimeout(timer.current);
-      timer.current = setTimeout(() => setPhase("idle"), 15000); // never get stuck
+      timer.current = setTimeout(() => setLoading(false), 15000); // never get stuck
     }
     // Capture phase: runs before the link handler calls preventDefault for client-side navigation.
     document.addEventListener("click", onClick, true);
     return () => { document.removeEventListener("click", onClick, true); clearTimeout(timer.current); };
   }, []);
 
-  if (phase === "idle") return null;
+  if (!loading) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px]" role="progressbar" aria-hidden>
-      <div
-        className="h-full bg-accent"
-        style={{
-          width: phase === "done" ? "100%" : "85%",
-          transition: phase === "done" ? "width 0.2s ease-out, opacity 0.3s 0.15s" : "width 8s cubic-bezier(0.1, 0.6, 0.2, 1)",
-          opacity: phase === "done" ? 0 : 1,
-          marginInlineStart: 0,
-        }}
-      />
+    <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center" role="status" aria-label="טוען">
+      <span className="grid size-10 place-items-center rounded-full border border-line bg-surface shadow-md">
+        <svg className="size-5 animate-spin text-accent motion-reduce:animate-none" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".2" strokeWidth="3" />
+          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </span>
     </div>
   );
 }
 
-export function NavProgress() {
+export function NavLoading() {
   return (
     <Suspense fallback={null}>
       <Bar />
