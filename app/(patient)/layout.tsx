@@ -14,12 +14,14 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const clinicName = await getClinicName();
   return (
     <div className="mx-auto min-h-dvh w-full max-w-xl px-5 pb-16">
-      <header className="flex items-center justify-between pt-4">
-        <span className="display text-xl">שלום {profile.full_name}</span>
-        <LogoutButton />
+      <header className="flex items-center justify-between gap-3 pt-4">
+        <span className="display min-w-0 text-xl">שלום {profile.full_name}</span>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="max-w-[9rem] truncate text-sm text-muted">{clinicName}</span>
+          <LogoutButton />
+        </div>
       </header>
-      <p className="mt-1 text-sm text-muted">{clinicName}</p>
-      <nav className="mb-6 mt-4 flex gap-6 border-b border-line">
+      <nav className="mb-6 mt-2 flex gap-6 border-b border-line">
         <NavLink href="/journey">המסע</NavLink>
         <NavLink href="/calendar">יומן</NavLink>
         {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
