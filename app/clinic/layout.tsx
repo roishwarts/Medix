@@ -16,7 +16,7 @@ export default async function ClinicLayout({ children }: { children: React.React
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5">
           <div className="flex items-center gap-8">
-          <span className="display hidden text-lg md:block">{clinicName}</span>
+          <span className="display hidden text-lg md:block">שלום {profile.full_name}</span>
           <nav className="flex gap-6">
             <NavLink href="/clinic" exact>פעולות השבוע</NavLink>
             <NavLink href="/clinic/patients">מטופלים</NavLink>
@@ -25,7 +25,7 @@ export default async function ClinicLayout({ children }: { children: React.React
           </nav>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden text-sm text-muted sm:block">שלום {profile.full_name}</span>
+            <span className="hidden text-sm text-muted sm:block">{clinicName}</span>
             <LogoutButton />
           </div>
         </div>

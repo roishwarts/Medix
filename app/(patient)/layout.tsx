@@ -15,10 +15,10 @@ export default async function PatientLayout({ children }: { children: React.Reac
   return (
     <div className="mx-auto min-h-dvh w-full max-w-xl px-5 pb-16">
       <header className="flex items-center justify-between pt-4">
-        <span className="display text-xl">{clinicName}</span>
+        <span className="display text-xl">שלום {profile.full_name}</span>
         <LogoutButton />
       </header>
-      <p className="mt-1 text-sm text-muted">שלום {profile.full_name}</p>
+      <p className="mt-1 text-sm text-muted">{clinicName}</p>
       <nav className="mb-6 mt-4 flex gap-6 border-b border-line">
         <NavLink href="/journey">המסע</NavLink>
         <NavLink href="/calendar">יומן</NavLink>
