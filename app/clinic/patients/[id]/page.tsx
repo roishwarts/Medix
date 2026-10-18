@@ -12,12 +12,34 @@ import { CaregiverList } from "@/components/caregiver-list";
 
 export const dynamic = "force-dynamic";
 
-export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
+const FILTERS = [
+  ["all", "הכול"],
+  ["todo", "פתוח"],
+  ["review", "ממתין לבדיקה"],
+  ["rejected", "הוחזר לתיקון"],
+  ["overdue", "באיחור"],
+  ["locked", "נעול"],
+  ["done", "הושלם"],
+] as const;
+type FilterKey = (typeof FILTERS)[number][0];
+
+export default async function PatientPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ status?: string }>;
+}) {
   const { id } = await params;
+  const { status } = await searchParams;
+  const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const profile = await requireProfile(["staff", "doctor"]);
   const journey = await loadJourney(id);
   if (!journey) notFound();
   const { summary } = journey;
+  const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
+    key === "all" || (key === "overdue" ? t.overdue : t.state === key);
+  const visibleTasks = summary.tasks.filter((t) => matches(t, active));
 
   const supabase = await createClient();
   const { data: caregivers } = await supabase
@@ -93,9 +115,27 @@ export default async function PatientPage({ params }: { params: Promise<{ id: st
       </section>
 
       <section className="mt-10">
-        <h2 className="eyebrow mb-3">כל המשימות</h2>
-        <div className="card divide-y divide-line">
-          {summary.tasks.map((t) => (
+        <h2 className="eyebrow mb-1">כל המשימות</h2>
+        <nav aria-label="סינון משימות לפי סטטוס" className="mb-4 flex gap-6 overflow-x-auto border-b border-line">
+          {FILTERS.map(([key, label]) => {
+            const count = summary.tasks.filter((t) => matches(t, key)).length;
+            const on = key === active;
+            return (
+              <Link
+                key={key}
+                href={key === "all" ? `/clinic/patients/${id}` : `/clinic/patients/${id}?status=${key}`}
+                scroll={false}
+                aria-current={on ? "page" : undefined}
+                className={`whitespace-nowrap border-b-2 py-3 text-[15px] ${on ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
+              >
+                {label} <span className="num text-xs">{count}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        {visibleTasks.length === 0 && <p className="card px-4 py-8 text-center text-muted">אין משימות בסטטוס הזה.</p>}
+        <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
+          {visibleTasks.map((t) => (
             <div key={t.id} className="px-4 py-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
