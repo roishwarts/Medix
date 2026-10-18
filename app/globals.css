@@ -9,9 +9,9 @@
   --color-muted: #667085;
   --color-line: #e7eaee;
   --color-line-strong: #cfd4da;
-  --color-accent: #0e7c86;
-  --color-accent-soft: #e6f3f4;
-  --color-accent-line: #cfe5e7;
+  --color-accent: #2f5fe0;
+  --color-accent-soft: #e8eefd;
+  --color-accent-line: #cbd8fb;
   --color-ok: #12805c;
   --color-ok-soft: #e6f4ee;
   --color-warn: #b25e09;
@@ -46,7 +46,7 @@ h1, h2, h3 {
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
-    border-radius: 8px;
+    border-radius: 14px;
   }
   .eyebrow {
     font-size: 0.75rem;
@@ -60,22 +60,22 @@ h1, h2, h3 {
     justify-content: center;
     gap: 0.5rem;
     min-height: 44px;
-    padding: 0 1.1rem;
-    border-radius: 6px;
+    padding: 0 1.3rem;
+    border-radius: 999px;
     font-weight: 500;
-    border: 1px solid var(--color-ink);
+    border: 1px solid var(--color-line-strong);
     background: transparent;
     color: var(--color-ink);
     cursor: pointer;
     transition: background 0.12s, color 0.12s, opacity 0.12s;
   }
-  .btn:hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
+  .btn:hover { background: var(--color-paper); border-color: var(--color-ink); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary { background: var(--color-ink); color: var(--color-surface); }
-  .btn-primary:hover { background: #2a3445; }
+  .btn-primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .btn-primary:hover { background: #2652c4; border-color: #2652c4; }
   .btn-danger { border-color: var(--color-bad); color: var(--color-bad); }
   .btn-danger:hover { background: var(--color-bad-soft); }
-  .btn-sm { min-height: 36px; padding: 0 0.8rem; font-size: 0.9rem; }
+  .btn-sm { min-height: 36px; padding: 0 1rem; font-size: 0.9rem; }
   .btn-quiet { border-color: transparent; color: var(--color-muted); }
   .field {
     width: 100%;
@@ -83,10 +83,10 @@ h1, h2, h3 {
     padding: 0.5rem 0.75rem;
     background: var(--color-surface);
     border: 1px solid var(--color-line-strong);
-    border-radius: 4px;
+    border-radius: 12px;
     color: var(--color-ink);
   }
-  .field:focus { outline: 2px solid var(--color-ink); outline-offset: -1px; }
+  .field:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
   textarea.field { min-height: 88px; resize: vertical; }
   label.lbl { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--color-ink); }
   .pill {
@@ -102,6 +102,7 @@ h1, h2, h3 {
   .pill-ok { background: var(--color-ok-soft); color: var(--color-ok); }
   .pill-warn { background: var(--color-warn-soft); color: var(--color-warn); }
   .pill-bad { background: var(--color-bad-soft); color: var(--color-bad); }
+  .pill-info { background: var(--color-accent-soft); color: var(--color-accent); }
   .pill-neutral { background: #f1f3f5; color: var(--color-muted); }
   .num { font-variant-numeric: tabular-nums; }
 }

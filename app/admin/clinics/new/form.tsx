@@ -32,7 +32,7 @@ export function NewClinicForm({ bases }: { bases: { id: string; name: string }[]
           <div className="space-y-2">
             {bases.map((b, i) => (
               <label key={b.id} className="flex items-center gap-2">
-                <input type="checkbox" name="templates" value={b.id} defaultChecked={i === 0} className="size-4 accent-ink" />
+                <input type="checkbox" name="templates" value={b.id} defaultChecked={i === 0} className="size-4 accent-accent" />
                 {b.name}
               </label>
             ))}

@@ -45,8 +45,8 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
           </select>
         </div>
         <div className="flex flex-col gap-2 pb-1.5 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" name="notReady" value="1" defaultChecked={!!sp.notReady} className="size-4 accent-ink" /> לא מוכנים בלבד</label>
-          <label className="flex items-center gap-2"><input type="checkbox" name="past" value="1" defaultChecked={!!sp.past} className="size-4 accent-ink" /> כולל ניתוחים שעברו</label>
+          <label className="flex items-center gap-2"><input type="checkbox" name="notReady" value="1" defaultChecked={!!sp.notReady} className="size-4 accent-accent" /> לא מוכנים בלבד</label>
+          <label className="flex items-center gap-2"><input type="checkbox" name="past" value="1" defaultChecked={!!sp.past} className="size-4 accent-accent" /> כולל ניתוחים שעברו</label>
         </div>
         <div className="flex gap-2">
           <button className="btn btn-primary">סינון</button>

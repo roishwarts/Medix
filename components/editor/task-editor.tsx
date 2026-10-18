@@ -132,9 +132,9 @@ export function TaskEditor({
                     </div>
                   )}
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-ink" checked={t.mandatory} onChange={(e) => update(t.id, { mandatory: e.target.checked })} /> חובה (נספר במוכנות)</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-ink" checked={t.requires_evidence} onChange={(e) => update(t.id, { requires_evidence: e.target.checked, requires_review: e.target.checked || t.requires_review })} /> דורש העלאת מסמך</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-ink" checked={t.requires_review || t.requires_evidence} disabled={t.requires_evidence} onChange={(e) => update(t.id, { requires_review: e.target.checked })} /> דורש אישור צוות</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-accent" checked={t.mandatory} onChange={(e) => update(t.id, { mandatory: e.target.checked })} /> חובה (נספר במוכנות)</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-accent" checked={t.requires_evidence} onChange={(e) => update(t.id, { requires_evidence: e.target.checked, requires_review: e.target.checked || t.requires_review })} /> דורש העלאת מסמך</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-accent" checked={t.requires_review || t.requires_evidence} disabled={t.requires_evidence} onChange={(e) => update(t.id, { requires_review: e.target.checked })} /> דורש אישור צוות</label>
                   </div>
                   <div>
                     <p className="lbl">המשימה נפתחת רק אחרי שהאלה אושרו</p>
@@ -144,7 +144,7 @@ export function TaskEditor({
                       <div className="grid max-h-48 gap-1 overflow-y-auto rounded border border-line p-2 sm:grid-cols-2">
                         {others.map((o) => (
                           <label key={o.id} className="flex items-center gap-2 py-0.5 text-sm">
-                            <input type="checkbox" className="size-4 accent-ink" checked={t.depends_on.includes(o.id)}
+                            <input type="checkbox" className="size-4 accent-accent" checked={t.depends_on.includes(o.id)}
                               onChange={(e) => update(t.id, { depends_on: e.target.checked ? [...t.depends_on, o.id] : t.depends_on.filter((d) => d !== o.id) })} />
                             <span className="truncate">{o.title || "ללא כותרת"}</span>
                           </label>

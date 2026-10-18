@@ -39,11 +39,11 @@ export function InviteForm() {
         <input id="relation" name="relation" className="field" placeholder="למשל: בת, בן זוג, אח" maxLength={40} required />
       </div>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="can_act" defaultChecked className="mt-1 size-4 accent-ink" />
+        <input type="checkbox" name="can_act" defaultChecked className="mt-1 size-4 accent-accent" />
         <span>לאפשר לו/ה גם לפעול בשמי: להעלות מסמכים ולסמן משימות. בלי זה, צפייה בלבד.</span>
       </label>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="consent" className="mt-1 size-4 accent-ink" required />
+        <input type="checkbox" name="consent" className="mt-1 size-4 accent-accent" required />
         <span>אני מסכימ/ה לשתף את פרטי המסע הרפואי שלי, כולל מסמכים שהעליתי, עם האדם שיקבל את ההזמנה. אפשר להסיר גישה בכל עת.</span>
       </label>
       {state?.error && <p role="alert" className="text-sm text-bad">{state.error}</p>}

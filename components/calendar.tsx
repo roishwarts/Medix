@@ -9,6 +9,7 @@ import { Icon } from "@/components/ui";
 export type CalView = "month" | "week" | "agenda";
 
 const CHIP: Record<CalTone, string> = {
+  info: "bg-accent-soft text-accent",
   ok: "bg-ok-soft text-ok",
   bad: "bg-bad-soft text-bad",
   warn: "bg-warn-soft text-warn",
@@ -17,6 +18,7 @@ const CHIP: Record<CalTone, string> = {
 };
 
 const DOT: Record<CalTone, string> = {
+  info: "bg-accent",
   ok: "bg-ok",
   bad: "bg-bad",
   warn: "bg-warn",
@@ -107,10 +109,10 @@ export function Calendar({
           <Link href={href({ d: next })} aria-label="הבא" className="btn btn-sm px-2"><Icon name="arrow" size={16} /></Link>
           <h2 className="display ms-3 text-2xl">{title}</h2>
         </div>
-        <div className="flex overflow-hidden rounded border border-ink text-sm">
+        <div className="flex overflow-hidden rounded-full border border-line-strong text-sm">
           {([["month", "חודש"], ["week", "שבוע"], ["agenda", "רשימה"]] as const).map(([v, label]) => (
             <Link key={v} href={href({ view: v })} aria-current={view === v ? "page" : undefined}
-              className={`px-3 py-1.5 ${view === v ? "bg-ink text-surface" : "hover:bg-paper"}`}>{label}</Link>
+              className={`px-3 py-1.5 ${view === v ? "bg-accent text-white" : "hover:bg-paper"}`}>{label}</Link>
           ))}
         </div>
       </div>
@@ -186,8 +188,8 @@ function MonthGrid({
           const hidden = list.length - shown.length;
           return (
             <Link key={day} href={href({ d: day })} aria-label={dayLabel(day)}
-              className={`block min-h-16 p-1 sm:min-h-28 sm:p-1.5 ${inMonth ? "bg-surface" : "bg-paper"} ${day === d ? "outline outline-2 -outline-offset-2 outline-ink" : ""} hover:bg-accent-soft`}>
-              <span className={`num mb-1 grid size-6 place-items-center rounded-full text-xs ${day === t0 ? "bg-ink text-surface" : inMonth ? "" : "text-line-strong"}`}>
+              className={`block min-h-16 p-1 sm:min-h-28 sm:p-1.5 ${inMonth ? "bg-surface" : "bg-paper"} ${day === d ? "outline outline-2 -outline-offset-2 outline-accent" : ""} hover:bg-accent-soft`}>
+              <span className={`num mb-1 grid size-6 place-items-center rounded-full text-xs ${day === t0 ? "bg-accent text-white" : inMonth ? "" : "text-line-strong"}`}>
                 {+day.slice(8)}
               </span>
               {/* desktop: chips; mobile: dots */}

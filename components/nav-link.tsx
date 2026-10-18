@@ -10,7 +10,7 @@ export function NavLink({ href, exact, children }: { href: string; exact?: boole
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`border-b-2 py-3 text-[15px] ${active ? "border-ink font-medium text-ink" : "border-transparent text-muted hover:text-ink"}`}
+      className={`border-b-2 py-3 text-[15px] ${active ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
     >
       {children}
     </Link>

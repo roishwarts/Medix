@@ -2,7 +2,7 @@ import type { PatientJourney } from "./queries";
 import { today } from "./dates";
 
 export type CalKind = "surgery" | "appointment" | "deadline";
-export type CalTone = "ok" | "bad" | "warn" | "neutral" | "accent";
+export type CalTone = "ok" | "bad" | "warn" | "info" | "neutral" | "accent";
 
 export type CalEvent = {
   id: string;
@@ -51,7 +51,7 @@ export function clinicEvents(journeys: PatientJourney[]): CalEvent[] {
     const { readiness, readinessState } = j.summary;
     out.push({
       id: `s-${j.id}`, date: j.surgery_date, time: null, title: `ניתוח – ${name}`, kind: "surgery",
-      tone: readinessState === "ready" ? "ok" : readinessState === "not_ready" ? "bad" : "warn",
+      tone: readinessState === "ready" ? "ok" : readinessState === "not_ready" ? "bad" : "info",
       href, sub: `מוכנות ${readiness}%`, patient: name,
     });
     for (const t of j.summary.tasks) {

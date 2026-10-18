@@ -32,7 +32,7 @@ const READINESS_LABEL: Record<Readiness, string> = {
 };
 const READINESS_CLASS: Record<Readiness, string> = {
   ready: "pill-ok",
-  in_progress: "pill-warn",
+  in_progress: "pill-info",
   not_ready: "pill-bad",
 };
 
@@ -46,7 +46,7 @@ export function ReadinessPill({ state }: { state: Readiness }) {
 }
 
 export function ReadinessBar({ value, state }: { value: number; state: Readiness }) {
-  const color = state === "ready" ? "bg-ok" : state === "not_ready" ? "bg-bad" : "bg-warn";
+  const color = state === "ready" ? "bg-ok" : state === "not_ready" ? "bg-bad" : "bg-accent";
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
       <div className={`h-full ${color}`} style={{ width: `${value}%` }} />
