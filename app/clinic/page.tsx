@@ -7,7 +7,17 @@ export const dynamic = "force-dynamic";
 
 const ORDER: ActionKind[] = ["review", "overdue", "clinic", "upcoming"];
 
-export default async function WeekPage() {
+const TABS: [ActionKind | "all", string][] = [
+  ["all", "הכול"],
+  ["review", "ממתין לבדיקה"],
+  ["overdue", "באיחור"],
+  ["clinic", "משימות לצוות"],
+  ["upcoming", "מועד קרוב"],
+];
+
+export default async function WeekPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const { status } = await searchParams;
+  const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
   const journeys = await loadJourneys();
   const t = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
@@ -45,16 +55,40 @@ export default async function WeekPage() {
         </section>
       )}
 
-      {ORDER.map((kind) => {
+      <nav aria-label="סינון פעולות לפי סטטוס" className="mt-10 flex gap-6 overflow-x-auto border-b border-line">
+        {TABS.map(([key, label]) => {
+          const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
+          const on = key === active;
+          return (
+            <Link
+              key={key}
+              href={key === "all" ? "/clinic" : `/clinic?status=${key}`}
+              scroll={false}
+              aria-current={on ? "page" : undefined}
+              className={`whitespace-nowrap border-b-2 py-3 text-[15px] ${on ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
+            >
+              {label} <span className="num text-xs">{count}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {active !== "all" && items.every((i) => i.kind !== active) && (
+        <p className="card mt-6 px-4 py-8 text-center text-muted">אין פעולות בסטטוס הזה.</p>
+      )}
+
+      {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
         const list = items
           .filter((i) => i.kind === kind)
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} className="mt-10">
-            <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
-              {ACTION_LABEL[kind]} <span className="num text-sm text-muted">{list.length}</span>
-            </h2>
+          <section key={kind} className="mt-8">
+            {active === "all" && (
+              <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+                {ACTION_LABEL[kind]} <span className="num text-sm text-muted">{list.length}</span>
+              </h2>
+            )}
             <div className="card divide-y divide-line">
               {list.map((i) => (
                 <Link
