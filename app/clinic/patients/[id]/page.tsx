@@ -67,18 +67,17 @@ export default async function PatientPage({
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="display text-4xl">{journey.patient.full_name}</h1>
-          <p className="mt-1 text-muted">
-            {journey.template_name}
-            {journey.patient.phone && <> · <span dir="ltr" className="num">{journey.patient.phone}</span></>}
-          </p>
+          <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
           <p className="mt-3">
             ניתוח: <span className="font-medium">{formatDateLong(journey.surgery_date)}</span>{" "}
             <span className="text-muted">({relativeDays(journey.surgery_date)})</span>
           </p>
         </div>
         <div className="w-full max-w-xs">
-          <span className="display num text-5xl">{summary.readiness}%</span>
-          <div className="mt-2"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
+          <div className="flex items-center gap-3">
+            <span className="num text-sm font-medium">{summary.readiness}%</span>
+            <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
+          </div>
           {profile.role === "doctor" && (
             <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm mt-4 w-full">עריכת המסלול של המטופל</Link>
           )}
@@ -100,7 +99,18 @@ export default async function PatientPage({
       )}
 
       <section className="mt-10">
-        <h2 className="eyebrow mb-3">בני משפחה</h2>
+        <h2 className="eyebrow mb-3">פרטי המטופל</h2>
+        <div className="card">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <span className="text-muted">טלפון</span>
+            {journey.patient.phone ? (
+              <a href={`tel:${journey.patient.phone}`} dir="ltr" className="num font-medium">{journey.patient.phone}</a>
+            ) : (
+              <span className="text-muted">לא הוזן</span>
+            )}
+          </div>
+        </div>
+        <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
         <CaregiverList
           isPatient={false}
           items={(caregivers ?? []).map((c) => ({

@@ -9,13 +9,14 @@ export type JourneyInfo = {
   patient_id: string;
   surgery_date: string;
   template_name: string;
+  procedure: string | null;
   patient: { id: string; full_name: string; phone: string | null };
 };
 
 export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-const JOURNEY_SELECT = `id, patient_id, surgery_date, template_name, patients(id, full_name, phone), journey_tasks(${TASK_COLUMNS})`;
+const JOURNEY_SELECT = `id, patient_id, surgery_date, template_name, patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
 
 type JourneyRow = {
   id: string;
@@ -23,6 +24,7 @@ type JourneyRow = {
   surgery_date: string;
   template_name: string;
   patients: JourneyInfo["patient"] | JourneyInfo["patient"][] | null;
+  templates: { procedure: string | null } | { procedure: string | null }[] | null;
   journey_tasks: TaskRow[] | null;
 };
 
@@ -33,6 +35,7 @@ function toJourney(j: JourneyRow): PatientJourney {
     patient_id: j.patient_id,
     surgery_date: j.surgery_date,
     template_name: j.template_name,
+    procedure: (Array.isArray(j.templates) ? j.templates[0] : j.templates)?.procedure ?? null,
     patient,
     summary: summarize(j.journey_tasks ?? [], j.surgery_date),
   };
