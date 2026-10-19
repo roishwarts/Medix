@@ -18,7 +18,7 @@ export default async function ClinicLayout({ children }: { children: React.React
           <div className="flex items-center gap-8">
           <span className="display hidden text-lg md:block">שלום {profile.full_name}</span>
           <nav className="flex gap-6">
-            <NavLink href="/clinic" exact>פעולות השבוע</NavLink>
+            <NavLink href="/clinic" exact>ראשי</NavLink>
             <NavLink href="/clinic/patients">מטופלים</NavLink>
             <NavLink href="/clinic/calendar">יומן</NavLink>
             {profile.role === "doctor" && <NavLink href="/clinic/templates">תבניות</NavLink>}

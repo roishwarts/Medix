@@ -24,36 +24,41 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
     actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t),
   );
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
-  const patientsNeedingAction = new Set(items.map((i) => i.patientId)).size;
-  const surgeriesThisWeek = journeys.filter((j) => {
+    const surgeriesThisWeek = journeys.filter((j) => {
     const d = diffDays(j.surgery_date, t);
     return d >= 0 && d <= 7;
   });
 
   return (
     <main>
-      <p className="eyebrow">7 הימים הקרובים</p>
-      <h1 className="display mt-1 text-4xl">פעולות השבוע</h1>
-      <p className="mt-2 text-muted">
-        {items.length === 0
-          ? "אין פעולות פתוחות. אפשר לנשום."
-          : `${patientsNeedingAction} מטופלים דורשים טיפול · ${items.length} פעולות`}
-      </p>
-
-      {surgeriesThisWeek.length > 0 && (
-        <section className="mt-8">
-          <h2 className="eyebrow mb-2">ניתוחים השבוע</h2>
-          <div className="flex flex-wrap gap-2">
+      <section>
+        <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+          ניתוחים השבוע <span className="num text-sm text-muted">{surgeriesThisWeek.length}</span>
+        </h2>
+        {surgeriesThisWeek.length === 0 ? (
+          <p className="card px-4 py-8 text-center text-muted">אין ניתוחים ב-7 הימים הקרובים.</p>
+        ) : (
+          <div className="card divide-y divide-line">
             {surgeriesThisWeek.map((j) => (
-              <Link key={j.id} href={`/clinic/patients/${j.id}`} className="card flex items-center gap-3 px-3 py-2 text-sm hover:border-line-strong">
+              <Link
+                key={j.id}
+                href={`/clinic/patients/${j.id}`}
+                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-paper sm:grid-cols-[12rem_1fr_auto]"
+              >
                 <span className="font-medium">{j.patient.full_name}</span>
-                <span className="text-muted">{formatDate(j.surgery_date)}</span>
-                <span className={`num font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}>{j.summary.readiness}%</span>
+                <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">
+                  {j.summary.topBlocker?.label ?? "ההכנות הושלמו"}
+                </span>
+                <span className="text-sm text-muted">
+                  <span className={`num font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}>{j.summary.readiness}%</span>
+                  {" · "}
+                  {formatDate(j.surgery_date)} · {relativeDays(j.surgery_date, t)}
+                </span>
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       <nav aria-label="סינון פעולות לפי סטטוס" className="mt-10 flex gap-6 overflow-x-auto border-b border-line">
         {TABS.map(([key, label]) => {
