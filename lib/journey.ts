@@ -161,7 +161,7 @@ export type ActionItem = {
 
 export const ACTION_LABEL: Record<ActionKind, string> = {
   review: "ממתין לבדיקת הצוות",
-  overdue: "מטופלים באיחור",
+  overdue: "באיחור",
   clinic: "משימות לצוות ולרופא",
   upcoming: "מועד קרוב אצל המטופל",
 };
@@ -180,7 +180,7 @@ export function actionItems(
     if (!task.preop || task.state === "done" || task.state === "locked") continue;
     const base = { task, patientId, patientName, surgeryDate };
     if (task.state === "review") out.push({ ...base, kind: "review" });
-    else if (task.overdue && task.owner === "patient") out.push({ ...base, kind: "overdue" });
+    else if (task.overdue) out.push({ ...base, kind: "overdue" });
     else if (task.owner !== "patient" && task.dueDate <= horizon) out.push({ ...base, kind: "clinic" });
     else if (task.owner === "patient" && task.dueDate <= horizon) out.push({ ...base, kind: "upcoming" });
   }

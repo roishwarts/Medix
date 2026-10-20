@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
-import { ACTION_LABEL, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
+import { ACTION_LABEL, OWNER_LABEL, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
 import { formatDate, relativeDays, today, diffDays } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -102,7 +102,10 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                   className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-paper sm:grid-cols-[12rem_1fr_auto]"
                 >
                   <span className="font-medium">{i.patientName}</span>
-                  <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">{i.task.title}</span>
+                  <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">
+                    {i.task.title}
+                    {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">אצל {OWNER_LABEL[i.task.owner]}</span>}
+                  </span>
                   <span className={`text-sm ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
                     {i.kind === "review" ? `ניתוח ${formatDate(i.surgeryDate)}` : `${formatDate(i.task.dueDate)} · ${relativeDays(i.task.dueDate, t)}`}
                   </span>
