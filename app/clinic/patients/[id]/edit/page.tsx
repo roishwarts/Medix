@@ -12,7 +12,7 @@ import { JourneyEditForm } from "./form";
 export const dynamic = "force-dynamic";
 
 export default async function EditJourneyPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireProfile(["doctor"]);
+  await requireProfile(["staff", "doctor"]);
   const { id } = await params;
   const journey = await loadJourney(id);
   if (!journey) notFound();

@@ -30,7 +30,7 @@ export async function saveJourneyTasks(input: {
   surgeryDate: string;
   tasks: EditorTask[];
 }): Promise<{ error?: string }> {
-  await requireProfile(["doctor"]);
+  await requireProfile(["staff", "doctor"]);
   if (!input.surgeryDate) return { error: "יש לבחור תאריך ניתוח" };
   const invalid = validateTasks(input.tasks);
   if (invalid) return { error: invalid };

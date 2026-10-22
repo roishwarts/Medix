@@ -97,3 +97,31 @@ export async function scheduleTask(taskId: string, local: string, location: stri
   revalidatePath("/journey", "layout");
   return {};
 }
+
+export type DetailsState = { error?: string; ok?: boolean } | undefined;
+
+// Staff and doctors can correct a patient's name and phone.
+export async function updatePatientDetails(patientId: string, _: DetailsState, formData: FormData): Promise<DetailsState> {
+  await requireProfile(["staff", "doctor"]);
+  const full_name = String(formData.get("full_name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!full_name || full_name.length > 80) return { error: "יש להזין שם (עד 80 תווים)" };
+  if (phone.length > 30 || !/^[0-9+\-\s()]*$/.test(phone)) return { error: "מספר הטלפון לא תקין" };
+
+  const supabase = await createClient();
+  // RLS limits this to patients of the caller's clinic.
+  const { data: patient } = await supabase.from("patients").select("id, user_id").eq("id", patientId).maybeSingle();
+  if (!patient) return { error: "המטופל לא נמצא" };
+
+  const { error } = await supabase.from("patients").update({ full_name, phone: phone || null }).eq("id", patientId);
+  if (error) return { error: "השמירה נכשלה" };
+
+  // Keep the name shown in the patient's own greeting in sync.
+  if (patient.user_id) {
+    const admin = createAdminClient();
+    if (admin) await admin.from("profiles").update({ full_name }).eq("id", patient.user_id);
+  }
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return { ok: true };
+}

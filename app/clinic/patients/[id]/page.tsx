@@ -9,6 +9,7 @@ import { Icon, ReadinessBar, TaskStatePill } from "@/components/ui";
 import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
+import { PatientDetails } from "./patient-details";
 
 export const dynamic = "force-dynamic";
 
@@ -78,9 +79,7 @@ export default async function PatientPage({
             <span className="num text-sm font-medium">{summary.readiness}%</span>
             <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
           </div>
-          {profile.role === "doctor" && (
-            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm mt-4 w-full">עריכת המסלול של המטופל</Link>
-          )}
+          <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm mt-4 w-full">עריכת המסלול של המטופל</Link>
         </div>
       </div>
 
@@ -100,16 +99,7 @@ export default async function PatientPage({
 
       <section className="mt-10">
         <h2 className="eyebrow mb-3">פרטי המטופל</h2>
-        <div className="card">
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="text-muted">טלפון</span>
-            {journey.patient.phone ? (
-              <a href={`tel:${journey.patient.phone}`} dir="ltr" className="num font-medium">{journey.patient.phone}</a>
-            ) : (
-              <span className="text-muted">לא הוזן</span>
-            )}
-          </div>
-        </div>
+        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} />
         <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
         <CaregiverList
           isPatient={false}
