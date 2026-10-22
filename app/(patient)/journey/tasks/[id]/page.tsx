@@ -30,7 +30,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const canSubmit = mayAct && mine && (task.state === "todo" || task.state === "rejected");
 
   return (
-    <main>
+    <main className="mx-auto max-w-xl">
       <Link href="/journey" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
         <Icon name="arrow" size={14} /> חזרה לראשי
       </Link>

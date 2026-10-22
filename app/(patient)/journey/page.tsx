@@ -22,7 +22,8 @@ export default async function JourneyPage() {
   const postop = summary.tasks.filter((t) => !t.preop);
 
   return (
-    <main>
+    <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
+      <div className="lg:col-span-2">
       <h1 className="display text-3xl">
         {surgeryPassed ? "הניתוח הושלם" : summary.daysToSurgery === 0 ? "הניתוח היום" : `הניתוח ${relativeDays(journey.surgery_date)}`}
       </h1>
@@ -93,8 +94,10 @@ export default async function JourneyPage() {
         </Link>
       )}
 
+      </div>
+
       {/* TIMELINE */}
-      <section className="mt-10">
+      <section className="mt-10 lg:col-span-3 lg:mt-0">
         <h2 className="eyebrow mb-4">המסע שלך</h2>
         <ol>
           {preop.map((t, i) => (

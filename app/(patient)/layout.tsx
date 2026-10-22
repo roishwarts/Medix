@@ -14,7 +14,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const caregiver = profile.role === "caregiver" ? await getCaregiverLink() : null;
   const clinicName = await getClinicName();
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-xl px-5 pb-16">
+    <div className="mx-auto min-h-dvh w-full max-w-5xl px-5 pb-16">
       <header className="flex items-center justify-between gap-3 pt-4">
         <Greeting name={profile.full_name} />
         <div className="flex shrink-0 items-center gap-1">

@@ -21,7 +21,7 @@ export default async function FamilyPage() {
   ]);
 
   return (
-    <main className="space-y-10">
+    <main className="mx-auto max-w-xl space-y-10">
       <div>
         <h1 className="display text-3xl">משפחה</h1>
         <p className="mt-2 text-muted">
