@@ -13,6 +13,8 @@ import { PatientDetails } from "./patient-details";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
+import { ActivityList } from "@/components/activity-list";
+import { toItems, type ActivityRow } from "@/lib/activity";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +61,18 @@ export default async function PatientPage({
     .is("used_at", null)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
+  const { data: historyRows } = await supabase
+    .from("activity_events")
+    .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
+    .eq("patient_id", journey.patient_id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const history = toItems((historyRows ?? []) as ActivityRow[], {
+    patientNames: new Map(),
+    journeyByPatient: new Map([[journey.patient_id, id]]),
+    me: "",
+    seenAt: new Date().toISOString(),
+  });
   const cgByUser = new Map((caregivers ?? []).map((c) => [c.user_id as string, c]));
   const urls = new Map<string, string>();
   await Promise.all(
@@ -207,6 +221,11 @@ export default async function PatientPage({
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="eyebrow mb-3">היסטוריה</h2>
+        <ActivityList items={history} showPatient={false} />
       </section>
     </main>
   );

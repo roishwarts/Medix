@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/ui";
+import { Suspense } from "react";
 import { NavLink } from "@/components/nav-link";
+import { ActivityBadge } from "./activity-badge";
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = await getClinicName();
@@ -21,6 +23,12 @@ export default async function ClinicLayout({ children }: { children: React.React
             <NavLink href="/clinic" exact>ראשי</NavLink>
             <NavLink href="/clinic/patients">מטופלים</NavLink>
             <NavLink href="/clinic/calendar">יומן</NavLink>
+            <NavLink href="/clinic/activity">
+              עדכונים
+              <Suspense fallback={null}>
+                <ActivityBadge />
+              </Suspense>
+            </NavLink>
             {profile.role === "doctor" && <NavLink href="/clinic/templates">תבניות</NavLink>}
           </nav>
           </div>
