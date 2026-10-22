@@ -10,6 +10,9 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
+import { InvitationPanel } from "./invitation-panel";
+import { AddCaregiver } from "./add-caregiver";
+import { PendingInvites } from "./pending-invites";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +51,14 @@ export default async function PatientPage({
     .select("id, user_id, full_name, relation, can_act, created_at")
     .eq("patient_id", journey.patient_id)
     .order("created_at");
+  const { data: patientRow } = await supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle();
+  const { data: openInvites } = await supabase
+    .from("caregiver_invites")
+    .select("id, invitee_name, relation, can_act, expires_at")
+    .eq("patient_id", journey.patient_id)
+    .is("used_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
   const cgByUser = new Map((caregivers ?? []).map((c) => [c.user_id as string, c]));
   const urls = new Map<string, string>();
   await Promise.all(
@@ -99,7 +110,8 @@ export default async function PatientPage({
 
       <section className="mt-10">
         <h2 className="eyebrow mb-3">פרטי המטופל</h2>
-        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} />
+        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} />
+        <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
         <CaregiverList
           isPatient={false}
@@ -111,7 +123,17 @@ export default async function PatientPage({
             since: israelParts(c.created_at).date.split("-").reverse().join("."),
           }))}
         />
-        <p className="mt-2 text-xs text-muted">בני משפחה מוזמנים על ידי המטופל. הצוות יכול להסיר גישה.</p>
+        <PendingInvites
+          items={(openInvites ?? []).map((i) => ({
+            id: i.id,
+            name: i.invitee_name ?? "",
+            relation: i.relation,
+            canAct: i.can_act,
+            expires: israelParts(i.expires_at).date.split("-").reverse().join("."),
+          }))}
+        />
+        <AddCaregiver patientId={journey.patient_id} />
+        <p className="mt-2 text-xs text-muted">בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.</p>
       </section>
 
       <section className="mt-10">

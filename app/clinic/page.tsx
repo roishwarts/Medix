@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { ACTION_LABEL, OWNER_LABEL, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
-import { formatDate, relativeDays, today, diffDays } from "@/lib/dates";
+import { formatDate, israelParts, relativeDays, today, diffDays } from "@/lib/dates";
+import { createClient } from "@/lib/supabase/server";
+import { ResetRequests } from "./reset-requests";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,15 @@ const TABS: [ActionKind | "all", string][] = [
 export default async function WeekPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status } = await searchParams;
   const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
-  const journeys = await loadJourneys();
+  const supabase = await createClient();
+  const [journeys, { data: resetRequests }] = await Promise.all([
+    loadJourneys(),
+    supabase
+      .from("password_reset_requests")
+      .select("id, full_name, role, requested_at")
+      .is("handled_at", null)
+      .order("requested_at"),
+  ]);
   const t = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
     actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t),
@@ -31,6 +41,14 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
 
   return (
     <main>
+      <ResetRequests
+        items={(resetRequests ?? []).map((r) => ({
+          id: r.id,
+          name: r.full_name,
+          role: r.role,
+          when: israelParts(r.requested_at).date.split("-").reverse().join("."),
+        }))}
+      />
       <section>
         <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
           ניתוחים השבוע <span className="num text-sm text-muted">{surgeriesThisWeek.length}</span>

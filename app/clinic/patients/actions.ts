@@ -1,11 +1,14 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LOGIN_DOMAIN, requireProfile } from "@/lib/auth";
+import { getClinicName, requireProfile } from "@/lib/auth";
 import { israelLocalToIso } from "@/lib/dates";
+import { createAccountLink, getOrigin } from "@/lib/account-links";
+import { hashToken } from "@/lib/invite";
+import { caregiverMessage, joinMessage, resetMessage } from "@/lib/messages";
 
 export async function reviewTask(taskId: string, decision: "accept" | "reject" | "reopen", note?: string) {
   const profile = await requireProfile(["staff", "doctor"]);
@@ -26,60 +29,172 @@ export async function reviewTask(taskId: string, decision: "accept" | "reject" |
   return {};
 }
 
-export type CreatePatientState = { error?: string } | undefined;
+export type CreatePatientState =
+  | {
+      error?: string;
+      created?: { journeyId: string; patientName: string; phone: string; email: string | null; link?: string; message?: string; linkError?: string };
+    }
+  | undefined;
 
+const PHONE_OK = /^[0-9+\-\s()]{8,30}$/;
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// The patient exists right away; they create their own login from a link the clinic sends.
 export async function createPatient(_: CreatePatientState, formData: FormData): Promise<CreatePatientState> {
   const profile = await requireProfile(["staff", "doctor"]);
   const full_name = String(formData.get("full_name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim() || null;
-  const username = String(formData.get("username") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
+  const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
   const template_id = String(formData.get("template_id") ?? "");
   const surgery_date = String(formData.get("surgery_date") ?? "");
 
   if (!full_name || !template_id || !surgery_date) return { error: "יש למלא שם, תבנית ותאריך ניתוח" };
-  if (!/^[a-z0-9._-]{3,30}$/.test(username)) return { error: "שם משתמש: 3–30 תווים באנגלית, מספרים או . _ -" };
-  if (password.length < 8) return { error: "הסיסמה צריכה להכיל לפחות 8 תווים" };
-
-  const admin = createAdminClient();
-  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת, ולכן אי אפשר ליצור התחברות למטופל." };
-
-  const { data: created, error: userErr } = await admin.auth.admin.createUser({
-    email: `${username}@${LOGIN_DOMAIN}`,
-    password,
-    email_confirm: true,
-  });
-  if (userErr || !created.user) {
-    return { error: userErr?.message.includes("already") ? "שם המשתמש תפוס" : "יצירת המשתמש נכשלה" };
-  }
-  const userId = created.user.id;
-
-  const rollback = async () => {
-    await admin.auth.admin.deleteUser(userId);
-  };
-
-  const { error: profErr } = await admin
-    .from("profiles")
-    .insert({ id: userId, clinic_id: profile.clinic_id, role: "patient", full_name });
-  if (profErr) { await rollback(); return { error: "יצירת הפרופיל נכשלה" }; }
-
-  const { data: patient, error: patErr } = await admin
-    .from("patients")
-    .insert({ clinic_id: profile.clinic_id, user_id: userId, full_name, phone })
-    .select("id")
-    .single();
-  if (patErr || !patient) { await rollback(); return { error: "יצירת המטופל נכשלה" }; }
+  if (!PHONE_OK.test(phone)) return { error: "יש להזין מספר טלפון תקין (לשליחה בוואטסאפ)" };
+  if (email && !EMAIL_OK.test(email)) return { error: "כתובת המייל לא תקינה" };
 
   const supabase = await createClient();
+  const { data: patient, error: patErr } = await supabase
+    .from("patients")
+    .insert({ clinic_id: profile.clinic_id, full_name, phone, email: email || null })
+    .select("id")
+    .single();
+  if (patErr || !patient) return { error: "יצירת המטופל נכשלה" };
+
   const { data: journeyId, error: jErr } = await supabase.rpc("start_journey", {
     p_patient: patient.id,
     p_template: template_id,
     p_surgery: surgery_date,
   });
-  if (jErr || !journeyId) { await admin.from("patients").delete().eq("id", patient.id); await rollback(); return { error: "פתיחת המסלול נכשלה" }; }
-
+  if (jErr || !journeyId) {
+    await supabase.from("patients").delete().eq("id", patient.id);
+    return { error: "פתיחת המסלול נכשלה" };
+  }
   revalidatePath("/clinic", "layout");
-  redirect(`/clinic/patients/${journeyId}`);
+
+  const link = await createAccountLink({
+    purpose: "patient_join",
+    clinicId: profile.clinic_id,
+    patientId: patient.id,
+    createdBy: profile.id,
+  });
+  const created = { journeyId: journeyId as string, patientName: full_name, phone, email: email || null };
+  if ("error" in link) return { created: { ...created, linkError: link.error } };
+  return { created: { ...created, link: link.url, message: joinMessage(full_name, await getClinicName(), link.url) } };
+}
+
+export type LinkResult = { error?: string; link?: string; message?: string; phone?: string | null; email?: string | null };
+
+// A new join link for a patient who has not created a login yet (resend / lost link).
+export async function createJoinLink(patientId: string): Promise<LinkResult> {
+  const profile = await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { data: patient } = await supabase
+    .from("patients")
+    .select("id, full_name, phone, email, user_id")
+    .eq("id", patientId)
+    .maybeSingle();
+  if (!patient) return { error: "המטופל לא נמצא" };
+  if (patient.user_id) return { error: "המטופל כבר הצטרף" };
+
+  const link = await createAccountLink({ purpose: "patient_join", clinicId: profile.clinic_id, patientId, createdBy: profile.id });
+  if ("error" in link) return { error: link.error };
+  revalidatePath("/clinic", "layout");
+  return { link: link.url, message: joinMessage(patient.full_name, await getClinicName(), link.url), phone: patient.phone, email: patient.email };
+}
+
+// A password-reset link for a patient who already has a login (asked for by phone or from the patient page).
+export async function createPatientResetLink(patientId: string): Promise<LinkResult> {
+  const profile = await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { data: patient } = await supabase
+    .from("patients")
+    .select("id, full_name, phone, email, user_id")
+    .eq("id", patientId)
+    .maybeSingle();
+  if (!patient?.user_id) return { error: "למטופל אין עדיין משתמש" };
+
+  const link = await createAccountLink({ purpose: "password_reset", clinicId: profile.clinic_id, userId: patient.user_id, createdBy: profile.id });
+  if ("error" in link) return { error: link.error };
+  return { link: link.url, message: resetMessage(patient.full_name, link.url), phone: patient.phone, email: patient.email };
+}
+
+// From the "forgot password" requests list on the main page.
+export async function createResetLinkFromRequest(requestId: string): Promise<LinkResult> {
+  const profile = await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { data: req } = await supabase
+    .from("password_reset_requests")
+    .select("id, user_id, full_name, handled_at")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (!req || req.handled_at) return { error: "הבקשה כבר טופלה" };
+
+  const link = await createAccountLink({ purpose: "password_reset", clinicId: profile.clinic_id, userId: req.user_id, createdBy: profile.id });
+  if ("error" in link) return { error: link.error };
+
+  const { data: patient } = await supabase.from("patients").select("phone, email").eq("user_id", req.user_id).maybeSingle();
+  const admin = createAdminClient();
+  await admin?.from("password_reset_requests").update({ handled_at: new Date().toISOString(), handled_by: profile.id }).eq("id", requestId);
+  revalidatePath("/clinic", "layout");
+  return { link: link.url, message: resetMessage(req.full_name, link.url), phone: patient?.phone ?? null, email: patient?.email ?? null };
+}
+
+export type CaregiverInviteState = { error?: string; link?: string; message?: string; phone?: string | null; email?: string | null; name?: string } | undefined;
+
+// The clinic adds a family member for a patient. The clinic confirms the patient agreed.
+export async function createCaregiverInviteByStaff(patientId: string, _: CaregiverInviteState, formData: FormData): Promise<CaregiverInviteState> {
+  const profile = await requireProfile(["staff", "doctor"]);
+  const name = String(formData.get("invitee_name") ?? "").trim();
+  const relation = String(formData.get("relation") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const canAct = formData.get("can_act") === "on";
+  const consent = formData.get("consent") === "on";
+
+  if (!name || name.length > 60) return { error: "יש להזין את שם בן המשפחה" };
+  if (!relation || relation.length > 40) return { error: "יש להזין קרבה (למשל: בת, בן זוג)" };
+  if (phone && !PHONE_OK.test(phone)) return { error: "מספר הטלפון לא תקין" };
+  if (email && !EMAIL_OK.test(email)) return { error: "כתובת המייל לא תקינה" };
+  if (!consent) return { error: "יש לאשר שהמטופל הסכים לשתף את פרטי ההכנה" };
+
+  const supabase = await createClient();
+  const { data: patient } = await supabase.from("patients").select("id, full_name, clinic_id").eq("id", patientId).maybeSingle();
+  if (!patient) return { error: "המטופל לא נמצא" };
+
+  const admin = createAdminClient();
+  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת" };
+
+  const token = randomBytes(32).toString("base64url");
+  const { error } = await admin.from("caregiver_invites").insert({
+    clinic_id: patient.clinic_id,
+    patient_id: patient.id,
+    created_by: profile.id,
+    invitee_name: name,
+    relation,
+    can_act: canAct,
+    invitee_phone: phone || null,
+    consent_confirmed_by_staff: true,
+    token_hash: hashToken(token),
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  if (error) return { error: "יצירת ההזמנה נכשלה" };
+
+  const url = `${await getOrigin()}/invite/${token}`;
+  revalidatePath("/clinic", "layout");
+  return { link: url, message: caregiverMessage(name, patient.full_name, await getClinicName(), url), phone: phone || null, email: email || null, name };
+}
+
+export async function revokeInviteByStaff(inviteId: string): Promise<{ error?: string }> {
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { data: invite } = await supabase.from("caregiver_invites").select("id").eq("id", inviteId).maybeSingle();
+  if (!invite) return { error: "ההזמנה לא נמצאה" };
+  const admin = createAdminClient();
+  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת" };
+  const { error } = await admin.from("caregiver_invites").delete().eq("id", inviteId);
+  if (error) return { error: "הביטול נכשל" };
+  revalidatePath("/clinic", "layout");
+  return {};
 }
 
 export async function scheduleTask(taskId: string, local: string, location: string) {
@@ -105,15 +220,17 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
   await requireProfile(["staff", "doctor"]);
   const full_name = String(formData.get("full_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
   if (!full_name || full_name.length > 80) return { error: "יש להזין שם (עד 80 תווים)" };
   if (phone.length > 30 || !/^[0-9+\-\s()]*$/.test(phone)) return { error: "מספר הטלפון לא תקין" };
+  if (email && !EMAIL_OK.test(email)) return { error: "כתובת המייל לא תקינה" };
 
   const supabase = await createClient();
   // RLS limits this to patients of the caller's clinic.
   const { data: patient } = await supabase.from("patients").select("id, user_id").eq("id", patientId).maybeSingle();
   if (!patient) return { error: "המטופל לא נמצא" };
 
-  const { error } = await supabase.from("patients").update({ full_name, phone: phone || null }).eq("id", patientId);
+  const { error } = await supabase.from("patients").update({ full_name, phone: phone || null, email: email || null }).eq("id", patientId);
   if (error) return { error: "השמירה נכשלה" };
 
   // Keep the name shown in the patient's own greeting in sync.

@@ -12,7 +12,7 @@ export default async function NewPatientPage() {
         <Icon name="arrow" size={14} /> כל המטופלים
       </Link>
       <h1 className="display text-4xl">מטופל חדש</h1>
-      <p className="mt-2 text-muted">המטופל יקבל שם משתמש וסיסמה כדי להיכנס ולראות את המסלול שלו.</p>
+      <p className="mt-2 text-muted">אחרי היצירה תוכל לשלוח למטופל קישור אישי, והוא יצור בעצמו משתמש וסיסמה.</p>
       <NewPatientForm templates={templates ?? []} />
     </main>
   );

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { updatePatientDetails } from "../actions";
 
-export function PatientDetails({ patientId, name, phone }: { patientId: string; name: string; phone: string }) {
+export function PatientDetails({ patientId, name, phone, email }: { patientId: string; name: string; phone: string; email: string }) {
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState(
     async (prev: Awaited<ReturnType<typeof updatePatientDetails>>, formData: FormData) => {
@@ -25,6 +25,10 @@ export function PatientDetails({ patientId, name, phone }: { patientId: string; 
           <label htmlFor="pd-phone" className="lbl">טלפון</label>
           <input id="pd-phone" name="phone" className="field" dir="ltr" inputMode="tel" defaultValue={phone} maxLength={30} />
         </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="pd-email" className="lbl">מייל</label>
+          <input id="pd-email" name="email" type="email" className="field" dir="ltr" defaultValue={email} />
+        </div>
         {state?.error && <p role="alert" className="text-sm text-bad sm:col-span-2">{state.error}</p>}
         <div className="flex gap-2 sm:col-span-2">
           <button className="btn btn-primary btn-sm" disabled={pending}>{pending ? "שומר…" : "שמירה"}</button>
@@ -43,6 +47,10 @@ export function PatientDetails({ patientId, name, phone }: { patientId: string; 
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="text-muted">טלפון</span>
         {phone ? <a href={`tel:${phone}`} dir="ltr" className="num font-medium">{phone}</a> : <span className="text-muted">לא הוזן</span>}
+      </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="text-muted">מייל</span>
+        {email ? <a href={`mailto:${email}`} dir="ltr" className="font-medium">{email}</a> : <span className="text-muted">לא הוזן</span>}
       </div>
       <div className="px-4 py-2.5">
         <button className="btn btn-sm" onClick={() => setEditing(true)}>עריכת פרטים</button>
