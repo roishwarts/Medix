@@ -11,9 +11,9 @@
   --color-muted: #667085;
   --color-line: #e8e5dd;
   --color-line-strong: #cfd4da;
-  --color-accent: #26262a;
-  --color-accent-soft: #eceae3;
-  --color-accent-line: #d4d1c8;
+  --color-accent: #c4623f;
+  --color-accent-soft: #f6e8e1;
+  --color-accent-line: #e9cdbf;
   --color-ok: #12805c;
   --color-ok-soft: #e6f4ee;
   --color-warn: #b25e09;
@@ -102,12 +102,12 @@ p { text-wrap: pretty; }
   .btn:active:not(:disabled) { transform: scale(0.97); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .btn-primary {
-    background: linear-gradient(180deg, #3a3a3f, #1f1f23);
-    border-color: #1f1f23;
+    background: linear-gradient(180deg, #d4734f, #bf5d3b);
+    border-color: #b4553a;
     color: #fff;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 1px 2px rgb(0 0 0 / 0.2), 0 8px 18px -8px rgb(0 0 0 / 0.4);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 1px 2px rgb(120 50 25 / 0.25), 0 8px 18px -8px rgb(196 98 63 / 0.55);
   }
-  .btn-primary:hover { background: linear-gradient(180deg, #46464c, #2a2a2f); border-color: #1f1f23; }
+  .btn-primary:hover { background: linear-gradient(180deg, #db7c58, #c76441); border-color: #b4553a; }
   .btn-danger { border-color: rgb(192 54 44 / 0.45); color: var(--color-bad); }
   .btn-danger:hover { background: var(--color-bad-soft); }
   .btn-sm { min-height: 36px; padding: 0 1rem; font-size: 0.9rem; }

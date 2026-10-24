@@ -16,8 +16,8 @@ export default async function ClinicLayout({ children }: { children: React.React
   return (
     <div className="min-h-dvh">
       <header className="topbar">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5">
-          <div className="flex min-w-0 items-center gap-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 px-5">
+          <div className="order-2 flex min-w-0 items-center gap-8 max-sm:w-full sm:order-1">
           <span className="display hidden text-lg md:block">שלום {profile.full_name}</span>
           <nav className="flex min-w-0 gap-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
             <NavLink href="/clinic" exact>ראשי</NavLink>
@@ -32,8 +32,8 @@ export default async function ClinicLayout({ children }: { children: React.React
             {profile.role === "doctor" && <NavLink href="/clinic/templates">תבניות</NavLink>}
           </nav>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="max-w-[5.5rem] truncate text-sm text-muted sm:max-w-[12rem]">{clinicName}</span>
+          <div className="order-1 flex shrink-0 items-center gap-2 max-sm:w-full max-sm:justify-between max-sm:pt-1 sm:order-2">
+            <span className="max-w-[12rem] truncate text-sm text-muted">{clinicName}</span>
             <LogoutButton />
           </div>
         </div>

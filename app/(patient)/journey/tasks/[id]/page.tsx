@@ -31,10 +31,6 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
   return (
     <main className="mx-auto max-w-xl">
-      <Link href="/journey" className="back-link">
-        <Icon name="arrow" size={14} /> חזרה לראשי
-      </Link>
-
       <div className="flex items-center gap-2">
         <TaskStatePill state={task.state} overdue={task.overdue} />
         <span className="text-sm text-muted">באחריות {OWNER_LABEL[task.owner]}</span>
