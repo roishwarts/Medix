@@ -115,9 +115,6 @@ export default async function PatientPage({
             <span>{summary.topBlocker.label}</span>
             <span className="shrink-0 text-muted">{formatDate(summary.topBlocker.task.dueDate)}</span>
           </div>
-          {summary.blockers.length > 1 && (
-            <p className="mt-2 text-xs text-muted">ועוד {summary.blockers.length - 1} משימות פתוחות ברשימה למטה</p>
-          )}
         </section>
       )}
 
