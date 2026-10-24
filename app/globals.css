@@ -2,13 +2,13 @@
 
 @theme {
   /* page + surfaces are pure white; "paper" is only a faint fill for hover and inactive areas */
-  --color-page: #fcfcfd;
-  --color-paper: #f6f7f9;
+  --color-page: #faf9f5;
+  --color-paper: #f3f1ea;
   --color-surface: #ffffff;
   --color-glass: rgb(255 255 255 / 0.72);
   --color-ink: #111827;
   --color-muted: #667085;
-  --color-line: #e7eaee;
+  --color-line: #e8e5dd;
   --color-line-strong: #cfd4da;
   --color-accent: #2f5fe0;
   --color-accent-soft: #e8eefd;
@@ -65,7 +65,7 @@ p { text-wrap: pretty; }
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgb(252 252 253 / 0.78);
+    background: rgb(250 249 245 / 0.8);
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     backdrop-filter: saturate(180%) blur(12px);
     border-bottom: 1px solid var(--color-line);
@@ -230,7 +230,7 @@ p { text-wrap: pretty; }
   .pill-warn { background: var(--color-warn-soft); color: var(--color-warn); }
   .pill-bad { background: var(--color-bad-soft); color: var(--color-bad); }
   .pill-info { background: var(--color-accent-soft); color: var(--color-accent); }
-  .pill-neutral { background: #f1f3f5; color: var(--color-muted); }
+  .pill-neutral { background: #efece4; color: var(--color-muted); }
   .link-row { transition: background 0.12s; }
   .link-row:hover { background: var(--color-paper); }
   .num { font-variant-numeric: tabular-nums; }
