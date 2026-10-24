@@ -46,8 +46,8 @@ function Chip({ e, compact }: { e: CalEvent; compact?: boolean }) {
 
 function EventRow({ e, showPatient }: { e: CalEvent; showPatient?: boolean }) {
   return (
-    <Link href={e.href} className="flex items-start gap-3 px-4 py-3 hover:bg-paper">
-      <span className="num w-12 shrink-0 pt-0.5 text-sm text-muted">{e.time ?? (e.kind === "surgery" ? "ניתוח" : "יעד")}</span>
+    <Link href={e.href} className="link-row flex items-start gap-3 px-4 py-3">
+      <span className="num w-12 shrink-0 pt-0.5 text-sm text-muted">{e.time ?? (e.kind === "surgery" ? "ניתוח" : "")}</span>
       <span className="min-w-0 flex-1">
         <span className="block font-medium leading-snug">{e.title}</span>
         <span className="block text-sm text-muted">

@@ -23,7 +23,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
               {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
             </nav>
             <div className="flex shrink-0 items-center gap-1">
-              <span className="max-w-[4.5rem] truncate text-sm text-muted sm:max-w-[10rem]">{clinicName}</span>
+              <span className="max-w-[7rem] text-center text-xs leading-tight text-muted sm:max-w-none sm:text-sm">{clinicName}</span>
               <LogoutButton />
             </div>
           </div>
