@@ -47,7 +47,7 @@ export default async function JourneyPage() {
               <p className="eyebrow text-accent">עכשיו</p>
               <h2 className="display mt-1 text-2xl">{now.title}</h2>
               {now.state === "rejected" && now.review_note && (
-                <p className="mt-3 rounded bg-bad-soft px-3 py-2 text-sm text-bad">הצוות החזיר לתיקון: {now.review_note}</p>
+                <p className="mt-3 rounded-xl bg-bad-soft px-3 py-2 text-sm text-bad">הצוות החזיר לתיקון: {now.review_note}</p>
               )}
               {now.description && <p className="mt-2 text-muted">{now.description}</p>}
               <div className="mt-4 flex items-center justify-between">

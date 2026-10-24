@@ -38,7 +38,7 @@ export default async function AdminHome() {
               const staff = (people ?? []).filter((p) => p.clinic_id === c.id);
               const doctors = staff.filter((p) => p.role === "doctor");
               return (
-                <tr key={c.id} className="hover:bg-paper">
+                <tr key={c.id} className="link-row">
                   <td className="px-4 py-3">
                     <Link href={`/admin/clinics/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
                   </td>

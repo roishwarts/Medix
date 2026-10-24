@@ -61,7 +61,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
               <Link
                 key={j.id}
                 href={`/clinic/patients/${j.id}`}
-                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-paper sm:grid-cols-[12rem_1fr_auto]"
+                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
               >
                 <span className="font-medium">{j.patient.full_name}</span>
                 <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">
@@ -117,7 +117,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                 <Link
                   key={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 hover:bg-paper sm:grid-cols-[12rem_1fr_auto]"
+                  className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
                 >
                   <span className="font-medium">{i.patientName}</span>
                   <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">

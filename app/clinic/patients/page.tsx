@@ -55,36 +55,36 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
       </form>
 
       <div className="card mt-6 overflow-x-auto">
-        <table className="w-full min-w-[40rem] text-start">
+        <table className="w-full text-start">
           <thead>
             <tr className="border-b border-line text-start text-sm text-muted">
               <th className="px-4 py-3 text-start font-medium">מטופל</th>
               <th className="px-4 py-3 text-start font-medium">ניתוח</th>
               <th className="px-4 py-3 text-start font-medium">מוכנות</th>
-              <th className="px-4 py-3 text-start font-medium">שלב נוכחי</th>
+              <th className="hidden px-4 py-3 text-start font-medium md:table-cell">שלב נוכחי</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {rows.map((j) => (
-              <tr key={j.id} className="hover:bg-paper">
-                <td className="px-4 py-3">
+              <tr key={j.id} className="link-row">
+                <td className="min-w-[6.5rem] px-4 py-3">
                   <Link href={`/clinic/patients/${j.id}`} className="font-medium hover:underline">
                     {j.patient.full_name}
                   </Link>
                 </td>
-                <td className="num px-4 py-3 text-muted">
+                <td className="num whitespace-nowrap px-3 py-3 text-muted sm:px-4">
                   {formatDate(j.surgery_date)}
-                  <span className="ms-2 text-xs">
+                  <span className="ms-2 whitespace-nowrap text-xs">
                     {j.summary.daysToSurgery >= 0 ? `(${j.summary.daysToSurgery} ימים)` : "(עבר)"}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3 sm:px-4">
                   <div className="flex items-center gap-3">
-                    <span className="num w-10 font-medium">{j.summary.readiness}%</span>
-                    <div className="w-20"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
+                    <span className="num w-10 shrink-0 font-medium">{j.summary.readiness}%</span>
+                    <div className="hidden w-20 sm:block"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-muted">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>
+                <td className="hidden px-4 py-3 text-sm text-muted md:table-cell">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>
               </tr>
             ))}
             {rows.length === 0 && (

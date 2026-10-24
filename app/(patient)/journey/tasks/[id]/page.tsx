@@ -60,7 +60,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       </dl>
 
       {task.state === "locked" && (
-        <div className="mt-6 flex gap-3 rounded border border-dashed border-line-strong p-4 text-muted">
+        <div className="mt-6 flex gap-3 rounded-xl border border-dashed border-line-strong p-4 text-muted">
           <Icon name="lock" size={18} />
           <div>
             <p className="font-medium text-ink">המשימה עדיין נעולה</p>
@@ -70,21 +70,21 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       )}
 
       {task.state === "rejected" && task.review_note && (
-        <div className="mt-6 rounded bg-bad-soft p-4 text-bad">
+        <div className="mt-6 rounded-xl bg-bad-soft p-4 text-bad">
           <p className="font-medium">הצוות החזיר את המשימה לתיקון</p>
           <p className="mt-0.5 text-sm">{task.review_note}</p>
         </div>
       )}
 
       {task.state === "review" && (
-        <div className="mt-6 rounded bg-warn-soft p-4 text-warn">
+        <div className="mt-6 rounded-xl bg-warn-soft p-4 text-warn">
           <p className="font-medium">נשלח וממתין לבדיקת הצוות</p>
           {task.evidence_name && <p className="mt-0.5 text-sm">{task.evidence_name}</p>}
         </div>
       )}
 
       {task.state === "done" && (
-        <div className="mt-6 rounded bg-ok-soft p-4 text-ok">
+        <div className="mt-6 rounded-xl bg-ok-soft p-4 text-ok">
           <p className="flex items-center gap-2 font-medium"><Icon name="check" /> המשימה אושרה</p>
         </div>
       )}

@@ -36,7 +36,7 @@ export function parseCalParams(sp: { view?: string; d?: string }) {
 
 function Chip({ e, compact }: { e: CalEvent; compact?: boolean }) {
   return (
-    <span className={`block truncate rounded px-1.5 py-0.5 text-[11px] leading-snug ${CHIP[e.tone]}`}>
+    <span className={`block truncate rounded-md px-1.5 py-0.5 text-[11px] leading-snug ${CHIP[e.tone]}`}>
       {e.time && <span className="num me-1 font-medium">{e.time}</span>}
       {compact && e.patient && e.kind !== "surgery" ? `${e.patient} · ` : ""}
       {e.title}

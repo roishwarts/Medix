@@ -19,7 +19,7 @@ export function ActivityList({ items, showPatient = true, markSeen = false }: { 
     <ul className="card divide-y divide-line">
       {items.map((i) => (
         <li key={i.id}>
-          <Link href={i.href} className="flex items-start gap-3 px-4 py-3 hover:bg-paper">
+          <Link href={i.href} className="flex items-start gap-3 px-4 py-3 link-row">
             <span className={`mt-2 size-2 shrink-0 rounded-full ${newIds.has(i.id) ? "bg-accent" : "bg-transparent"}`} aria-label={newIds.has(i.id) ? "חדש" : undefined} />
             <span className="min-w-0 flex-1">
               {showPatient && i.patientName && <span className="block font-medium">{i.patientName}</span>}

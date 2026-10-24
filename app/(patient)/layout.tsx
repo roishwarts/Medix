@@ -14,21 +14,26 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const caregiver = profile.role === "caregiver" ? await getCaregiverLink() : null;
   const clinicName = await getClinicName();
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-5xl px-5 pb-16">
-      <header className="flex items-center justify-between gap-3 pt-4">
-        <Greeting name={profile.full_name} />
-        <div className="flex shrink-0 items-center gap-1">
-          <span className="max-w-[9rem] truncate text-sm text-muted">{clinicName}</span>
-          <LogoutButton />
+    <div className="min-h-dvh pb-16">
+      <div className="topbar">
+        <div className="mx-auto w-full max-w-5xl px-5">
+          <header className="flex items-center justify-between gap-3 pt-3">
+            <Greeting name={profile.full_name} />
+            <div className="flex shrink-0 items-center gap-1">
+              <span className="max-w-[9rem] truncate text-sm text-muted">{clinicName}</span>
+              <LogoutButton />
+            </div>
+          </header>
+          <nav className="mt-1 flex gap-6">
+            <NavLink href="/journey">ראשי</NavLink>
+            <NavLink href="/calendar">יומן</NavLink>
+            {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
+          </nav>
         </div>
-      </header>
-      <nav className="mb-6 mt-2 flex gap-6 border-b border-line">
-        <NavLink href="/journey">ראשי</NavLink>
-        <NavLink href="/calendar">יומן</NavLink>
-        {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
-      </nav>
+      </div>
+      <div className="mx-auto w-full max-w-5xl px-5 pt-6">
       {profile.role === "caregiver" && (
-        <p className="mb-6 rounded bg-accent-soft px-3 py-2 text-sm">
+        <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
           {caregiver ? (
             <>
               את/ה צופה במסע של <span className="font-medium">{caregiver.patient_name}</span> ({caregiver.relation}).{" "}
@@ -40,6 +45,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
         </p>
       )}
       {children}
+      </div>
     </div>
   );
 }
