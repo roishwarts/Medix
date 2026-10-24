@@ -124,7 +124,7 @@ function TimelineItem({ task, isNow, last }: { task: Task; isNow: boolean; last:
   const { state, overdue } = task;
   let node: React.ReactNode;
   if (state === "done") {
-    node = <span className="grid size-7 place-items-center rounded-full bg-accent text-white"><Icon name="check" size={14} /></span>;
+    node = <span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={14} /></span>;
   } else if (isNow) {
     node = <span className={`grid size-7 place-items-center rounded-full border-2 ${overdue ? "border-bad" : "border-accent"} bg-surface`}><span className={`size-2.5 rounded-full ${overdue ? "bg-bad" : "bg-accent"}`} /></span>;
   } else if (state === "review") {
