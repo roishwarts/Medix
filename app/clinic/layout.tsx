@@ -33,7 +33,7 @@ export default async function ClinicLayout({ children }: { children: React.React
           </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="hidden text-sm text-muted sm:block">{clinicName}</span>
+            <span className="max-w-[5.5rem] truncate text-sm text-muted sm:max-w-[12rem]">{clinicName}</span>
             <LogoutButton />
           </div>
         </div>

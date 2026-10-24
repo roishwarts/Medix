@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireProfile } from "@/lib/auth";
 import { loadJourneys } from "@/lib/queries";
 import { nowTask, OWNER_LABEL, type Task } from "@/lib/journey";
 import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
@@ -7,6 +8,7 @@ import { Icon, ReadinessBar } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage() {
+  const profile = await requireProfile(["patient", "caregiver"]);
   const [journey] = await loadJourneys();
   if (!journey) {
     return <p className="py-20 text-center text-muted">עדיין לא הוגדר עבורך מסלול. פנה/י למרפאה.</p>;
@@ -24,6 +26,7 @@ export default async function JourneyPage() {
   return (
     <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
       <div className="lg:col-span-2">
+      <p className="mb-1 text-muted">שלום {profile.full_name}</p>
       <h1 className="display text-3xl">
         {surgeryPassed ? "הניתוח הושלם" : summary.daysToSurgery === 0 ? "הניתוח היום" : `הניתוח ${relativeDays(journey.surgery_date)}`}
       </h1>
