@@ -88,6 +88,23 @@ h1, h2, h3 {
   }
   .field:focus { outline: 2px solid var(--color-accent); outline-offset: -1px; border-color: var(--color-accent); }
   textarea.field { min-height: 88px; resize: vertical; }
+  /* iOS Safari gives date/time inputs a native width that ignores width:100% and spills out of the box. */
+  input.field[type="date"],
+  input.field[type="datetime-local"],
+  input.field[type="time"] {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    inline-size: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: start;
+  }
+  input.field[type="date"]::-webkit-date-and-time-value,
+  input.field[type="datetime-local"]::-webkit-date-and-time-value {
+    text-align: start;
+    min-width: 0;
+  }
   label.lbl { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--color-ink); }
   .pill {
     display: inline-flex;
