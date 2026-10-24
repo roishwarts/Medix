@@ -86,7 +86,7 @@ export default async function PatientPage({
 
   return (
     <main>
-      <Link href="/clinic/patients" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Link href="/clinic/patients" className="back-link">
         <Icon name="arrow" size={14} /> כל המטופלים
       </Link>
 
@@ -152,7 +152,7 @@ export default async function PatientPage({
 
       <section className="mt-10">
         <h2 className="eyebrow mb-1">כל המשימות</h2>
-        <nav aria-label="סינון משימות לפי סטטוס" className="mb-4 flex gap-6 overflow-x-auto border-b border-line">
+        <nav aria-label="סינון משימות לפי סטטוס" className="chip-row">
           {FILTERS.map(([key, label]) => {
             const count = summary.tasks.filter((t) => matches(t, key)).length;
             const on = key === active;
@@ -162,7 +162,7 @@ export default async function PatientPage({
                 href={key === "all" ? `/clinic/patients/${id}` : `/clinic/patients/${id}?status=${key}`}
                 scroll={false}
                 aria-current={on ? "page" : undefined}
-                className={`whitespace-nowrap border-b-2 py-3 text-[15px] ${on ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
+                className="chip"
               >
                 {label} <span className="num text-xs">{count}</span>
               </Link>

@@ -19,7 +19,7 @@ export default async function ClinicLayout({ children }: { children: React.React
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5">
           <div className="flex min-w-0 items-center gap-8">
           <span className="display hidden text-lg md:block">שלום {profile.full_name}</span>
-          <nav className="flex min-w-0 gap-4 overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden">
+          <nav className="flex min-w-0 gap-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
             <NavLink href="/clinic" exact>ראשי</NavLink>
             <NavLink href="/clinic/patients">מטופלים</NavLink>
             <NavLink href="/clinic/calendar">יומן</NavLink>

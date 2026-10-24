@@ -2,9 +2,10 @@
 
 @theme {
   /* page + surfaces are pure white; "paper" is only a faint fill for hover and inactive areas */
-  --color-page: #ffffff;
+  --color-page: #fcfcfd;
   --color-paper: #f6f7f9;
   --color-surface: #ffffff;
+  --color-glass: rgb(255 255 255 / 0.72);
   --color-ink: #111827;
   --color-muted: #667085;
   --color-line: #e7eaee;
@@ -53,16 +54,18 @@ p { text-wrap: pretty; }
     letter-spacing: -0.015em;
   }
   .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-line);
-    border-radius: 16px;
-    box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+    background: var(--color-glass);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    border: 1px solid rgb(16 24 40 / 0.08);
+    border-radius: 22px;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -12px rgb(16 24 40 / 0.08);
   }
   .topbar {
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgb(255 255 255 / 0.88);
+    background: rgb(252 252 253 / 0.78);
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     backdrop-filter: saturate(180%) blur(12px);
     border-bottom: 1px solid var(--color-line);
@@ -82,8 +85,8 @@ p { text-wrap: pretty; }
     padding: 0 1.3rem;
     border-radius: 999px;
     font-weight: 500;
-    border: 1px solid var(--color-line-strong);
-    background: transparent;
+    border: 1px solid rgb(16 24 40 / 0.12);
+    background: rgb(255 255 255 / 0.8);
     color: var(--color-ink);
     cursor: pointer;
     transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s, transform 0.08s, box-shadow 0.15s;
@@ -105,10 +108,11 @@ p { text-wrap: pretty; }
     width: 100%;
     min-height: 44px;
     padding: 0.5rem 0.75rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-line-strong);
-    border-radius: 12px;
+    background: rgb(255 255 255 / 0.85);
+    border: 1px solid rgb(16 24 40 / 0.12);
+    border-radius: 16px;
     color: var(--color-ink);
+    box-shadow: inset 0 1px 2px rgb(16 24 40 / 0.04);
     transition: border-color 0.15s, box-shadow 0.15s;
   }
   .field::placeholder { color: #98a2b3; }
@@ -142,6 +146,45 @@ p { text-wrap: pretty; }
     min-width: 0;
   }
   label.lbl { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--color-ink); }
+  .btn-icon { min-height: 40px; width: 40px; padding: 0; flex: none; }
+  .btn-icon.btn-primary { box-shadow: 0 2px 8px rgb(47 95 224 / 0.3); }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    padding: 0.25rem 1rem 0.25rem 0.25rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    background: var(--color-glass);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(16 24 40 / 0.1);
+    border-radius: 999px;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+    transition: background 0.15s, transform 0.08s;
+  }
+  .back-link:hover { background: #fff; }
+  .back-link:active { transform: scale(0.97); }
+  .back-link > svg { box-sizing: content-box; padding: 0.4rem; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent); }
+  .chip-row { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.25rem 0.125rem; margin-bottom: 1rem; scrollbar-width: none; }
+  .chip-row::-webkit-scrollbar { display: none; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: none;
+    white-space: nowrap;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    background: var(--color-glass);
+    border: 1px solid rgb(16 24 40 / 0.1);
+    border-radius: 999px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .chip:hover { color: var(--color-ink); background: #fff; }
+  .chip[aria-current] { color: var(--color-accent); font-weight: 500; background: var(--color-accent-soft); border-color: var(--color-accent-line); }
   .pill {
     display: inline-flex;
     align-items: center;

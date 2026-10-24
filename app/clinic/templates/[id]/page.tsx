@@ -56,7 +56,7 @@ export default async function TemplatePage({
 
   return (
     <main className="max-w-3xl">
-      <Link href="/clinic/templates" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Link href="/clinic/templates" className="back-link">
         <Icon name="arrow" size={14} /> כל התבניות
       </Link>
       <h1 className="display text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>

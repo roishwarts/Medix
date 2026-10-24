@@ -104,9 +104,9 @@ export function Calendar({
       {/* toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <Link href={href({ d: prev })} aria-label="הקודם" className="btn btn-sm px-2 [&_svg]:rotate-180"><Icon name="arrow" size={16} /></Link>
+          <Link href={href({ d: prev })} aria-label="הקודם" className="btn btn-icon [&_svg]:rotate-180"><Icon name="arrow" size={16} /></Link>
           <Link href={href({ d: t0 })} className="btn btn-sm">היום</Link>
-          <Link href={href({ d: next })} aria-label="הבא" className="btn btn-sm px-2"><Icon name="arrow" size={16} /></Link>
+          <Link href={href({ d: next })} aria-label="הבא" className="btn btn-icon"><Icon name="arrow" size={16} /></Link>
           <h2 className="display ms-3 text-2xl">{title}</h2>
         </div>
         <div className="flex overflow-hidden rounded-full border border-line-strong text-sm">

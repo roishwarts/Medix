@@ -24,7 +24,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
               <LogoutButton />
             </div>
           </header>
-          <nav className="mt-1 flex gap-6">
+          <nav className="mt-1 flex gap-1">
             <NavLink href="/journey">ראשי</NavLink>
             <NavLink href="/calendar">יומן</NavLink>
             {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}

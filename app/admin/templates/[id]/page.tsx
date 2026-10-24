@@ -59,7 +59,7 @@ export default async function BaseTemplatePage({
 
   return (
     <main className="max-w-3xl">
-      <Link href="/admin/templates" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Link href="/admin/templates" className="back-link">
         <Icon name="arrow" size={14} /> כל תבניות הבסיס
       </Link>
       <p className="eyebrow">תבנית בסיס</p>

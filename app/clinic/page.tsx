@@ -78,7 +78,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         )}
       </section>
 
-      <nav aria-label="סינון פעולות לפי סטטוס" className="mt-10 flex gap-6 overflow-x-auto border-b border-line">
+      <nav aria-label="סינון פעולות לפי סטטוס" className="chip-row mt-10">
         {TABS.map(([key, label]) => {
           const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
           const on = key === active;
@@ -88,7 +88,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
               href={key === "all" ? "/clinic" : `/clinic?status=${key}`}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className={`whitespace-nowrap border-b-2 py-3 text-[15px] ${on ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
+              className="chip"
             >
               {label} <span className="num text-xs">{count}</span>
             </Link>

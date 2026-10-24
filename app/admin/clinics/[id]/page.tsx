@@ -31,7 +31,7 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
 
   return (
     <main>
-      <Link href="/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Link href="/admin" className="back-link">
         <Icon name="arrow" size={14} /> כל המרפאות
       </Link>
       <h1 className="display text-4xl">{clinic.name}</h1>

@@ -37,7 +37,7 @@ export default async function EditJourneyPage({ params }: { params: Promise<{ id
 
   return (
     <main className="max-w-3xl">
-      <Link href={`/clinic/patients/${id}`} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
+      <Link href={`/clinic/patients/${id}`} className="back-link">
         <Icon name="arrow" size={14} /> חזרה למטופל
       </Link>
       <p className="eyebrow">עריכה למטופל זה בלבד</p>

@@ -60,7 +60,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         </form>
       </div>
 
-      <nav aria-label="סינון עדכונים" className="mb-4 mt-6 flex gap-6 overflow-x-auto border-b border-line">
+      <nav aria-label="סינון עדכונים" className="chip-row mt-6">
         {GROUPS.map((g) => {
           const on = g.key === group.key;
           return (
@@ -69,7 +69,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
               href={tabHref(g.key)}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className={`whitespace-nowrap border-b-2 py-3 text-[15px] ${on ? "border-accent font-medium text-accent" : "border-transparent text-muted hover:text-ink"}`}
+              className="chip"
             >
               {g.label}
             </Link>
