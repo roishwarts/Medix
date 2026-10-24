@@ -2,7 +2,7 @@ import { logout } from "@/app/login/actions";
 import type { Readiness, TaskState } from "@/lib/journey";
 
 export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "alert" | "arrow" | "file" | "plus" | "trash" | "up" | "down"; size?: number }) {
-  const common = { width: size, height: size, viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  const common = { width: size, height: size, viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   switch (name) {
     case "check": return <svg {...common}><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>;
     case "lock": return <svg {...common}><rect x="3.5" y="7" width="9" height="6.5" rx="1" /><path d="M5.5 7V5.2a2.5 2.5 0 015 0V7" /></svg>;
