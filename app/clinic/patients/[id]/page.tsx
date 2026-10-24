@@ -108,17 +108,16 @@ export default async function PatientPage({
         </div>
       </div>
 
-      {summary.blockers.length > 0 && (
+      {summary.topBlocker && (
         <section className="mt-8">
-          <h2 className="eyebrow mb-2">משימות פתוחות</h2>
-          <ul className="card divide-y divide-line">
-            {summary.blockers.map((b) => (
-              <li key={b.task.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                <span>{b.label}</span>
-                <span className="text-muted">{formatDate(b.task.dueDate)}</span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="eyebrow mb-2">שלב נוכחי</h2>
+          <div className="card flex items-center justify-between gap-3 px-4 py-3 text-sm">
+            <span>{summary.topBlocker.label}</span>
+            <span className="shrink-0 text-muted">{formatDate(summary.topBlocker.task.dueDate)}</span>
+          </div>
+          {summary.blockers.length > 1 && (
+            <p className="mt-2 text-xs text-muted">ועוד {summary.blockers.length - 1} משימות פתוחות ברשימה למטה</p>
+          )}
         </section>
       )}
 
