@@ -86,14 +86,13 @@ export default async function PatientPage({
 
   return (
     <main>
-      <Link href="/clinic/patients" className="back-link">
-        <Icon name="arrow" size={14} /> כל המטופלים
-      </Link>
-
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="display text-4xl">{journey.patient.full_name}</h1>
-          <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <p className="text-muted">{journey.procedure || journey.template_name}</p>
+            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-8 px-3 text-sm">עריכת המסלול של המטופל</Link>
+          </div>
           <p className="mt-3">
             ניתוח: <span className="font-medium">{formatDateLong(journey.surgery_date)}</span>{" "}
             <span className="text-muted">({relativeDays(journey.surgery_date)})</span>
@@ -104,7 +103,6 @@ export default async function PatientPage({
             <span className="num text-sm font-medium">{summary.readiness}%</span>
             <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
           </div>
-          <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm mt-4 w-full">עריכת המסלול של המטופל</Link>
         </div>
       </div>
 
