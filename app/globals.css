@@ -185,6 +185,37 @@ p { text-wrap: pretty; }
   }
   .chip:hover { color: var(--color-ink); background: #fff; }
   .chip[aria-current] { color: var(--color-accent); font-weight: 500; background: var(--color-accent-soft); border-color: var(--color-accent-line); }
+  .fold > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 52px;
+    padding: 0 1rem;
+    cursor: pointer;
+    list-style: none;
+    background: var(--color-glass);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(16 24 40 / 0.08);
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+    transition: background 0.15s;
+  }
+  .fold > summary::-webkit-details-marker { display: none; }
+  .fold > summary:hover { background: #fff; }
+  .fold > summary::after {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-inline-start: 0.25rem;
+    border-right: 1.6px solid var(--color-muted);
+    border-bottom: 1.6px solid var(--color-muted);
+    transform: rotate(45deg);
+    transition: transform 0.2s;
+  }
+  .fold[open] > summary::after { transform: rotate(-135deg); }
   .pill {
     display: inline-flex;
     align-items: center;

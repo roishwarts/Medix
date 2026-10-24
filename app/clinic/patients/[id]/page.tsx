@@ -121,8 +121,12 @@ export default async function PatientPage({
         </section>
       )}
 
-      <section className="mt-10">
-        <h2 className="eyebrow mb-3">פרטי המטופל</h2>
+      <details className="fold mt-8">
+        <summary>
+          <span className="font-medium">פרטי המטופל ובני משפחה</span>
+          <span className="text-sm text-muted">{(caregivers ?? []).length > 0 ? `${(caregivers ?? []).length} בני משפחה` : ""}</span>
+        </summary>
+        <div className="pt-4">
         <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} />
         <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
@@ -147,7 +151,8 @@ export default async function PatientPage({
         />
         <AddCaregiver patientId={journey.patient_id} />
         <p className="mt-2 text-xs text-muted">בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.</p>
-      </section>
+        </div>
+      </details>
 
       <section className="mt-10">
         <h2 className="eyebrow mb-1">כל המשימות</h2>
