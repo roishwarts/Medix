@@ -71,30 +71,34 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {rows.map((j) => (
-              <tr key={j.id} className="link-row">
-                <td className="min-w-[6.5rem] px-4 py-3">
-                  <Link href={`/clinic/patients/${j.id}`} className="font-medium hover:underline">
-                    {j.patient.full_name}
-                  </Link>
-                </td>
-                <td className="num whitespace-nowrap px-3 py-3 text-muted sm:px-4">
-                  {formatDate(j.surgery_date)}
-                  <span className="ms-2 whitespace-nowrap text-xs">
-                    {j.summary.daysToSurgery >= 0 ? `(${j.summary.daysToSurgery} ימים)` : "(עבר)"}
-                  </span>
-                </td>
-                <td className="px-3 py-3 sm:px-4">
-                  <div className="flex items-center gap-3">
-                    <span className="num w-10 shrink-0 font-medium">{j.summary.readiness}%</span>
-                    <div className="hidden w-20 sm:block"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
-                  </div>
-                </td>
-                <td className="hidden px-4 py-3 text-sm text-muted lg:table-cell">{placeOf.get(j.patient_id)?.hospital ?? "—"}</td>
-                <td className="hidden px-4 py-3 text-sm text-muted lg:table-cell">{placeOf.get(j.patient_id)?.company ?? "—"}</td>
-                <td className="hidden px-4 py-3 text-sm text-muted md:table-cell">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>
-              </tr>
-            ))}
+            {rows.map((j) => {
+              const href = `/clinic/patients/${j.id}`;
+              const place = placeOf.get(j.patient_id);
+              // Every cell is a link, so tapping anywhere on the row opens the patient.
+              const link = "block px-3 py-3 sm:px-4";
+              return (
+                <tr key={j.id} className="link-row">
+                  <td className="min-w-[6.5rem]"><Link href={href} className={`${link} font-medium`}>{j.patient.full_name}</Link></td>
+                  <td>
+                    <Link href={href} tabIndex={-1} className={`${link} num whitespace-nowrap text-muted`}>
+                      {formatDate(j.surgery_date)}
+                      <span className="ms-2 whitespace-nowrap text-xs">
+                        {j.summary.daysToSurgery >= 0 ? `(${j.summary.daysToSurgery} ימים)` : "(עבר)"}
+                      </span>
+                    </Link>
+                  </td>
+                  <td>
+                    <Link href={href} tabIndex={-1} className={`${link} flex items-center gap-3`}>
+                      <span className="num w-10 shrink-0 font-medium">{j.summary.readiness}%</span>
+                      <div className="hidden w-20 sm:block"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
+                    </Link>
+                  </td>
+                  <td className="hidden lg:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{place?.hospital ?? "—"}</Link></td>
+                  <td className="hidden lg:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{place?.company ?? "—"}</Link></td>
+                  <td className="hidden md:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</Link></td>
+                </tr>
+              );
+            })}
             {rows.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-10 text-center text-muted">אין מטופלים שמתאימים לסינון.</td></tr>
             )}

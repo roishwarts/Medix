@@ -23,29 +23,30 @@ export default async function AdminHome() {
       </div>
 
       <div className="card mt-6 overflow-x-auto">
-        <table className="w-full min-w-[34rem]">
+        <table className="w-full">
           <thead>
             <tr className="border-b border-line text-sm text-muted">
               <th className="px-4 py-3 text-start font-medium">מרפאה</th>
               <th className="px-4 py-3 text-start font-medium">רופא</th>
-              <th className="px-4 py-3 text-start font-medium">משתמשי צוות</th>
-              <th className="px-4 py-3 text-start font-medium">מטופלים</th>
-              <th className="px-4 py-3 text-start font-medium">נוצרה</th>
+              <th className="px-4 py-3 text-start font-medium">צוות</th>
+              <th className="hidden px-4 py-3 text-start font-medium sm:table-cell">מטופלים</th>
+              <th className="hidden px-4 py-3 text-start font-medium sm:table-cell">נוצרה</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {(clinics ?? []).map((c) => {
               const staff = (people ?? []).filter((p) => p.clinic_id === c.id);
               const doctors = staff.filter((p) => p.role === "doctor");
+              const href = `/admin/clinics/${c.id}`;
+              // Every cell is a link, so tapping anywhere on the row opens the clinic.
+              const cell = "block px-4 py-3";
               return (
                 <tr key={c.id} className="link-row">
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/clinics/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted">{doctors.map((d) => d.full_name).join(", ") || "—"}</td>
-                  <td className="num px-4 py-3 text-muted">{staff.length}</td>
-                  <td className="num px-4 py-3 text-muted">{(patients ?? []).filter((p) => p.clinic_id === c.id).length}</td>
-                  <td className="num px-4 py-3 text-muted">{israelParts(c.created_at).date.split("-").reverse().join(".")}</td>
+                  <td><Link href={href} className={`${cell} font-medium`}>{c.name}</Link></td>
+                  <td><Link href={href} tabIndex={-1} className={`${cell} text-muted`}>{doctors.map((d) => d.full_name).join(", ") || "—"}</Link></td>
+                  <td><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{staff.length}</Link></td>
+                  <td className="hidden sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{(patients ?? []).filter((p) => p.clinic_id === c.id).length}</Link></td>
+                  <td className="hidden sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{israelParts(c.created_at).date.split("-").reverse().join(".")}</Link></td>
                 </tr>
               );
             })}
