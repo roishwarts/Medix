@@ -8,6 +8,7 @@ export type Profile = {
   role: "patient" | "caregiver" | "staff" | "doctor";
   full_name: string;
   clinic_name: string;
+  mfa_required: boolean;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
@@ -20,30 +21,42 @@ export const getAuthUserId = cache(async (): Promise<string | null> => {
   return data?.claims?.sub ?? null;
 });
 
+// Authenticator assurance level of this session: "aal2" once the second factor has been verified.
+export const getAal = cache(async (): Promise<string> => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  return String((data?.claims as { aal?: string } | undefined)?.aal ?? "aal1");
+});
+
 export const getProfile = cache(async (): Promise<Profile | null> => {
   const userId = await getAuthUserId();
   if (!userId) return null;
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name, disabled, clinics(name)")
+    .select("id, clinic_id, role, full_name, disabled, clinics(*)")
     .eq("id", userId)
     .maybeSingle();
   if (!data || data.disabled) return null;
-  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string } | null;
+  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string; mfa_required?: boolean } | null;
   return {
     id: data.id,
     clinic_id: data.clinic_id,
     role: data.role,
     full_name: data.full_name,
     clinic_name: clinic?.name ?? "",
+    mfa_required: !!clinic?.mfa_required,
   };
 });
+
+// Staff and doctors of a clinic that turned on two-factor login must verify it each session.
+export const needsSecondFactor = (p: Profile) => p.mfa_required && (p.role === "staff" || p.role === "doctor");
 
 export async function requireProfile(roles?: Profile["role"][]): Promise<Profile> {
   const profile = await getProfile();
   if (!profile) redirect("/login?error=profile");
   if (roles && !roles.includes(profile.role)) redirect("/");
+  if (needsSecondFactor(profile) && (await getAal()) !== "aal2") redirect("/mfa");
   return profile;
 }
 

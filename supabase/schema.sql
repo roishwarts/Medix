@@ -8,6 +8,7 @@ create type user_role as enum ('patient', 'staff', 'doctor');
 create table clinics (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  mfa_required boolean not null default false,
   created_at timestamptz not null default now()
 );
 

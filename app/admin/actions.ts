@@ -121,6 +121,29 @@ export async function resetUserPassword(userId: string, password: string): Promi
   return { ok: true };
 }
 
+export async function setClinicMfa(clinicId: string, required: boolean): Promise<{ error?: string }> {
+  const { db } = await requireAdmin();
+  const { error } = await db.from("clinics").update({ mfa_required: required }).eq("id", clinicId);
+  if (error) return { error: "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-mfa.sql." };
+  revalidatePath(`/admin/clinics/${clinicId}`);
+  return {};
+}
+
+// For a lost phone: removes the user's authenticator, so they set up a new one at the next login.
+export async function resetUserMfa(userId: string): Promise<{ error?: string }> {
+  const { db } = await requireAdmin();
+  const user = await clinicUser(db, userId);
+  if (!user) return { error: "משתמש לא נמצא" };
+  const { data, error } = await db.auth.admin.mfa.listFactors({ userId });
+  if (error) return { error: "האיפוס נכשל" };
+  for (const f of data?.factors ?? []) {
+    const { error: delErr } = await db.auth.admin.mfa.deleteFactor({ id: f.id, userId });
+    if (delErr) return { error: "האיפוס נכשל" };
+  }
+  revalidatePath(`/admin/clinics/${user.clinic_id}`);
+  return {};
+}
+
 export async function addTemplateToClinic(clinicId: string, baseId: string): Promise<{ error?: string }> {
   const { db } = await requireAdmin();
   const { error } = await db.rpc("admin_copy_base_template", { p_base: baseId, p_clinic: clinicId });

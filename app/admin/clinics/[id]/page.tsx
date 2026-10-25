@@ -6,13 +6,14 @@ import { Icon } from "@/components/ui";
 import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
+import { MfaToggle } from "./mfa-toggle";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClinicPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { db } = await requireAdmin();
-  const { data: clinic } = await db.from("clinics").select("id, name, created_at").eq("id", id).maybeSingle();
+  const { data: clinic } = await db.from("clinics").select("*").eq("id", id).maybeSingle();
   if (!clinic) notFound();
 
   const [{ data: people }, { data: templates }, { data: bases }, { count: patientCount }] = await Promise.all([
@@ -25,7 +26,9 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   const users = await Promise.all(
     (people ?? []).map(async (p) => {
       const { data } = await db.auth.admin.getUserById(p.id);
-      return { ...p, username: data.user?.email?.split("@")[0] ?? "" };
+      const { data: f } = await db.auth.admin.mfa.listFactors({ userId: p.id });
+      const mfa = (f?.factors ?? []).some((x) => x.status === "verified");
+      return { ...p, username: data.user?.email?.split("@")[0] ?? "", mfa };
     }),
   );
 
@@ -39,11 +42,15 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
         נוצרה {israelParts(clinic.created_at).date.split("-").reverse().join(".")} · <span className="num">{patientCount ?? 0}</span> מטופלים
       </p>
 
+      <section className="mt-8">
+        <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
+      </section>
+
       <section className="mt-10">
         <h2 className="eyebrow mb-3">משתמשי צוות</h2>
         <div className="card divide-y divide-line">
           {users.map((u) => (
-            <UserRow key={u.id} id={u.id} name={u.full_name} username={u.username} role={u.role} disabled={u.disabled} />
+            <UserRow key={u.id} id={u.id} name={u.full_name} username={u.username} role={u.role} disabled={u.disabled} mfa={u.mfa} />
           ))}
           {users.length === 0 && <p className="px-4 py-6 text-center text-muted">אין משתמשים.</p>}
         </div>

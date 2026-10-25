@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { PasswordField } from "@/components/password-field";
-import { resetUserPassword, setUserDisabled } from "../../actions";
+import { resetUserMfa, resetUserPassword, setUserDisabled } from "../../actions";
 
-export function UserRow({ id, name, username, role, disabled }: { id: string; name: string; username: string; role: string; disabled: boolean }) {
+export function UserRow({ id, name, username, role, disabled, mfa }: { id: string; name: string; username: string; role: string; disabled: boolean; mfa: boolean }) {
   const [resetting, setResetting] = useState(false);
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
   const [pending, start] = useTransition();
@@ -16,6 +16,16 @@ export function UserRow({ id, name, username, role, disabled }: { id: string; na
     start(async () => {
       const res = await setUserDisabled(id, next);
       if (res.error) setMsg({ error: res.error });
+    });
+  }
+
+  function resetMfa() {
+    if (!confirm(`לאפס את האימות הדו-שלבי של ${name}? ההגדרה תתבצע מחדש בכניסה הבאה.`)) return;
+    setMsg(null);
+    start(async () => {
+      const res = await resetUserMfa(id);
+      if (res.error) setMsg({ error: res.error });
+      else setMsg({ ok: "האימות הדו-שלבי אופס" });
     });
   }
 
@@ -36,9 +46,11 @@ export function UserRow({ id, name, username, role, disabled }: { id: string; na
           <p className="text-sm text-muted">
             {role === "doctor" ? "רופא" : "צוות"} · <span dir="ltr" className="num">{username}</span>
             {disabled && <span className="pill pill-bad ms-2">מושבת</span>}
+            {mfa && <span className="pill pill-ok ms-2">אימות דו-שלבי</span>}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {mfa && <button className="btn btn-sm" disabled={pending} onClick={resetMfa}>איפוס אימות דו-שלבי</button>}
           <button className="btn btn-sm" disabled={pending} onClick={() => { setResetting(!resetting); setMsg(null); }}>איפוס סיסמה</button>
           <button className={`btn btn-sm ${disabled ? "" : "btn-danger"}`} disabled={pending} onClick={toggle}>
             {disabled ? "הפעלה מחדש" : "השבתה"}
