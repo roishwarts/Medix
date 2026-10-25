@@ -15,6 +15,7 @@ import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
+import { getClinicOptions } from "@/lib/clinic-options";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,9 @@ export default async function PatientPage({
     .eq("patient_id", journey.patient_id)
     .order("created_at");
   const { data: patientRow } = await supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle();
+  // Separate query so the page still works before the hospital/company patch is applied.
+  const { data: placement } = await supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle();
+  const options = await getClinicOptions();
   const { data: openInvites } = await supabase
     .from("caregiver_invites")
     .select("id, invitee_name, relation, can_act, expires_at")
@@ -93,6 +97,12 @@ export default async function PatientPage({
             <p className="text-muted">{journey.procedure || journey.template_name}</p>
             <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-8 px-3 text-sm">עריכת המסלול של המטופל</Link>
           </div>
+          {(placement?.hospital || placement?.company) && (
+            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {placement?.hospital && <span><span className="text-muted">בית חולים:</span> <span className="font-medium">{placement.hospital}</span></span>}
+              {placement?.company && <span><span className="text-muted">חברה:</span> <span className="font-medium">{placement.company}</span></span>}
+            </p>
+          )}
           <p className="mt-3">
             ניתוח: <span className="font-medium">{formatDateLong(journey.surgery_date)}</span>{" "}
             <span className="text-muted">({relativeDays(journey.surgery_date)})</span>
@@ -122,7 +132,7 @@ export default async function PatientPage({
           <span className="text-sm text-muted">{(caregivers ?? []).length > 0 ? `${(caregivers ?? []).length} בני משפחה` : ""}</span>
         </summary>
         <div className="pt-4">
-        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} />
+        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies} />
         <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
         <CaregiverList

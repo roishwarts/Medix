@@ -5,7 +5,7 @@ Hebrew-only, RTL. Stack: Next.js (App Router) + Supabase (Auth, Postgres + RLS, 
 
 ## Setup
 1. Supabase SQL editor: run `supabase/schema.sql`, then `supabase/seed.sql` (demo data only).
-   Then run `supabase/patch-calendar.sql` (appointments + calendar) and `supabase/patch-caregivers.sql` (family access), then `supabase/patch-admin.sql` (admin panel) `supabase/patch-staff-edit.sql` (secretary can edit a journey) `supabase/patch-invitations.sql` (invitation links, forgot password) `supabase/patch-activity.sql` (updates feed) `supabase/patch-mfa.sql` (two-factor login) and `supabase/patch-devtasks.sql` (admin backlog), in that order. All are safe to re-run.
+   Then run `supabase/patch-calendar.sql` (appointments + calendar) and `supabase/patch-caregivers.sql` (family access), then `supabase/patch-admin.sql` (admin panel) `supabase/patch-staff-edit.sql` (secretary can edit a journey) `supabase/patch-invitations.sql` (invitation links, forgot password) `supabase/patch-activity.sql` (updates feed) `supabase/patch-mfa.sql` (two-factor login) `supabase/patch-devtasks.sql` (admin backlog) and `supabase/patch-options.sql` (hospitals and companies), in that order. All are safe to re-run.
    To create your admin login, edit and run `supabase/create-admin.sql`, then sign in and open `/admin`.
 2. Environment variables (locally in `.env.local`, and in Vercel → Settings → Environment Variables):
    - `NEXT_PUBLIC_SUPABASE_URL`

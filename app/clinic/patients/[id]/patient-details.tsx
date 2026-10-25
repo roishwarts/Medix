@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { OptionSelect } from "@/components/option-select";
 import { updatePatientDetails } from "../actions";
 
-export function PatientDetails({ patientId, name, phone, email }: { patientId: string; name: string; phone: string; email: string }) {
+type Props = { patientId: string; name: string; phone: string; email: string; hospital: string; company: string; hospitals: string[]; companies: string[] };
+
+export function PatientDetails({ patientId, name, phone, email, hospital, company, hospitals, companies }: Props) {
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState(
     async (prev: Awaited<ReturnType<typeof updatePatientDetails>>, formData: FormData) => {
@@ -29,6 +32,8 @@ export function PatientDetails({ patientId, name, phone, email }: { patientId: s
           <label htmlFor="pd-email" className="lbl">מייל</label>
           <input id="pd-email" name="email" type="email" className="field" dir="ltr" defaultValue={email} />
         </div>
+        <OptionSelect id="pd-hospital" name="hospital" label="בית חולים" options={hospitals} current={hospital} />
+        <OptionSelect id="pd-company" name="company" label="חברה" options={companies} current={company} />
         {state?.error && <p role="alert" className="text-sm text-bad sm:col-span-2">{state.error}</p>}
         <div className="flex gap-2 sm:col-span-2">
           <button className="btn btn-primary btn-sm" disabled={pending}>{pending ? "שומר…" : "שמירה"}</button>
@@ -51,6 +56,14 @@ export function PatientDetails({ patientId, name, phone, email }: { patientId: s
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="text-muted">מייל</span>
         {email ? <a href={`mailto:${email}`} dir="ltr" className="font-medium">{email}</a> : <span className="text-muted">לא הוזן</span>}
+      </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="text-muted">בית חולים</span>
+        {hospital ? <span className="font-medium">{hospital}</span> : <span className="text-muted">לא נבחר</span>}
+      </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="text-muted">חברה</span>
+        {company ? <span className="font-medium">{company}</span> : <span className="text-muted">לא נבחר</span>}
       </div>
       <div className="px-4 py-2.5">
         <button className="btn btn-sm" onClick={() => setEditing(true)}>עריכת פרטים</button>

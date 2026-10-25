@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
+import { getClinicOptions } from "@/lib/clinic-options";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -59,6 +60,19 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
     .select("id")
     .single();
   if (patErr || !patient) return { error: "יצירת המטופל נכשלה" };
+
+  const hospital = String(formData.get("hospital") ?? "").trim();
+  const company = String(formData.get("company") ?? "").trim();
+  if (hospital || company) {
+    const options = await getClinicOptions();
+    await supabase
+      .from("patients")
+      .update({
+        hospital: options.hospitals.includes(hospital) ? hospital : null,
+        company: options.companies.includes(company) ? company : null,
+      })
+      .eq("id", patient.id);
+  }
 
   const { data: journeyId, error: jErr } = await supabase.rpc("start_journey", {
     p_patient: patient.id,
@@ -232,6 +246,20 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
 
   const { error } = await supabase.from("patients").update({ full_name, phone: phone || null, email: email || null }).eq("id", patientId);
   if (error) return { error: "השמירה נכשלה" };
+
+  // Hospital and company come from the clinic's lists; a value the patient already has stays valid.
+  if (formData.has("hospital") || formData.has("company")) {
+    const hospital = String(formData.get("hospital") ?? "").trim();
+    const company = String(formData.get("company") ?? "").trim();
+    const [options, { data: current }] = await Promise.all([
+      getClinicOptions(),
+      supabase.from("patients").select("hospital, company").eq("id", patientId).maybeSingle(),
+    ]);
+    if (hospital && !options.hospitals.includes(hospital) && hospital !== current?.hospital) return { error: "בית החולים שנבחר לא ברשימה" };
+    if (company && !options.companies.includes(company) && company !== current?.company) return { error: "החברה שנבחרה לא ברשימה" };
+    const { error: optErr } = await supabase.from("patients").update({ hospital: hospital || null, company: company || null }).eq("id", patientId);
+    if (optErr) return { error: "שמירת בית החולים והחברה נכשלה. ודאו שהורצה התוספת supabase/patch-options.sql." };
+  }
 
   // Keep the name shown in the patient's own greeting in sync.
   if (patient.user_id) {

@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { ShareLink } from "@/components/share-link";
+import { OptionSelect } from "@/components/option-select";
 import { createPatient } from "../actions";
 
-export function NewPatientForm({ templates }: { templates: { id: string; name: string }[] }) {
+export function NewPatientForm({ templates, hospitals, companies }: { templates: { id: string; name: string }[]; hospitals: string[]; companies: string[] }) {
   const [state, action, pending] = useActionState(createPatient, undefined);
   const created = state?.created;
 
@@ -61,6 +62,12 @@ export function NewPatientForm({ templates }: { templates: { id: string; name: s
           <input id="surgery_date" name="surgery_date" type="date" className="field" required />
         </div>
       </div>
+      {(hospitals.length > 0 || companies.length > 0) && (
+        <div className="grid gap-5 sm:grid-cols-2">
+          <OptionSelect id="hospital" name="hospital" label="בית חולים (לא חובה)" options={hospitals} />
+          <OptionSelect id="company" name="company" label="חברה (לא חובה)" options={companies} />
+        </div>
+      )}
       {state?.error && <p role="alert" className="text-sm text-bad">{state.error}</p>}
       <button className="btn btn-primary" disabled={pending}>{pending ? "יוצר…" : "יצירת מטופל והכנת הזמנה"}</button>
     </form>

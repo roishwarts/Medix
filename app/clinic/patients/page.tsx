@@ -2,6 +2,7 @@ import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { formatDate, today } from "@/lib/dates";
 import { ReadinessBar } from "@/components/ui";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,9 @@ type Search = { q?: string; notReady?: string; days?: string; past?: string };
 export default async function PatientsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const all = await loadJourneys();
+  // Separate query so the list still works before the hospital/company patch is applied.
+  const { data: placements } = await (await createClient()).from("patients").select("id, hospital, company");
+  const placeOf = new Map((placements ?? []).map((p) => [p.id as string, p as { hospital: string | null; company: string | null }]));
   const t = today();
   const days = sp.days ? Number(sp.days) : null;
 
@@ -61,6 +65,8 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
               <th className="px-4 py-3 text-start font-medium">מטופל</th>
               <th className="px-4 py-3 text-start font-medium">ניתוח</th>
               <th className="px-4 py-3 text-start font-medium">מוכנות</th>
+              <th className="hidden px-4 py-3 text-start font-medium lg:table-cell">בית חולים</th>
+              <th className="hidden px-4 py-3 text-start font-medium lg:table-cell">חברה</th>
               <th className="hidden px-4 py-3 text-start font-medium md:table-cell">שלב נוכחי</th>
             </tr>
           </thead>
@@ -84,11 +90,13 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
                     <div className="hidden w-20 sm:block"><ReadinessBar value={j.summary.readiness} state={j.summary.readinessState} /></div>
                   </div>
                 </td>
+                <td className="hidden px-4 py-3 text-sm text-muted lg:table-cell">{placeOf.get(j.patient_id)?.hospital ?? "—"}</td>
+                <td className="hidden px-4 py-3 text-sm text-muted lg:table-cell">{placeOf.get(j.patient_id)?.company ?? "—"}</td>
                 <td className="hidden px-4 py-3 text-sm text-muted md:table-cell">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-muted">אין מטופלים שמתאימים לסינון.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-muted">אין מטופלים שמתאימים לסינון.</td></tr>
             )}
           </tbody>
         </table>

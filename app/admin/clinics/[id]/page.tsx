@@ -7,6 +7,7 @@ import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
 import { MfaToggle } from "./mfa-toggle";
+import { ClinicOptions } from "./clinic-options";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,12 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   const { data: clinic } = await db.from("clinics").select("*").eq("id", id).maybeSingle();
   if (!clinic) notFound();
 
-  const [{ data: people }, { data: templates }, { data: bases }, { count: patientCount }] = await Promise.all([
+  const [{ data: people }, { data: templates }, { data: bases }, { count: patientCount }, { data: options }] = await Promise.all([
     db.from("profiles").select("id, full_name, role, disabled").eq("clinic_id", id).in("role", ["doctor", "staff"]).order("role"),
     db.from("templates").select("id, name").eq("clinic_id", id).eq("is_base", false).order("name"),
     db.from("templates").select("id, name").eq("is_base", true).order("name"),
     db.from("patients").select("id", { count: "exact", head: true }).eq("clinic_id", id),
+    db.from("clinic_options").select("id, kind, name").eq("clinic_id", id).order("name"),
   ]);
 
   const users = await Promise.all(
@@ -44,6 +46,16 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
 
       <section className="mt-8">
         <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
+      </section>
+
+      <section className="mt-10">
+        <h2 className="eyebrow mb-3">בתי חולים וחברות</h2>
+        <ClinicOptions
+          clinicId={id}
+          hospitals={(options ?? []).filter((o) => o.kind === "hospital")}
+          companies={(options ?? []).filter((o) => o.kind === "company")}
+        />
+        <p className="mt-2 text-xs text-muted">הרופא והצוות בוחרים מהרשימות האלה לכל מטופל: באיזה בית חולים הפרוצדורה, ועם איזו חברה עובדים.</p>
       </section>
 
       <section className="mt-10">

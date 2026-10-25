@@ -144,6 +144,25 @@ export async function resetUserMfa(userId: string): Promise<{ error?: string }> 
   return {};
 }
 
+export async function addClinicOption(clinicId: string, kind: "hospital" | "company", name: string): Promise<{ error?: string }> {
+  const { db } = await requireAdmin();
+  const n = name.trim().replace(/\s+/g, " ");
+  if (!n) return { error: "יש להזין שם" };
+  if (n.length > 80) return { error: "השם ארוך מדי" };
+  if (kind !== "hospital" && kind !== "company") return { error: "סוג לא תקין" };
+  const { error } = await db.from("clinic_options").insert({ clinic_id: clinicId, kind, name: n });
+  if (error) return { error: error.code === "23505" || /duplicate|unique/i.test(error.message) ? "כבר קיים ברשימה" : "ההוספה נכשלה. ודאו שהורצה התוספת supabase/patch-options.sql." };
+  revalidatePath(`/admin/clinics/${clinicId}`);
+  return {};
+}
+
+export async function removeClinicOption(id: string): Promise<{ error?: string }> {
+  const { db } = await requireAdmin();
+  const { data } = await db.from("clinic_options").delete().eq("id", id).select("clinic_id").maybeSingle();
+  if (data) revalidatePath(`/admin/clinics/${data.clinic_id}`);
+  return {};
+}
+
 export async function addTemplateToClinic(clinicId: string, baseId: string): Promise<{ error?: string }> {
   const { db } = await requireAdmin();
   const { error } = await db.rpc("admin_copy_base_template", { p_base: baseId, p_clinic: clinicId });
