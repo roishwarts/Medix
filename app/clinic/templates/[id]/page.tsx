@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui";
 import { TemplateForm } from "@/components/template-form";
 import { deleteTemplate, saveTemplate } from "../actions";
 
+export const metadata = { title: "עריכת תבנית" };
 export const dynamic = "force-dynamic";
 
 export default async function TemplatePage({
@@ -55,11 +56,14 @@ export default async function TemplatePage({
   }
 
   return (
-    <main className="max-w-3xl">
+    <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
       <Link href="/clinic/templates" className="back-link">
         <Icon name="arrow" size={14} /> כל התבניות
       </Link>
-      <h1 className="display text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
+      <h1 className="display text-3xl sm:text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        הגדירו את שלבי הפרוטוקול: מי אחראי על כל משימה, מתי היא מתבצעת ביחס ליום הניתוח ומה צריך להסתיים לפניה.
+      </p>
       <TemplateForm
         key={id + (from ?? "")}
         templateId={isNew ? null : id}

@@ -34,13 +34,13 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
     actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t),
   );
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
-    const surgeriesThisWeek = journeys.filter((j) => {
+  const surgeriesThisWeek = journeys.filter((j) => {
     const d = diffDays(j.surgery_date, t);
     return d >= 0 && d <= 7;
   });
 
   return (
-    <main>
+    <main className="space-y-10">
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
           id: r.id,
@@ -49,8 +49,8 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           when: israelParts(r.requested_at).date.split("-").reverse().join("."),
         }))}
       />
-      <section>
-        <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+      <section aria-labelledby="h-surgeries">
+        <h2 id="h-surgeries" className="mb-3 flex items-baseline gap-2 text-lg font-medium">
           ניתוחים השבוע <span className="num text-sm text-muted">{surgeriesThisWeek.length}</span>
         </h2>
         {surgeriesThisWeek.length === 0 ? (
@@ -61,14 +61,14 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
               <Link
                 key={j.id}
                 href={`/clinic/patients/${j.id}`}
-                className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
+                className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
               >
-                <span className="font-medium">{j.patient.full_name}</span>
-                <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">
+                <span className="min-w-0 break-words font-medium">{j.patient.full_name}</span>
+                <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
                   {j.summary.topBlocker?.label ?? "ההכנות הושלמו"}
                 </span>
-                <span className="text-sm text-muted">
-                  <span className={`num font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}>{j.summary.readiness}%</span>
+                <span className="text-sm text-muted sm:whitespace-nowrap">
+                  <span className={`num font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}><span className="sr-only">מוכנות </span>{j.summary.readiness}%</span>
                   {" · "}
                   {formatDate(j.surgery_date)} · {relativeDays(j.surgery_date, t)}
                 </span>
@@ -78,7 +78,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         )}
       </section>
 
-      <nav aria-label="סינון פעולות לפי סטטוס" className="chip-row mt-10">
+      <nav aria-label="סינון פעולות לפי סטטוס" className="chip-row !mb-0 !flex-wrap !overflow-visible">
         {TABS.map(([key, label]) => {
           const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
           const on = key === active;
@@ -88,16 +88,16 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
               href={key === "all" ? "/clinic" : `/clinic?status=${key}`}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className="chip"
+              className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
             >
-              {label} <span className="num text-xs">{count}</span>
+              {label} <span className="num text-xs">{count}</span><span className="sr-only"> פעולות</span>
             </Link>
           );
         })}
       </nav>
 
       {active !== "all" && items.every((i) => i.kind !== active) && (
-        <p className="card mt-6 px-4 py-8 text-center text-muted">אין פעולות בסטטוס הזה.</p>
+        <p role="status" className="card px-4 py-8 text-center text-muted">אין פעולות בסטטוס הזה.</p>
       )}
 
       {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
@@ -106,9 +106,9 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} className="mt-8">
+          <section key={kind} aria-label={active === "all" ? undefined : ACTION_LABEL[kind]} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
-              <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+              <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
                 {ACTION_LABEL[kind]} <span className="num text-sm text-muted">{list.length}</span>
               </h2>
             )}
@@ -117,14 +117,14 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                 <Link
                   key={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
+                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
                 >
-                  <span className="font-medium">{i.patientName}</span>
-                  <span className="order-3 col-span-2 text-muted sm:order-none sm:col-span-1">
+                  <span className="min-w-0 break-words font-medium">{i.patientName}</span>
+                  <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
                     {i.task.title}
                     {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">אצל {OWNER_LABEL[i.task.owner]}</span>}
                   </span>
-                  <span className={`text-sm ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
+                  <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
                     {i.kind === "review" ? `ניתוח ${formatDate(i.surgeryDate)}` : `${formatDate(i.task.dueDate)} · ${relativeDays(i.task.dueDate, t)}`}
                   </span>
                 </Link>

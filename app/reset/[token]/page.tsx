@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
+import Link from "next/link";
 import { ResetForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,9 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
       ) : (
         <>
           <h1 className="display mb-3 text-3xl">הקישור אינו תקף</h1>
-          <p className="text-muted">הקישור פג תוקף או כבר נוצל. אפשר לבקש קישור חדש מדף הכניסה, דרך "שכחתי סיסמה".</p>
+          <p className="mb-8 text-muted">הקישור פג תוקף או כבר נוצל. אפשר לבקש קישור חדש מדף הכניסה, דרך &quot;שכחתי סיסמה&quot;.</p>
+          <Link href="/forgot" className="btn btn-primary w-full">בקשת קישור חדש</Link>
+          <Link href="/login" className="btn btn-quiet mt-3 w-full">חזרה לכניסה</Link>
         </>
       )}
     </main>

@@ -19,11 +19,11 @@ export function AddSubject() {
   }
 
   return (
-    <form onSubmit={submit} className="mt-8">
+    <form onSubmit={submit} className="mt-8 border-t border-line pt-6">
       <label htmlFor="subject" className="lbl">נושא חדש</label>
       <div className="flex gap-2">
-        <input id="subject" className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="למשל: דוחות וניתוח נתונים" />
-        <button className="btn btn-primary shrink-0" disabled={pending || !title.trim()}>הוספה</button>
+        <input id="subject" className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="למשל: דוחות וניתוח נתונים" autoComplete="off" enterKeyHint="done" />
+        <button className="btn btn-primary shrink-0" disabled={pending || !title.trim()}>{pending ? "מוסיף…" : "הוספה"}</button>
       </div>
       {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
     </form>

@@ -21,7 +21,7 @@ export default async function FamilyPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-xl space-y-10">
+    <main className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="display text-3xl">משפחה</h1>
         <p className="mt-2 text-muted">
@@ -29,8 +29,8 @@ export default async function FamilyPage() {
         </p>
       </div>
 
-      <section>
-        <h2 className="eyebrow mb-3">מקושרים כרגע</h2>
+      <section aria-labelledby="h-linked">
+        <h2 id="h-linked" className="eyebrow mb-3">מקושרים כרגע</h2>
         <CaregiverList
           isPatient
           items={(caregivers ?? []).map((c) => ({
@@ -44,8 +44,8 @@ export default async function FamilyPage() {
       </section>
 
       {(invites ?? []).length > 0 && (
-        <section>
-          <h2 className="eyebrow mb-3">הזמנות שממתינות</h2>
+        <section aria-labelledby="h-pending">
+          <h2 id="h-pending" className="eyebrow mb-3">הזמנות שממתינות</h2>
           <ul className="card divide-y divide-line">
             {invites!.map((i) => (
               <InviteRow key={i.id} id={i.id} name={i.invitee_name ?? ""} relation={i.relation} canAct={i.can_act}
@@ -55,8 +55,8 @@ export default async function FamilyPage() {
         </section>
       )}
 
-      <section>
-        <h2 className="eyebrow mb-3">הזמנת בן משפחה</h2>
+      <section aria-labelledby="h-invite">
+        <h2 id="h-invite" className="eyebrow mb-3">הזמנת בן משפחה</h2>
         <InviteForm />
       </section>
     </main>

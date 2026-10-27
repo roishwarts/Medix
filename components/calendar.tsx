@@ -36,7 +36,7 @@ export function parseCalParams(sp: { view?: string; d?: string }) {
 
 function Chip({ e, compact }: { e: CalEvent; compact?: boolean }) {
   return (
-    <span className={`block truncate rounded-md px-1.5 py-0.5 text-[11px] leading-snug ${CHIP[e.tone]}`}>
+    <span className={`block truncate rounded-md px-1.5 py-0.5 text-xs leading-snug ${CHIP[e.tone]}`}>
       {e.time && <span className="num me-1 font-medium">{e.time}</span>}
       {compact && e.patient && e.kind !== "surgery" ? `${e.patient} · ` : ""}
       {e.title}
@@ -104,15 +104,15 @@ export function Calendar({
       {/* toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <Link href={href({ d: prev })} aria-label="הקודם" className="btn btn-icon [&_svg]:rotate-180"><Icon name="arrow" size={16} /></Link>
-          <Link href={href({ d: t0 })} className="btn btn-sm">היום</Link>
-          <Link href={href({ d: next })} aria-label="הבא" className="btn btn-icon"><Icon name="arrow" size={16} /></Link>
-          <h2 className="display ms-3 text-2xl">{title}</h2>
+          <Link href={href({ d: prev })} aria-label="הקודם" className="btn btn-icon size-11 min-h-11 [&_svg]:rotate-180"><Icon name="arrow" size={16} /></Link>
+          <Link href={href({ d: t0 })} className="btn btn-sm max-sm:min-h-11">היום</Link>
+          <Link href={href({ d: next })} aria-label="הבא" className="btn btn-icon size-11 min-h-11"><Icon name="arrow" size={16} /></Link>
+          <h2 className="display ms-3 text-xl sm:text-2xl">{title}</h2>
         </div>
-        <div className="flex overflow-hidden rounded-full border border-line-strong text-sm">
+        <div role="group" aria-label="תצוגת היומן" className="flex overflow-hidden rounded-full border border-line-strong text-sm">
           {([["month", "חודש"], ["week", "שבוע"], ["agenda", "רשימה"]] as const).map(([v, label]) => (
             <Link key={v} href={href({ view: v })} aria-current={view === v ? "page" : undefined}
-              className={`px-3 py-1.5 ${view === v ? "bg-accent text-white" : "hover:bg-paper"}`}>{label}</Link>
+              className={`inline-flex min-h-11 items-center px-4 -outline-offset-2 sm:min-h-9 ${view === v ? "bg-accent text-white" : "hover:bg-paper"}`}>{label}</Link>
           ))}
         </div>
       </div>
@@ -122,7 +122,7 @@ export function Calendar({
       )}
 
       {view === "week" && (
-        <div className="mt-5 grid gap-px overflow-hidden rounded border border-line bg-line sm:grid-cols-7">
+        <div role="group" aria-label="השבוע" className="mt-5 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-7">
           {Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(d), i)).map((day) => {
             const list = map.get(day) ?? [];
             return (
@@ -132,7 +132,7 @@ export function Calendar({
                 </p>
                 <div className="space-y-1">
                   {list.map((e) => (
-                    <Link key={e.id + e.kind} href={e.href} className="block"><Chip e={e} compact={showPatient} /></Link>
+                    <Link key={e.id + e.kind} href={e.href} className="block rounded-md"><Chip e={e} compact={showPatient} /></Link>
                   ))}
                   {list.length === 0 && <span className="text-xs text-line-strong sm:hidden">—</span>}
                 </div>
@@ -175,7 +175,7 @@ function MonthGrid({
   const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(gridStart, i));
 
   return (
-    <div className="mt-5 overflow-hidden rounded border border-line bg-line">
+    <div role="group" aria-label="החודש" className="mt-5 overflow-hidden rounded-xl border border-line bg-line">
       <div className="grid grid-cols-7 gap-px">
         {names.map((n, i) => (
           <div key={i} className="bg-surface py-1.5 text-center text-xs font-medium text-muted">{n}</div>
@@ -187,8 +187,8 @@ function MonthGrid({
           const deadlines = list.filter((e) => e.kind === "deadline");
           const hidden = list.length - shown.length;
           return (
-            <Link key={day} href={href({ d: day })} aria-label={dayLabel(day)}
-              className={`block min-h-16 p-1 sm:min-h-28 sm:p-1.5 ${inMonth ? "bg-surface" : "bg-paper"} ${day === d ? "outline outline-2 -outline-offset-2 outline-accent" : ""} hover:bg-accent-soft`}>
+            <Link key={day} href={href({ d: day })} aria-label={dayLabel(day)} aria-current={day === t0 ? "date" : undefined}
+              className={`block -outline-offset-2 min-h-16 p-1 sm:min-h-28 sm:p-1.5 ${inMonth ? "bg-surface" : "bg-paper"} ${day === d ? "outline outline-2 -outline-offset-2 outline-accent" : ""} hover:bg-accent-soft`}>
               <span className={`num mb-1 grid size-6 place-items-center rounded-full text-xs ${day === t0 ? "bg-accent text-white" : inMonth ? "" : "text-line-strong"}`}>
                 {+day.slice(8)}
               </span>
@@ -196,10 +196,10 @@ function MonthGrid({
               <span className="hidden space-y-0.5 sm:block">
                 {shown.map((e) => <Chip key={e.id + e.kind} e={e} compact />)}
                 {deadlines.length > 0 && shown.length < 2 && (
-                  <span className="block truncate text-[11px] text-muted">{tasksLabel(deadlines.length)}</span>
+                  <span className="block truncate text-xs text-muted">{tasksLabel(deadlines.length)}</span>
                 )}
                 {deadlines.length > 0 && shown.length >= 2 && hidden > 0 && (
-                  <span className="block text-[11px] text-muted">+{hidden}</span>
+                  <span className="block text-xs text-muted">+{hidden}</span>
                 )}
               </span>
               <span className="flex flex-wrap gap-0.5 sm:hidden">

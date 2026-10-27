@@ -90,12 +90,12 @@ export default async function PatientPage({
 
   return (
     <main>
-      <div className="flex flex-wrap items-start justify-between gap-6">
-        <div>
-          <h1 className="display text-4xl">{journey.patient.full_name}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0">
+          <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
             <p className="text-muted">{journey.procedure || journey.template_name}</p>
-            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-8 px-3 text-sm">עריכת המסלול של המטופל</Link>
+            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">עריכת המסלול של המטופל</Link>
           </div>
           {(placement?.hospital || placement?.company) && (
             <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -108,7 +108,8 @@ export default async function PatientPage({
             <span className="text-muted">({relativeDays(journey.surgery_date)})</span>
           </p>
         </div>
-        <div className="w-full max-w-xs">
+        <div className="w-full sm:max-w-xs">
+          <p className="mb-1 text-sm text-muted">מוכנות לניתוח</p>
           <div className="flex items-center gap-3">
             <span className="num text-sm font-medium">{summary.readiness}%</span>
             <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
@@ -119,9 +120,9 @@ export default async function PatientPage({
       {summary.topBlocker && (
         <section className="mt-8">
           <h2 className="eyebrow mb-2">שלב נוכחי</h2>
-          <div className="card flex items-center justify-between gap-3 px-4 py-3 text-sm">
+          <div className="card flex items-center justify-between gap-3 px-4 py-3">
             <span>{summary.topBlocker.label}</span>
-            <span className="shrink-0 text-muted">{formatDate(summary.topBlocker.task.dueDate)}</span>
+            <span className="shrink-0 text-sm text-muted">יעד {formatDate(summary.topBlocker.task.dueDate)}</span>
           </div>
         </section>
       )}
@@ -171,7 +172,7 @@ export default async function PatientPage({
                 href={key === "all" ? `/clinic/patients/${id}` : `/clinic/patients/${id}?status=${key}`}
                 scroll={false}
                 aria-current={on ? "page" : undefined}
-                className="chip"
+                className="chip min-h-11"
               >
                 {label} <span className="num text-xs">{count}</span>
               </Link>
@@ -181,11 +182,11 @@ export default async function PatientPage({
         {visibleTasks.length === 0 && <p className="card px-4 py-8 text-center text-muted">אין משימות בסטטוס הזה.</p>}
         <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
           {visibleTasks.map((t) => (
-            <div key={t.id} className="px-4 py-4">
+            <div key={t.id} className={`px-4 py-4 ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{t.title}</p>
+                    <p className="break-words font-medium">{t.title}</p>
                     {!t.mandatory && <span className="pill pill-neutral">רשות</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">
@@ -202,10 +203,10 @@ export default async function PatientPage({
               {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (
                 <div className="mt-3 space-y-1 text-sm">
                   {t.evidence_name && (
-                    <p className="flex items-center gap-2">
+                    <p className="flex items-center gap-2 break-words">
                       <Icon name="file" />
                       {urls.get(t.id) ? (
-                        <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="underline underline-offset-4">{t.evidence_name}</a>
+                        <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center break-all underline underline-offset-4 sm:min-h-0">{t.evidence_name}</a>
                       ) : t.evidence_name}
                     </p>
                   )}

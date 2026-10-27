@@ -24,24 +24,39 @@ export default async function BaseTemplatesPage() {
         תבניות שמרפאה חדשה יכולה להתחיל מהן. כל מרפאה מקבלת עותק משלה, ושינוי כאן לא משפיע על מרפאות קיימות.
       </p>
 
-      <div className="card mt-6 divide-y divide-line">
-        {(templates ?? []).map((t) => {
-          const tasks = (t.template_tasks as { count: number }[])?.[0]?.count ?? 0;
-          return (
-            <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
-              <div>
-                <Link href={`/admin/templates/${t.id}`} className="font-medium hover:underline">{t.name}</Link>
-                <p className="text-sm text-muted">{tasks} משימות{t.procedure ? ` · ${t.procedure}` : ""}</p>
-              </div>
-              <div className="flex gap-2">
-                <Link href={`/admin/templates/new?from=${t.id}`} className="btn btn-sm">שכפול</Link>
-                <Link href={`/admin/templates/${t.id}`} className="btn btn-sm">עריכה</Link>
-              </div>
-            </div>
-          );
-        })}
-        {(templates ?? []).length === 0 && <p className="px-4 py-10 text-center text-muted">אין תבניות בסיס עדיין.</p>}
-      </div>
+      <section aria-labelledby="base-templates-title" className="mt-6">
+        <h2 id="base-templates-title" className="sr-only">רשימת תבניות הבסיס</h2>
+        {(templates ?? []).length === 0 ? (
+          <div className="card px-4 py-10 text-center text-muted">אין תבניות בסיס עדיין.</div>
+        ) : (
+          <ul className="card divide-y divide-line">
+            {(templates ?? []).map((t) => {
+              const tasks = (t.template_tasks as { count: number }[])?.[0]?.count ?? 0;
+              const tasksLabel = tasks === 1 ? "משימה אחת" : `${tasks} משימות`;
+              return (
+                <li key={t.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/admin/templates/${t.id}`}
+                      className="block break-words font-medium hover:underline focus-visible:underline"
+                    >
+                      {t.name}
+                    </Link>
+                    <p className="break-words text-sm text-muted">
+                      <span className="num">{tasksLabel}</span>
+                      {t.procedure ? ` · ${t.procedure}` : ""}
+                    </p>
+                  </div>
+                  <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex">
+                    <Link href={`/admin/templates/new?from=${t.id}`} className="btn btn-sm min-h-11" aria-label={`שכפול התבנית ${t.name}`}>שכפול</Link>
+                    <Link href={`/admin/templates/${t.id}`} className="btn btn-sm min-h-11" aria-label={`עריכת התבנית ${t.name}`}>עריכה</Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }

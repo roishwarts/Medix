@@ -8,6 +8,7 @@ export type CaregiverItem = { id: string; name: string; relation: string; canAct
 export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; isPatient: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [confirming, setConfirming] = useState<string | null>(null);
 
   const run = (fn: () => Promise<{ error?: string }>) => {
     setError(null);
@@ -17,7 +18,14 @@ export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; is
     });
   };
 
-  if (items.length === 0) return <p className="card px-4 py-6 text-center text-muted">אין בני משפחה מקושרים.</p>;
+  if (items.length === 0) {
+    return (
+      <div className="card px-4 py-6 text-center">
+        <p className="text-muted">אין בני משפחה מקושרים.</p>
+        <p className="mt-1 text-sm text-muted">אפשר להזמין בן משפחה בטופס שמתחת.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -37,10 +45,20 @@ export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; is
                   {c.canAct ? "הגבלה לצפייה" : "מתן הרשאת פעולה"}
                 </button>
               )}
-              <button className="btn btn-danger btn-sm" disabled={pending}
-                onClick={() => { if (confirm(`להסיר את ${c.name}? הגישה תיחסם מיד.`)) run(() => removeCaregiver(c.id)); }}>
-                הסרה
-              </button>
+              {confirming === c.id ? (
+                <>
+                  <button className="btn btn-danger btn-sm" disabled={pending}
+                    onClick={() => { setConfirming(null); run(() => removeCaregiver(c.id)); }}>
+                    להסיר את {c.name}? הגישה תיחסם
+                  </button>
+                  <button className="btn btn-quiet btn-sm" onClick={() => setConfirming(null)}>ביטול</button>
+                </>
+              ) : (
+                <button className="btn btn-danger btn-sm" disabled={pending} aria-label={`הסרת ${c.name}`}
+                  onClick={() => setConfirming(c.id)}>
+                  הסרה
+                </button>
+              )}
             </div>
           </li>
         ))}

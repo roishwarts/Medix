@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { PasswordField } from "@/components/password-field";
+import { useId, useState, useTransition } from "react";
 import { resetUserMfa, resetUserPassword, setUserDisabled } from "../../actions";
 
 export function UserRow({ id, name, username, role, disabled, mfa }: { id: string; name: string; username: string; role: string; disabled: boolean; mfa: boolean }) {
   const [resetting, setResetting] = useState(false);
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
   const [pending, start] = useTransition();
+  const [pw, setPw] = useState("");
+  const pwId = useId();
+
+  function generate() {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const bytes = crypto.getRandomValues(new Uint32Array(12));
+    setPw(Array.from(bytes, (b) => chars[b % chars.length]).join(""));
+  }
 
   function toggle() {
     const next = !disabled;
@@ -34,37 +41,45 @@ export function UserRow({ id, name, username, role, disabled, mfa }: { id: strin
     start(async () => {
       const res = await resetUserPassword(id, String(formData.get("password") ?? ""));
       if (res.error) setMsg({ error: res.error });
-      else { setMsg({ ok: "הסיסמה עודכנה" }); setResetting(false); }
+      else { setMsg({ ok: "הסיסמה עודכנה" }); setResetting(false); setPw(""); }
     });
   }
 
+  const btn = "btn btn-sm min-h-11 max-sm:flex-1 sm:min-h-9";
   return (
-    <div className="px-4 py-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className={`font-medium ${disabled ? "text-muted line-through" : ""}`}>{name}</p>
-          <p className="text-sm text-muted">
-            {role === "doctor" ? "רופא" : "צוות"} · <span dir="ltr" className="num">{username}</span>
-            {disabled && <span className="pill pill-bad ms-2">מושבת</span>}
-            {mfa && <span className="pill pill-ok ms-2">אימות דו-שלבי</span>}
+    <li className="px-4 py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 max-w-full">
+          <p className={`break-words font-medium ${disabled ? "text-muted line-through" : ""}`}>{name}</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+            <span>{role === "doctor" ? "רופא" : "צוות"}</span>
+            <span aria-hidden="true">·</span>
+            <span dir="ltr" className="num break-all">{username}</span>
+            {disabled && <span className="pill pill-bad">מושבת</span>}
+            {mfa && <span className="pill pill-ok">אימות דו-שלבי</span>}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {mfa && <button className="btn btn-sm" disabled={pending} onClick={resetMfa}>איפוס אימות דו-שלבי</button>}
-          <button className="btn btn-sm" disabled={pending} onClick={() => { setResetting(!resetting); setMsg(null); }}>איפוס סיסמה</button>
-          <button className={`btn btn-sm ${disabled ? "" : "btn-danger"}`} disabled={pending} onClick={toggle}>
+        <div className="flex flex-wrap gap-2 max-sm:w-full">
+          {mfa && <button className={btn} disabled={pending} onClick={resetMfa}>איפוס אימות דו-שלבי</button>}
+          <button className={btn} disabled={pending} aria-expanded={resetting} onClick={() => { setResetting(!resetting); setMsg(null); }}>איפוס סיסמה</button>
+          <button className={`${btn} ${disabled ? "" : "btn-danger"}`} disabled={pending} onClick={toggle}>
             {disabled ? "הפעלה מחדש" : "השבתה"}
           </button>
         </div>
       </div>
       {resetting && (
-        <form action={reset} className="mt-3 flex max-w-md items-end gap-2">
-          <div className="flex-1"><PasswordField label="סיסמה חדשה" /></div>
-          <button className="btn btn-primary btn-sm mb-0.5" disabled={pending}>שמירה</button>
+        <form action={reset} className="mt-3 max-w-md">
+          <label htmlFor={pwId} className="lbl">סיסמה חדשה <span className="font-normal text-muted">(לפחות 8 תווים)</span></label>
+          <div className="flex gap-2">
+            <input id={pwId} name="password" className="field min-w-0" dir="ltr" minLength={8} value={pw}
+              onChange={(e) => setPw(e.target.value)} autoComplete="off" required />
+            <button type="button" className="btn btn-sm min-h-11 shrink-0" onClick={generate}>יצירה</button>
+            <button className="btn btn-primary btn-sm min-h-11 shrink-0" disabled={pending}>{pending ? "שומר…" : "שמירה"}</button>
+          </div>
         </form>
       )}
       {msg?.error && <p role="alert" className="mt-2 text-sm text-bad">{msg.error}</p>}
-      {msg?.ok && <p className="mt-2 text-sm text-ok">{msg.ok}</p>}
-    </div>
+      {msg?.ok && <p role="status" className="mt-2 text-sm text-ok">{msg.ok}</p>}
+    </li>
   );
 }

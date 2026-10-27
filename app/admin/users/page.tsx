@@ -84,14 +84,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       <h1 className="display mt-1 text-4xl">משתמשים</h1>
       <p className="mt-2 text-muted">לחיצה על משתמש פותחת את המערכת כפי שהוא רואה אותה, בקריאה בלבד. ניהול משתמשי צוות נעשה בכרטיס המרפאה.</p>
 
-      <form className="mt-6 flex gap-2">
+      <form role="search" className="mt-6 flex gap-2">
         {active !== "all" && <input type="hidden" name="role" value={active} />}
-        <input name="q" defaultValue={q} className="field" placeholder="חיפוש לפי שם, שם משתמש או מרפאה" aria-label="חיפוש משתמשים" />
-        <button className="btn btn-sm shrink-0 self-center">חיפוש</button>
-        {q && <Link href={active === "all" ? "/admin/users" : `/admin/users?role=${active}`} className="btn btn-quiet btn-sm shrink-0 self-center">ניקוי</Link>}
+        <input name="q" type="search" enterKeyHint="search" autoComplete="off" defaultValue={q} className="field min-w-0 flex-1" placeholder="שם, שם משתמש או מרפאה" aria-label="חיפוש משתמשים" />
+        <button className="btn btn-sm min-h-11 shrink-0 self-center">חיפוש</button>
+        {q && <Link href={active === "all" ? "/admin/users" : `/admin/users?role=${active}`} className="btn btn-quiet btn-sm min-h-11 shrink-0 self-center">ניקוי</Link>}
       </form>
 
-      <nav aria-label="סינון לפי תפקיד" className="chip-row mt-4">
+      <nav aria-label="סינון לפי תפקיד" className="chip-row mt-4 flex-wrap! overflow-visible!">
         {FILTERS.map(([key, label]) => (
           <Link key={key} href={href(key)} scroll={false} aria-current={key === active ? "page" : undefined} className="chip">
             {label} <span className="num text-xs">{count(key)}</span>
@@ -99,30 +99,31 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         ))}
       </nav>
 
+      <p className="sr-only" role="status" aria-live="polite">{shown.length === 0 ? "אין משתמשים שמתאימים" : `מוצגים ${shown.length} משתמשים`}</p>
       <ul className="card mt-2 divide-y divide-line">
         {shown.map((r) => {
           const body = (
-            <>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className={`font-medium ${r.disabled ? "text-muted line-through" : ""}`}>{r.name}</span>
+                <span className={`min-w-0 break-words font-medium ${r.disabled ? "text-muted line-through" : ""}`}>{r.name}</span>
                 <span className={`pill ${ROLE_PILL[r.role]}`}>{ROLE_LABEL[r.role]}</span>
                 {r.disabled && <span className="pill pill-bad">מושבת</span>}
               </div>
-              <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
-                {r.clinic !== "—" && <span>{r.clinic}</span>}
-                {r.username && <span dir="ltr" className="num">{r.username}</span>}
+              <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted">
+                {r.clinic !== "—" && <span className="break-words">{r.clinic}</span>}
+                {r.username && <span dir="ltr" className="num break-all">{r.username}</span>}
                 <span>{r.last ? `כניסה אחרונה ${dmy(r.last)}` : "טרם נכנס"}</span>
               </p>
-            </>
+            </div>
           );
           // Tapping a user opens the system as they see it. Admins and disabled users cannot be opened.
           return r.role === "admin" || r.disabled ? (
-            <li key={r.id} className="px-4 py-3">{body}</li>
+            <li key={r.id} className="flex items-center gap-3 px-4 py-3">{body}</li>
           ) : (
             <ViewAsRow key={r.id} id={r.id} name={r.name}>{body}</ViewAsRow>
           );
         })}
-        {shown.length === 0 && <li className="px-4 py-8 text-center text-muted">אין משתמשים שמתאימים.</li>}
+        {shown.length === 0 && <li className="px-4 py-10 text-center text-muted">אין משתמשים שמתאימים{q ? " לחיפוש" : ""}.</li>}
       </ul>
     </main>
   );
