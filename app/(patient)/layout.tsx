@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
-import { LogoutButton } from "@/components/ui";
+import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { NavLink } from "@/components/nav-link";
 

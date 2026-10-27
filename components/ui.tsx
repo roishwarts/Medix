@@ -1,5 +1,3 @@
-import { logout } from "@/app/login/actions";
-import { getImpersonation } from "@/lib/impersonation";
 import type { Readiness, TaskState } from "@/lib/journey";
 
 export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "alert" | "arrow" | "file" | "plus" | "trash" | "up" | "down"; size?: number }) {
@@ -16,15 +14,6 @@ export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "
     case "up": return <svg {...common}><path d="M4 10l4-4 4 4" /></svg>;
     case "down": return <svg {...common}><path d="M4 6l4 4 4-4" /></svg>;
   }
-}
-
-export async function LogoutButton() {
-  if (await getImpersonation()) return <a href="/impersonate/exit" className="btn btn-quiet btn-sm">חזרה לניהול</a>;
-  return (
-    <form action={logout}>
-      <button className="btn btn-quiet btn-sm">יציאה</button>
-    </form>
-  );
 }
 
 export function ReadinessBar({ value, state }: { value: number; state: Readiness }) {

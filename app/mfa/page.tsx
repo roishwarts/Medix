@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAal, getProfile, needsSecondFactor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "@/components/ui";
+import { LogoutButton } from "@/components/logout-button";
 import { MfaForm } from "./form";
 
 export const dynamic = "force-dynamic";

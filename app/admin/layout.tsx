@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/admin";
-import { LogoutButton } from "@/components/ui";
+import { LogoutButton } from "@/components/logout-button";
 import { NavLink } from "@/components/nav-link";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
