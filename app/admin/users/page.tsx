@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
+import { ViewAsRow } from "./view-as-row";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +82,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <main>
       <p className="eyebrow">{rows.length} משתמשים</p>
       <h1 className="display mt-1 text-4xl">משתמשים</h1>
-      <p className="mt-2 text-muted">תצוגה בלבד של כל המשתמשים במערכת. ניהול משתמשי צוות נעשה בכרטיס המרפאה.</p>
+      <p className="mt-2 text-muted">לחיצה על משתמש פותחת את המערכת כפי שהוא רואה אותה, בקריאה בלבד. ניהול משתמשי צוות נעשה בכרטיס המרפאה.</p>
 
       <form className="mt-6 flex gap-2">
         {active !== "all" && <input type="hidden" name="role" value={active} />}
@@ -99,20 +100,28 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       </nav>
 
       <ul className="card mt-2 divide-y divide-line">
-        {shown.map((r) => (
-          <li key={r.id} className="px-4 py-3">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className={`font-medium ${r.disabled ? "text-muted line-through" : ""}`}>{r.name}</span>
-              <span className={`pill ${ROLE_PILL[r.role]}`}>{ROLE_LABEL[r.role]}</span>
-              {r.disabled && <span className="pill pill-bad">מושבת</span>}
-            </div>
-            <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
-              {r.clinic !== "—" && <span>{r.clinic}</span>}
-              {r.username && <span dir="ltr" className="num">{r.username}</span>}
-              <span>{r.last ? `כניסה אחרונה ${dmy(r.last)}` : "טרם נכנס"}</span>
-            </p>
-          </li>
-        ))}
+        {shown.map((r) => {
+          const body = (
+            <>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className={`font-medium ${r.disabled ? "text-muted line-through" : ""}`}>{r.name}</span>
+                <span className={`pill ${ROLE_PILL[r.role]}`}>{ROLE_LABEL[r.role]}</span>
+                {r.disabled && <span className="pill pill-bad">מושבת</span>}
+              </div>
+              <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
+                {r.clinic !== "—" && <span>{r.clinic}</span>}
+                {r.username && <span dir="ltr" className="num">{r.username}</span>}
+                <span>{r.last ? `כניסה אחרונה ${dmy(r.last)}` : "טרם נכנס"}</span>
+              </p>
+            </>
+          );
+          // Tapping a user opens the system as they see it. Admins and disabled users cannot be opened.
+          return r.role === "admin" || r.disabled ? (
+            <li key={r.id} className="px-4 py-3">{body}</li>
+          ) : (
+            <ViewAsRow key={r.id} id={r.id} name={r.name}>{body}</ViewAsRow>
+          );
+        })}
         {shown.length === 0 && <li className="px-4 py-8 text-center text-muted">אין משתמשים שמתאימים.</li>}
       </ul>
     </main>

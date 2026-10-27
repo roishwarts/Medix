@@ -25,6 +25,18 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = isLogin || path.startsWith("/invite/") || path.startsWith("/join/") || path.startsWith("/reset/") || path.startsWith("/forgot");
 
+  // "View as" mode is read-only: every write (a POST, i.e. a server action) is refused.
+  if (signedIn && request.method === "POST" && !isLogin) {
+    const raw = request.cookies.get("medix_view_as")?.value;
+    try {
+      const body = raw?.split(".")[0];
+      const target = body ? JSON.parse(atob(body.replace(/-/g, "+").replace(/_/g, "/"))).target : null;
+      if (target && target === data?.claims?.sub) return new NextResponse("מצב צפייה בלבד", { status: 403 });
+    } catch {
+      // A malformed cookie is simply ignored.
+    }
+  }
+
   if (!signedIn && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
