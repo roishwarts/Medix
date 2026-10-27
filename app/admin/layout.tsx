@@ -11,6 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <nav className="flex min-w-0 gap-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <NavLink href="/admin" exact>מרפאות</NavLink>
             <NavLink href="/admin/templates">תבניות בסיס</NavLink>
+            <NavLink href="/admin/users">משתמשים</NavLink>
             <NavLink href="/admin/dev-tasks">משימות פיתוח</NavLink>
           </nav>
           <div className="flex items-center gap-2">
