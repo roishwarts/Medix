@@ -60,5 +60,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // The icons, share image and manifest must load without signing in (home screen, WhatsApp previews).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|opengraph-image.png|twitter-image.png|manifest.webmanifest|icon-192.png|icon-512.png).*)"],
 };
