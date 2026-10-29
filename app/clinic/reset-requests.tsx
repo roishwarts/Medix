@@ -12,13 +12,14 @@ export function ResetRequests({ items }: { items: ResetRequestItem[] }) {
   // A request leaves the server's list as soon as its link exists, so keep the row on screen
   // until the page is left; otherwise the send buttons would vanish before they can be used.
   const [kept, setKept] = useState<Record<string, ResetRequestItem>>({});
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const rows = [...items, ...Object.values(kept).filter((k) => !items.some((i) => i.id === k.id))];
   if (rows.length === 0) return null;
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+    <section aria-labelledby="h-resets">
+      <h2 id="h-resets" className="mb-3 flex items-baseline gap-2 text-lg font-medium">
         בקשות איפוס סיסמה <span className="num text-sm text-muted">{rows.length}</span>
       </h2>
       <div className="card divide-y divide-line">
@@ -27,17 +28,17 @@ export function ResetRequests({ items }: { items: ResetRequestItem[] }) {
           return (
             <div key={r.id} className="space-y-3 px-4 py-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">{r.name}</p>
-                  <p className="text-sm text-muted">{r.role === "caregiver" ? "בן משפחה" : "מטופל"} · {r.when}</p>
+                <div className="min-w-0">
+                  <p className="break-words font-medium">{r.name}</p>
+                  <p className="text-sm text-muted">{r.role === "caregiver" ? "בן משפחה" : "מטופל"} · בקשה מתאריך {r.when}</p>
                 </div>
                 {!res?.link && (
                   <button
-                    className="btn btn-sm"
+                    className="btn btn-sm min-h-11"
                     disabled={pending}
-                    onClick={() => start(async () => { const out = await createResetLinkFromRequest(r.id); setResults((m) => ({ ...m, [r.id]: out })); if (out.link) setKept((m) => ({ ...m, [r.id]: r })); })}
+                    onClick={() => { setBusyId(r.id); start(async () => { const out = await createResetLinkFromRequest(r.id); setResults((m) => ({ ...m, [r.id]: out })); if (out.link) setKept((m) => ({ ...m, [r.id]: r })); setBusyId(null); }); }}
                   >
-                    {pending ? "יוצר…" : "יצירת קישור לאיפוס"}
+                    {pending && busyId === r.id ? "יוצר…" : "יצירת קישור לאיפוס"}
                   </button>
                 )}
               </div>

@@ -43,14 +43,14 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
       <h1 className="display mt-1 text-4xl">משימות פיתוח</h1>
       <p className="mt-2 text-muted">רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.</p>
 
-      <nav aria-label="סינון משימות לפי סטטוס" className="chip-row mt-6">
+      <nav aria-label="סינון משימות לפי סטטוס" className="chip-row mt-6 flex-wrap overflow-visible">
         {FILTERS.map(([key, label]) => (
           <Link
             key={key}
             href={key === "all" ? "/admin/dev-tasks" : `/admin/dev-tasks?status=${key}`}
             scroll={false}
             aria-current={key === active ? "page" : undefined}
-            className="chip"
+            className="chip min-h-11"
           >
             {label} <span className="num text-xs">{count(key)}</span>
           </Link>
@@ -58,6 +58,9 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
       </nav>
 
       <div className="mt-2 space-y-5">
+        {active !== "all" && count(active) === 0 && (subjects ?? []).length > 0 && (
+          <p className="card px-4 py-8 text-center text-muted">אין משימות בסטטוס הזה.</p>
+        )}
         {(subjects ?? []).map((s) => {
           const mine = all.filter((t) => t.subject_id === s.id);
           const shown = active === "all" ? mine : mine.filter((t) => t.status === active);

@@ -9,24 +9,23 @@ export type Profile = {
   full_name: string;
   clinic_name: string;
   mfa_required: boolean;
+  clinic_address: string | null;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
 
-// The signed-in user's id, read from the verified session token. This avoids a round trip to the
-// auth server on every request when the project signs tokens with asymmetric keys.
-export const getAuthUserId = cache(async (): Promise<string | null> => {
+// The verified session claims, read once per request. With asymmetric signing keys this needs no network call.
+const getClaimsOnce = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  return data?.claims?.sub ?? null;
+  return (data?.claims ?? null) as { sub?: string; aal?: string } | null;
 });
 
+// The signed-in user's id, read from the verified session token.
+export const getAuthUserId = cache(async (): Promise<string | null> => (await getClaimsOnce())?.sub ?? null);
+
 // Authenticator assurance level of this session: "aal2" once the second factor has been verified.
-export const getAal = cache(async (): Promise<string> => {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  return String((data?.claims as { aal?: string } | undefined)?.aal ?? "aal1");
-});
+export const getAal = cache(async (): Promise<string> => String((await getClaimsOnce())?.aal ?? "aal1"));
 
 export const getProfile = cache(async (): Promise<Profile | null> => {
   const userId = await getAuthUserId();
@@ -38,7 +37,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     .eq("id", userId)
     .maybeSingle();
   if (!data || data.disabled) return null;
-  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string; mfa_required?: boolean } | null;
+  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string; mfa_required?: boolean; address?: string | null } | null;
   return {
     id: data.id,
     clinic_id: data.clinic_id,
@@ -46,6 +45,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     full_name: data.full_name,
     clinic_name: clinic?.name ?? "",
     mfa_required: !!clinic?.mfa_required,
+    clinic_address: clinic?.address ?? null,
   };
 });
 

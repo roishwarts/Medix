@@ -17,13 +17,13 @@ export function InvitationPanel({ patientId, joined }: { patientId: string; join
   return (
     <div className="card mt-4 space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-medium">{joined ? "המטופל הצטרף ויש לו משתמש" : "ממתין להצטרפות"}</p>
           <p className="text-sm text-muted">
             {joined ? "אם המטופל שכח סיסמה, אפשר לשלוח לו קישור לאיפוס." : "המטופל עדיין לא יצר משתמש. אפשר לשלוח לו קישור הזמנה."}
           </p>
         </div>
-        <button className="btn btn-sm" onClick={run} disabled={pending}>
+        <button className="btn btn-sm min-h-11 w-full sm:min-h-9 sm:w-auto" onClick={run} disabled={pending}>
           {pending ? "יוצר…" : joined ? "שליחת קישור לאיפוס סיסמה" : "שליחת הזמנה (קישור חדש)"}
         </button>
       </div>

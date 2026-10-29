@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LOGIN_DOMAIN } from "@/lib/auth";
@@ -17,11 +18,13 @@ export async function login(_: { error?: string } | undefined, formData: FormDat
   if (error) {
     return { error: /banned/i.test(error.message) ? "החשבון הושבת. יש לפנות למנהל." : "שם משתמש או סיסמה שגויים" };
   }
+  (await cookies()).delete("medix_view_as");
   redirect("/");
 }
 
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  (await cookies()).delete("medix_view_as");
   redirect("/login");
 }

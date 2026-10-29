@@ -58,12 +58,15 @@ export default async function BaseTemplatePage({
   }
 
   return (
-    <main className="max-w-3xl">
+    <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
       <Link href="/admin/templates" className="back-link">
         <Icon name="arrow" size={14} /> כל תבניות הבסיס
       </Link>
       <p className="eyebrow">תבנית בסיס</p>
-      <h1 className="display mt-1 text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
+      <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        תבנית בסיס היא נקודת מוצא שמרפאות מעתיקות ומתאימות. הגדירו את המשימות, מי אחראי עליהן, מתי הן מתבצעות ביחס ליום הניתוח ומה צריך להסתיים לפניהן.
+      </p>
       <TemplateForm
         key={id + (from ?? "")}
         templateId={isNew ? null : id}

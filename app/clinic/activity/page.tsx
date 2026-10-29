@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getImpersonation } from "@/lib/impersonation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityList } from "@/components/activity-list";
@@ -45,22 +46,25 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
 
   return (
     <main>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-4xl">עדכונים</h1>
-        <form className="flex items-end gap-2" action="/clinic/activity">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div>
+          <h1 className="display text-4xl">עדכונים</h1>
+          <p className="mt-1 text-muted">מה קרה אצל המטופלים, בני המשפחה והצוות.</p>
+        </div>
+        <form className="flex w-full items-end gap-2 sm:w-auto" action="/clinic/activity" role="search" aria-label="סינון לפי מטופל">
           {group.key !== "all" && <input type="hidden" name="type" value={group.key} />}
-          <div>
+          <div className="min-w-0 flex-1 sm:flex-none">
             <label htmlFor="patient" className="lbl">מטופל</label>
-            <select id="patient" name="patient" defaultValue={sp.patient ?? ""} className="field">
+            <select id="patient" name="patient" defaultValue={sp.patient ?? ""} className="field w-full sm:w-64">
               <option value="">כל המטופלים</option>
               {(patients ?? []).map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
             </select>
           </div>
-          <button className="btn btn-sm mb-0.5">סינון</button>
+          <button className="btn btn-sm min-h-11 shrink-0">סינון</button>
         </form>
-      </div>
+      </header>
 
-      <nav aria-label="סינון עדכונים" className="chip-row mt-6">
+      <nav aria-label="סינון עדכונים לפי סוג" className="chip-row mt-6 flex-wrap">
         {GROUPS.map((g) => {
           const on = g.key === group.key;
           return (
@@ -69,7 +73,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
               href={tabHref(g.key)}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className="chip"
+              className="chip min-h-11"
             >
               {g.label}
             </Link>
@@ -77,8 +81,9 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         })}
       </nav>
 
-      <ActivityList items={items} markSeen />
-      {items.length >= 150 && <p className="mt-3 text-center text-sm text-muted">מוצגים 150 העדכונים האחרונים.</p>}
+      {/* An admin viewing as this person must not clear their unread markers. */}
+      <ActivityList items={items} markSeen={!(await getImpersonation())} />
+      {items.length >= 150 && <p role="status" className="mt-3 text-center text-sm text-muted">מוצגים 150 העדכונים האחרונים.</p>}
     </main>
   );
 }

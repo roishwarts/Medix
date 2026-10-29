@@ -54,15 +54,15 @@ export function TemplateForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="lbl" htmlFor="name">שם התבנית</label>
-          <input id="name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="למשל: החלפת ברך – פרוטוקול ד״ר כהן" />
+          <input id="name" autoComplete="off" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="למשל: החלפת ברך – פרוטוקול ד״ר כהן" />
         </div>
         <div>
           <label className="lbl" htmlFor="procedure">פרוצדורה</label>
-          <input id="procedure" className="field" value={procedure} onChange={(e) => setProcedure(e.target.value)} />
+          <input id="procedure" autoComplete="off" className="field" value={procedure} onChange={(e) => setProcedure(e.target.value)} />
         </div>
         <div className="sm:col-span-2">
           <label className="lbl" htmlFor="desc">תיאור</label>
-          <input id="desc" className="field" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <input id="desc" autoComplete="off" className="field" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
       </div>
 
@@ -71,8 +71,8 @@ export function TemplateForm({
       <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-5 py-4 backdrop-blur">
         <button className="btn btn-primary" onClick={save} disabled={pending}>{pending ? "שומר…" : "שמירת תבנית"}</button>
         {templateId && <button className="btn btn-danger btn-sm" onClick={remove} disabled={pending}>מחיקה</button>}
-        {saved && <span className="text-sm text-ok">נשמר</span>}
-        {error && <span role="alert" className="text-sm text-bad">{error}</span>}
+        {saved && <span role="status" className="text-sm text-ok">נשמר</span>}
+        {error && <span role="alert" className="basis-full text-sm text-bad sm:basis-auto">{error}</span>}
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
 import { MfaToggle } from "./mfa-toggle";
 import { ClinicOptions } from "./clinic-options";
+import { ClinicAddress } from "./clinic-address";
 
 export const dynamic = "force-dynamic";
 
@@ -34,48 +35,61 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
     }),
   );
 
+  const h2 = "display mb-3 text-xl";
+  const note = "mt-3 text-sm text-muted";
   return (
     <main>
       <Link href="/admin" className="back-link">
         <Icon name="arrow" size={14} /> כל המרפאות
       </Link>
-      <h1 className="display text-4xl">{clinic.name}</h1>
+      <h1 className="display break-words text-3xl sm:text-4xl">{clinic.name}</h1>
       <p className="mt-1 text-muted">
-        נוצרה {israelParts(clinic.created_at).date.split("-").reverse().join(".")} · <span className="num">{patientCount ?? 0}</span> מטופלים
+        נוצרה <span className="num">{israelParts(clinic.created_at).date.split("-").reverse().join(".")}</span> · <span className="num">{patientCount ?? 0}</span> מטופלים
       </p>
 
-      <section className="mt-8">
+      <section className="mt-8" aria-labelledby="address-h">
+        <h2 id="address-h" className="display mb-3 text-xl">מיקום המרפאה</h2>
+        <ClinicAddress clinicId={id} initial={clinic.address ?? ""} />
+      </section>
+
+      <section className="mt-10" aria-label="אימות דו-שלבי">
         <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
       </section>
 
-      <section className="mt-10">
-        <h2 className="eyebrow mb-3">בתי חולים וחברות</h2>
+      <section className="mt-10" aria-labelledby="options-h">
+        <h2 id="options-h" className={h2}>בתי חולים וחברות</h2>
         <ClinicOptions
           clinicId={id}
           hospitals={(options ?? []).filter((o) => o.kind === "hospital")}
           companies={(options ?? []).filter((o) => o.kind === "company")}
         />
-        <p className="mt-2 text-xs text-muted">הרופא והצוות בוחרים מהרשימות האלה לכל מטופל: באיזה בית חולים הפרוצדורה, ועם איזו חברה עובדים.</p>
+        <p className={note}>הרופא והצוות בוחרים מהרשימות האלה לכל מטופל: באיזה בית חולים הפרוצדורה, ועם איזו חברה עובדים.</p>
       </section>
 
-      <section className="mt-10">
-        <h2 className="eyebrow mb-3">משתמשי צוות</h2>
-        <div className="card divide-y divide-line">
-          {users.map((u) => (
-            <UserRow key={u.id} id={u.id} name={u.full_name} username={u.username} role={u.role} disabled={u.disabled} mfa={u.mfa} />
-          ))}
-          {users.length === 0 && <p className="px-4 py-6 text-center text-muted">אין משתמשים.</p>}
-        </div>
+      <section className="mt-10" aria-labelledby="users-h">
+        <h2 id="users-h" className={h2}>משתמשי צוות</h2>
+        {users.length > 0 ? (
+          <ul className="card divide-y divide-line">
+            {users.map((u) => (
+              <UserRow key={u.id} id={u.id} name={u.full_name} username={u.username} role={u.role} disabled={u.disabled} mfa={u.mfa} />
+            ))}
+          </ul>
+        ) : (
+          <p className="card px-4 py-6 text-center text-muted">אין משתמשים.</p>
+        )}
         <AddUserForm clinicId={id} />
       </section>
 
-      <section className="mt-10">
-        <h2 className="eyebrow mb-3">תבניות של המרפאה</h2>
-        <div className="card divide-y divide-line">
-          {(templates ?? []).map((t) => <p key={t.id} className="px-4 py-3">{t.name}</p>)}
-          {(templates ?? []).length === 0 && <p className="px-4 py-6 text-center text-muted">אין תבניות.</p>}
-        </div>
-        <p className="mt-2 text-xs text-muted">הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.</p>
+      <section className="mt-10" aria-labelledby="templates-h">
+        <h2 id="templates-h" className={h2}>תבניות של המרפאה</h2>
+        {(templates ?? []).length > 0 ? (
+          <ul className="card divide-y divide-line">
+            {(templates ?? []).map((t) => <li key={t.id} className="break-words px-4 py-3">{t.name}</li>)}
+          </ul>
+        ) : (
+          <p className="card px-4 py-6 text-center text-muted">אין תבניות.</p>
+        )}
+        <p className={note}>הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.</p>
         <AddTemplate clinicId={id} bases={bases ?? []} />
       </section>
     </main>

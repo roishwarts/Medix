@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
-import { LogoutButton } from "@/components/ui";
+import { LogoutButton } from "@/components/logout-button";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { NavLink } from "@/components/nav-link";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,6 +15,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const clinicName = await getClinicName();
   return (
     <div className="min-h-dvh pb-16">
+      <ImpersonationBanner />
       <div className="topbar">
         <div className="mx-auto w-full max-w-5xl px-5">
           <div className="flex items-center justify-between gap-3">

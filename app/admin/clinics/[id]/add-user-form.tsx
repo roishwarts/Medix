@@ -7,12 +7,12 @@ import { addClinicUser } from "../../actions";
 export function AddUserForm({ clinicId }: { clinicId: string }) {
   const [state, action, pending] = useActionState(addClinicUser.bind(null, clinicId), undefined);
   return (
-    <details className="card mt-3">
-      <summary className="cursor-pointer px-4 py-3 font-medium">הוספת משתמש</summary>
-      <form action={action} className="grid gap-4 border-t border-line p-4 sm:grid-cols-2">
+    <details className="fold mt-3">
+      <summary><span className="font-medium">הוספת משתמש</span></summary>
+      <form action={action} className="card mt-2 grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
         <div>
           <label htmlFor="full_name" className="lbl">שם מלא</label>
-          <input id="full_name" name="full_name" className="field" required />
+          <input id="full_name" name="full_name" className="field" autoComplete="off" required />
         </div>
         <div>
           <label htmlFor="role" className="lbl">תפקיד</label>
@@ -23,13 +23,17 @@ export function AddUserForm({ clinicId }: { clinicId: string }) {
         </div>
         <div>
           <label htmlFor="username" className="lbl">שם משתמש</label>
-          <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" required />
+          <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" required />
+          <p className="mt-1 text-sm text-muted">3–30 תווים באנגלית, מספרים או <bdi dir="ltr">. _ -</bdi></p>
         </div>
-        <PasswordField label="סיסמה זמנית" />
-        <div className="flex items-center gap-3 sm:col-span-2">
-          <button className="btn btn-primary btn-sm" disabled={pending}>{pending ? "מוסיף…" : "הוספה"}</button>
-          {state?.error && <span role="alert" className="text-sm text-bad">{state.error}</span>}
-          {state?.ok && <span className="text-sm text-ok">{state.ok}</span>}
+        <div>
+          <PasswordField label="סיסמה זמנית" />
+          <p className="mt-1 text-sm text-muted">לפחות 8 תווים</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+          <button className="btn btn-primary min-h-11 max-sm:w-full" disabled={pending}>{pending ? "מוסיף…" : "הוספה"}</button>
+          {state?.error && <p role="alert" className="text-sm text-bad">{state.error}</p>}
+          {state?.ok && <p role="status" className="text-sm text-ok">{state.ok}</p>}
         </div>
       </form>
     </details>

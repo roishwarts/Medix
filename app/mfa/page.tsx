@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAal, getProfile, needsSecondFactor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "@/components/ui";
+import { LogoutButton } from "@/components/logout-button";
+import { Icon } from "@/components/ui";
 import { MfaForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -22,15 +23,23 @@ export default async function MfaPage() {
   const factor = data?.totp?.[0] ?? null;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6 py-12">
-      <h1 className="display text-3xl">אימות דו-שלבי</h1>
-      <p className="mb-6 mt-2 text-muted">
-        {factor
-          ? "הזינו את הקוד בן 6 הספרות מאפליקציית האימות בטלפון."
-          : "המרפאה דורשת אימות דו-שלבי. מחברים פעם אחת אפליקציית אימות, ובכל כניסה מזינים קוד קצר."}
-      </p>
-      <MfaForm factorId={factor?.id ?? null} />
-      <div className="mt-6 flex justify-center">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
+      <div className="card p-5 sm:p-8">
+        <div className="mb-4 flex items-center gap-2 text-muted">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent">
+            <Icon name="lock" size={16} />
+          </span>
+          {profile.clinic_name && <span className="eyebrow">{profile.clinic_name}</span>}
+        </div>
+        <h1 className="display text-3xl">אימות דו-שלבי</h1>
+        <p className="mb-6 mt-1.5 text-muted">
+          {factor
+            ? "הזינו את הקוד בן 6 הספרות מאפליקציית האימות בטלפון."
+            : "המרפאה דורשת אימות דו-שלבי. מחברים פעם אחת אפליקציית אימות, ובכל כניסה מזינים קוד קצר."}
+        </p>
+        <MfaForm factorId={factor?.id ?? null} />
+      </div>
+      <div className="mt-3 flex justify-center [&_.btn]:min-h-11 [&_.btn]:px-5">
         <LogoutButton />
       </div>
     </main>
