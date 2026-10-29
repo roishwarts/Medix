@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const VIEW_ONLY_MESSAGE = "אתה במצב צפייה כמנהל, ולכן אי אפשר לערוך פרטים.";
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -31,7 +33,12 @@ export async function proxy(request: NextRequest) {
     try {
       const body = raw?.split(".")[0];
       const target = body ? JSON.parse(atob(body.replace(/-/g, "+").replace(/_/g, "/"))).target : null;
-      if (target && target === data?.claims?.sub) return new NextResponse("מצב צפייה בלבד", { status: 403 });
+      if (target && target === data?.claims?.sub) {
+        // Answer in the format a server action expects, so the page shows a message instead of an error page:
+        // the action "returns" { error }, and the header tells the client to open the explanation popup.
+        const flight = `0:{"a":"$@1"}\n1:${JSON.stringify({ error: VIEW_ONLY_MESSAGE })}\n`;
+        return new NextResponse(flight, { status: 200, headers: { "content-type": "text/x-component", "x-view-as-blocked": "1" } });
+      }
     } catch {
       // A malformed cookie is simply ignored.
     }

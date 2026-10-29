@@ -10,9 +10,12 @@ type Search = { q?: string; notReady?: string; days?: string; past?: string };
 
 export default async function PatientsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const all = await loadJourneys();
-  // Separate query so the list still works before the hospital/company patch is applied.
-  const { data: placements } = await (await createClient()).from("patients").select("id, hospital, company");
+  const supabase = await createClient();
+  const [all, { data: placements }] = await Promise.all([
+    loadJourneys(),
+    // Separate query so the list still works before the hospital/company patch is applied.
+    supabase.from("patients").select("id, hospital, company"),
+  ]);
   const placeOf = new Map((placements ?? []).map((p) => [p.id as string, p as { hospital: string | null; company: string | null }]));
   const t = today();
   const days = sp.days ? Number(sp.days) : null;

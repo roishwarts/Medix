@@ -24,6 +24,9 @@
   --font-display: var(--font-rubik), system-ui, sans-serif;
 }
 
+/* Taps register at once on phones (no double-tap-to-zoom wait). */
+a, button, summary, label, input, select, textarea, [role="button"], [role="switch"] { touch-action: manipulation; }
+
 html {
   background: var(--color-page);
   color: var(--color-ink);

@@ -15,7 +15,10 @@ function StatusDot({ status }: { status: DevStatus }) {
   return <span className="block size-6 rounded-full border-2 border-line-strong" />;
 }
 
-function TaskRow({ task }: { task: DevTask }) {
+function TaskRow({ task: serverTask }: { task: DevTask }) {
+  // Shows the new status at once; the server confirms a moment later.
+  const [optimistic, setOptimistic] = useState<DevStatus | null>(null);
+  const task = optimistic ? { ...serverTask, status: optimistic } : serverTask;
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -53,7 +56,7 @@ function TaskRow({ task }: { task: DevTask }) {
           className="-my-1 -ms-2 grid size-11 shrink-0 place-items-center rounded-full disabled:opacity-60" disabled={pending}
           aria-label={`${LABEL[task.status]}, לחיצה תעביר ל${LABEL[NEXT[task.status]]}`}
           title={`${LABEL[task.status]} ← ${LABEL[NEXT[task.status]]}`}
-          onClick={() => run(() => setTaskStatus(task.id, NEXT[task.status]))}
+          onClick={() => { const next = NEXT[task.status]; setOptimistic(next); run(async () => { const res = await setTaskStatus(task.id, next); setOptimistic(null); return res; }); }}
         >
           <StatusDot status={task.status} />
         </button>

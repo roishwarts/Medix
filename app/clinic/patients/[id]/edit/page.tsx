@@ -12,13 +12,14 @@ import { JourneyEditForm } from "./form";
 export const dynamic = "force-dynamic";
 
 export default async function EditJourneyPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireProfile(["staff", "doctor"]);
   const { id } = await params;
-  const journey = await loadJourney(id);
-  if (!journey) notFound();
-
   const supabase = await createClient();
-  const { data } = await supabase.from("journey_tasks").select(TASK_COLUMNS).eq("journey_id", id).order("position");
+  const [, journey, { data }] = await Promise.all([
+    requireProfile(["staff", "doctor"]),
+    loadJourney(id),
+    supabase.from("journey_tasks").select(TASK_COLUMNS).eq("journey_id", id).order("position"),
+  ]);
+  if (!journey) notFound();
   const tasks: EditorTask[] = ((data ?? []) as TaskRow[]).map((r) => ({
     id: r.id,
     title: r.title,

@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
 import { OWNER_LABEL } from "@/lib/journey";
 import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";
-import { Icon, ReadinessBar, TaskStatePill } from "@/components/ui";
+import { Icon, ReadinessBar } from "@/components/ui";
+import { LiveTaskPill } from "@/components/task-optimistic";
 import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
@@ -40,37 +41,51 @@ export default async function PatientPage({
   const { id } = await params;
   const { status } = await searchParams;
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
-  const profile = await requireProfile(["staff", "doctor"]);
-  const journey = await loadJourney(id);
+  const supabase = await createClient();
+  // Everything that does not depend on the journey is fetched together with it.
+  const [profile, journey, options] = await Promise.all([
+    requireProfile(["staff", "doctor"]),
+    loadJourney(id),
+    getClinicOptions(),
+  ]);
+  void profile;
   if (!journey) notFound();
   const { summary } = journey;
   const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
     key === "all" || (key === "overdue" ? t.overdue : t.state === key);
   const visibleTasks = summary.tasks.filter((t) => matches(t, active));
 
-  const supabase = await createClient();
-  const { data: caregivers } = await supabase
-    .from("patient_caregivers")
-    .select("id, user_id, full_name, relation, can_act, created_at")
-    .eq("patient_id", journey.patient_id)
-    .order("created_at");
-  const { data: patientRow } = await supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle();
-  // Separate query so the page still works before the hospital/company patch is applied.
-  const { data: placement } = await supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle();
-  const options = await getClinicOptions();
-  const { data: openInvites } = await supabase
-    .from("caregiver_invites")
-    .select("id, invitee_name, relation, can_act, expires_at")
-    .eq("patient_id", journey.patient_id)
-    .is("used_at", null)
-    .gt("expires_at", new Date().toISOString())
-    .order("created_at", { ascending: false });
-  const { data: historyRows } = await supabase
-    .from("activity_events")
-    .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
-    .eq("patient_id", journey.patient_id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries] = await Promise.all([
+    supabase
+      .from("patient_caregivers")
+      .select("id, user_id, full_name, relation, can_act, created_at")
+      .eq("patient_id", journey.patient_id)
+      .order("created_at"),
+    supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle(),
+    // Separate query so the page still works before the hospital/company patch is applied.
+    supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle(),
+    supabase
+      .from("caregiver_invites")
+      .select("id, invitee_name, relation, can_act, expires_at")
+      .eq("patient_id", journey.patient_id)
+      .is("used_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("activity_events")
+      .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
+      .eq("patient_id", journey.patient_id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    Promise.all(
+      summary.tasks
+        .filter((t) => t.evidence_path)
+        .map(async (t) => {
+          const { data } = await supabase.storage.from("evidence").createSignedUrl(t.evidence_path!, 600);
+          return [t.id, data?.signedUrl] as const;
+        }),
+    ),
+  ]);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     patientNames: new Map(),
     journeyByPatient: new Map([[journey.patient_id, id]]),
@@ -79,14 +94,7 @@ export default async function PatientPage({
   });
   const cgByUser = new Map((caregivers ?? []).map((c) => [c.user_id as string, c]));
   const urls = new Map<string, string>();
-  await Promise.all(
-    summary.tasks
-      .filter((t) => t.evidence_path)
-      .map(async (t) => {
-        const { data } = await supabase.storage.from("evidence").createSignedUrl(t.evidence_path!, 600);
-        if (data?.signedUrl) urls.set(t.id, data.signedUrl);
-      }),
-  );
+  for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
 
   return (
     <main>
@@ -197,7 +205,7 @@ export default async function PatientPage({
                     {t.state === "locked" && ` · ממתין ל: ${t.blockedBy.map((b) => b.title).join(", ")}`}
                   </p>
                 </div>
-                <TaskStatePill state={t.state} overdue={t.overdue} />
+                <LiveTaskPill taskId={t.id} state={t.state} overdue={t.overdue} />
               </div>
 
               {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (

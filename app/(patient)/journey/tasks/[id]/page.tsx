@@ -37,19 +37,17 @@ function Notice({ tone, icon, title, children }: { tone: Tone; icon: "check" | "
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [journey] = await loadJourneys();
+  const [[journey], profile] = await Promise.all([loadJourneys(), getProfile()]);
   const task = journey?.summary.tasks.find((t) => t.id === id);
   if (!journey || !task) notFound();
 
-  let fileUrl: string | null = null;
-  if (task.evidence_path) {
-    const supabase = await createClient();
-    const { data } = await supabase.storage.from("evidence").createSignedUrl(task.evidence_path, 600);
-    fileUrl = data?.signedUrl ?? null;
-  }
-
-  const profile = await getProfile();
-  const caregiver = profile?.role === "caregiver" ? await getCaregiverLink() : null;
+  // The uploaded file's link and the caregiver's permissions do not depend on each other.
+  const [fileUrl, caregiver] = await Promise.all([
+    task.evidence_path
+      ? createClient().then((supabase) => supabase.storage.from("evidence").createSignedUrl(task.evidence_path!, 600)).then(({ data }) => data?.signedUrl ?? null)
+      : Promise.resolve<string | null>(null),
+    profile?.role === "caregiver" ? getCaregiverLink() : Promise.resolve(null),
+  ]);
   const mayAct = profile?.role === "patient" || !!caregiver?.can_act;
   const mine = task.owner === "patient";
   const canSubmit = mayAct && mine && (task.state === "todo" || task.state === "rejected");

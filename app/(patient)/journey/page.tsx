@@ -10,8 +10,7 @@ import { resolvePlace } from "@/lib/location";
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage() {
-  const profile = await requireProfile(["patient", "caregiver"]);
-  const [journey] = await loadJourneys();
+  const [profile, [journey]] = await Promise.all([requireProfile(["patient", "caregiver"]), loadJourneys()]);
   if (!journey) {
     return <p className="py-20 text-center text-muted">עדיין לא הוגדר עבורך מסלול. פנה/י למרפאה.</p>;
   }

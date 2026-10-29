@@ -45,8 +45,8 @@ export function SubmitPanel({
       }
       const res = await submitTask(taskId, { path, name, note });
       if (res.error) return setError(res.error);
+      // revalidatePath in the action already marked /journey stale, so a single navigation shows fresh data.
       router.push("/journey");
-      router.refresh();
     });
   }
 

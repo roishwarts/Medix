@@ -1,21 +1,34 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { reviewTask } from "../actions";
 import type { Owner, TaskState } from "@/lib/journey";
+import { setOptimisticState, useTaskState } from "@/components/task-optimistic";
 
-export function TaskReview({ taskId, state, owner }: { taskId: string; state: TaskState; owner: Owner }) {
+export function TaskReview({ taskId, state: serverState, owner }: { taskId: string; state: TaskState; owner: Owner }) {
+  const state = useTaskState(taskId, serverState);
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
+  // The real state arrived from the server: the instant (optimistic) one is no longer needed.
+  useEffect(() => { setOptimisticState(taskId, null); }, [taskId, serverState]);
+
   function run(decision: "accept" | "reject" | "reopen") {
     setError(null);
+    // Show the outcome immediately; the server confirms (or we roll back) a moment later.
+    setOptimisticState(taskId, decision === "accept" ? "done" : decision === "reject" ? "rejected" : "todo");
+    setRejecting(false);
     start(async () => {
-      const res = await reviewTask(taskId, decision, note);
-      if (res.error) setError(res.error);
-      else { setRejecting(false); setNote(""); }
+      try {
+        const res = await reviewTask(taskId, decision, note);
+        if (res?.error) { setOptimisticState(taskId, null); setError(res.error); if (decision === "reject") setRejecting(true); }
+        else setNote("");
+      } catch {
+        setOptimisticState(taskId, null);
+        setError("הפעולה נכשלה. נסו שוב.");
+      }
     });
   }
 
