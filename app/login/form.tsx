@@ -6,7 +6,6 @@ import { login } from "./actions";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(login, undefined);
-  const [show, setShow] = useState(false);
   const [user, setUser] = useState("");
   const err = state?.error;
   return (
@@ -19,15 +18,9 @@ export function LoginForm() {
       </div>
       <div>
         <label htmlFor="password" className="lbl">סיסמה</label>
-        <div className="relative">
-          <input id="password" name="password" type={show ? "text" : "password"} className="field pe-16" dir="ltr"
-            autoComplete="current-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="go"
-            aria-invalid={err ? true : undefined} aria-describedby={err ? "login-error" : undefined} required />
-          <button type="button" onClick={() => setShow((s) => !s)} aria-pressed={show}
-            className="absolute inset-y-0 end-0 min-w-14 rounded-e-2xl px-3 text-sm font-medium text-muted hover:text-ink">
-            {show ? "הסתר" : "הצג"}
-          </button>
-        </div>
+        <input id="password" name="password" type="password" className="field" dir="ltr"
+          autoComplete="current-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="go"
+          aria-invalid={err ? true : undefined} aria-describedby={err ? "login-error" : undefined} required />
       </div>
       <div aria-live="polite" className={err ? "" : "hidden"}>
         {err && (
