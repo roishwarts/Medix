@@ -4,6 +4,8 @@ import { loadJourneys } from "@/lib/queries";
 import { nowTask, OWNER_LABEL, type Task } from "@/lib/journey";
 import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { Icon, ReadinessBar } from "@/components/ui";
+import { NavigateButtons } from "@/components/navigate-buttons";
+import { resolvePlace } from "@/lib/location";
 
 export const dynamic = "force-dynamic";
 
@@ -92,20 +94,27 @@ export default async function JourneyPage() {
         )}
 
         {/* NEXT APPOINTMENT */}
-        {nextAppt && (
-          <Link href={`/journey/tasks/${nextAppt.id}`} className="card mt-4 flex min-h-16 items-center justify-between gap-4 p-4 transition hover:border-line-strong">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-muted">התור הקרוב</p>
-              <p className="mt-0.5 break-words font-medium">{nextAppt.title}</p>
-              <p className="break-words text-sm text-muted">
-                {formatDateLong(nextAppt.eventDate)}
-                {nextAppt.eventTime && <> · <span className="num">{nextAppt.eventTime}</span></>}
-                {nextAppt.location && <> · {nextAppt.location}</>}
-              </p>
+        {nextAppt && (() => {
+          const place = resolvePlace(nextAppt.location, profile.clinic_address);
+          return (
+            <div className="card mt-4 p-4">
+              <Link href={`/journey/tasks/${nextAppt.id}`} className="flex min-h-16 items-center justify-between gap-4 rounded-xl">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-muted">התור הקרוב</p>
+                  <p className="mt-0.5 break-words font-medium">{nextAppt.title}</p>
+                  <p className="break-words text-sm text-muted">
+                    {formatDateLong(nextAppt.eventDate)}
+                    {nextAppt.eventTime && <> · <span className="num">{nextAppt.eventTime}</span></>}
+                    {place.place && <> · {place.place}</>}
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm font-medium text-accent">{relativeDays(nextAppt.eventDate, t0)}</span>
+              </Link>
+              {place.address && <p className="mt-1 break-words text-sm">{place.address}</p>}
+              {place.navQuery && <NavigateButtons query={place.navQuery} className="mt-3" />}
             </div>
-            <span className="shrink-0 text-sm font-medium text-accent">{relativeDays(nextAppt.eventDate, t0)}</span>
-          </Link>
-        )}
+          );
+        })()}
       </div>
 
       {/* TIMELINE */}

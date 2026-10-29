@@ -144,6 +144,16 @@ export async function resetUserMfa(userId: string): Promise<{ error?: string }> 
   return {};
 }
 
+export async function setClinicAddress(clinicId: string, address: string): Promise<{ error?: string }> {
+  const { db } = await requireAdmin();
+  const a = address.trim().replace(/\s+/g, " ");
+  if (a.length > 200) return { error: "הכתובת ארוכה מדי" };
+  const { error } = await db.from("clinics").update({ address: a || null }).eq("id", clinicId);
+  if (error) return { error: "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-location.sql." };
+  revalidatePath(`/admin/clinics/${clinicId}`);
+  return {};
+}
+
 export async function addClinicOption(clinicId: string, kind: "hospital" | "company", name: string): Promise<{ error?: string }> {
   const { db } = await requireAdmin();
   const n = name.trim().replace(/\s+/g, " ");

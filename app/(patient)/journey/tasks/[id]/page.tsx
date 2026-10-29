@@ -7,6 +7,8 @@ import { OWNER_LABEL } from "@/lib/journey";
 import { formatDateLong, relativeDays } from "@/lib/dates";
 import { Icon, TaskStatePill } from "@/components/ui";
 import { SubmitPanel } from "./submit-panel";
+import { NavigateButtons } from "@/components/navigate-buttons";
+import { resolvePlace } from "@/lib/location";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +54,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const mine = task.owner === "patient";
   const canSubmit = mayAct && mine && (task.state === "todo" || task.state === "rejected");
   const isAppt = task.kind === "appointment";
+  const place = resolvePlace(task.location, profile?.clinic_address);
   const viewOnly = !!profile && profile.role === "caregiver" && !mayAct;
   const selfOwned = profile?.role === "patient" && mine;
   const ownerText = selfOwned ? "באחריותך" : `באחריות ${OWNER_LABEL[task.owner]}`;
@@ -93,10 +96,14 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
             <dt className="eyebrow">נדרש</dt>
             <dd className="mt-1 font-medium">{required}</dd>
           </div>
-          {isAppt && task.location && (
+          {isAppt && (place.place || place.address) && (
             <div className="sm:col-span-2">
               <dt className="eyebrow">מיקום</dt>
-              <dd className="mt-1 break-words font-medium">{task.location}</dd>
+              <dd className="mt-1 break-words font-medium">
+                {place.place}
+                {place.address && <span className="block font-normal text-muted">{place.address}</span>}
+              </dd>
+              {place.navQuery && task.state !== "done" && <NavigateButtons query={place.navQuery} className="mt-3" />}
             </div>
           )}
         </dl>
@@ -132,7 +139,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
           {open && isAppt && (
             <Notice tone="neutral" icon="clock" title="אין צורך להעלות דבר">
-              <p>מספיק להגיע למרפאה בזמן{task.location ? ` (${task.location})` : ""}.</p>
+              <p>מספיק להגיע למרפאה בזמן{place.place ? ` (${place.place})` : ""}.</p>
             </Notice>
           )}
 

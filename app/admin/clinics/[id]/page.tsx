@@ -8,6 +8,7 @@ import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
 import { MfaToggle } from "./mfa-toggle";
 import { ClinicOptions } from "./clinic-options";
+import { ClinicAddress } from "./clinic-address";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,12 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
         נוצרה <span className="num">{israelParts(clinic.created_at).date.split("-").reverse().join(".")}</span> · <span className="num">{patientCount ?? 0}</span> מטופלים
       </p>
 
-      <section className="mt-8" aria-label="אימות דו-שלבי">
+      <section className="mt-8" aria-labelledby="address-h">
+        <h2 id="address-h" className="display mb-3 text-xl">מיקום המרפאה</h2>
+        <ClinicAddress clinicId={id} initial={clinic.address ?? ""} />
+      </section>
+
+      <section className="mt-10" aria-label="אימות דו-שלבי">
         <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
       </section>
 
