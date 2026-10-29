@@ -1,138 +1,188 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
-import { ACTION_LABEL, OWNER_LABEL, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
-import { formatDate, israelParts, relativeDays, today, diffDays } from "@/lib/dates";
+import { OWNER_LABEL, actionItems, type ActionItem } from "@/lib/journey";
+import { dayLabel, diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-import { ResetRequests } from "./reset-requests";
+import { ActivityList } from "@/components/activity-list";
+import { toItems, type ActivityRow } from "@/lib/activity";
 
 export const dynamic = "force-dynamic";
 
-const ORDER: ActionKind[] = ["review", "overdue", "clinic", "upcoming"];
+const READY_WINDOW_DAYS = 14;
 
-const TABS: [ActionKind | "all", string][] = [
-  ["all", "הכול"],
-  ["review", "ממתין לבדיקה"],
-  ["overdue", "באיחור"],
-  ["clinic", "משימות לצוות"],
-  ["upcoming", "מועד קרוב"],
-];
+function Kpi({ href, label, value, sub, tone }: { href: string; label: string; value: string; sub: string; tone?: "bad" | "warn" | "ok" }) {
+  const color = tone === "bad" ? "text-bad" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-ink";
+  return (
+    <Link href={href} className="card block min-h-28 p-4 transition hover:border-line-strong">
+      <p className="text-sm text-muted">{label}</p>
+      <p className={`display num mt-1 text-4xl ${color}`}>{value}</p>
+      <p className="mt-1 text-xs leading-snug text-muted">{sub}</p>
+    </Link>
+  );
+}
 
-export default async function WeekPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams;
-  const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
+function SectionTitle({ id, children, count, href, linkLabel }: { id: string; children: React.ReactNode; count?: number; href?: string; linkLabel?: string }) {
+  return (
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <h2 id={id} className="flex items-baseline gap-2 text-lg font-medium">
+        {children}
+        {count !== undefined && <span className="num text-sm text-muted">{count}</span>}
+      </h2>
+      {href && <Link href={href} className="inline-flex min-h-11 items-center text-sm text-accent underline-offset-4 hover:underline">{linkLabel}</Link>}
+    </div>
+  );
+}
+
+export default async function DashboardPage() {
   const supabase = await createClient();
-  const [journeys, { data: resetRequests }] = await Promise.all([
+  const [journeys, resetRes, eventsRes] = await Promise.all([
     loadJourneys(),
+    supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
-      .from("password_reset_requests")
-      .select("id, full_name, role, requested_at")
-      .is("handled_at", null)
-      .order("requested_at"),
+      .from("activity_events")
+      .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
   const t = today();
-  const items: ActionItem[] = journeys.flatMap((j) =>
-    actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t),
-  );
+  const resetRequests = resetRes.count ?? 0;
+
+  const items: ActionItem[] = journeys.flatMap((j) => actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t));
+  const reviewCount = items.filter((i) => i.kind === "review").length;
+  const overdueCount = items.filter((i) => i.kind === "overdue").length;
+
+  const upcoming = journeys.filter((j) => diffDays(j.surgery_date, t) >= 0);
+  const thisWeek = upcoming.filter((j) => diffDays(j.surgery_date, t) <= 7);
+  const soon = upcoming.filter((j) => diffDays(j.surgery_date, t) <= READY_WINDOW_DAYS);
+  const soonReady = soon.filter((j) => j.summary.readiness === 100).length;
+  const readyPct = soon.length ? Math.round((soonReady / soon.length) * 100) : null;
+
+  const readyN = upcoming.filter((j) => j.summary.readinessState === "ready").length;
+  const lateN = upcoming.filter((j) => j.summary.readinessState === "not_ready").length;
+  const progressN = upcoming.length - readyN - lateN;
+
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
-  const surgeriesThisWeek = journeys.filter((j) => {
-    const d = diffDays(j.surgery_date, t);
-    return d >= 0 && d <= 7;
+  const attention = items
+    .filter((i) => i.kind === "review" || i.kind === "overdue")
+    .sort((a, b) => (a.kind === b.kind ? (a.task.dueDate < b.task.dueDate ? -1 : 1) : a.kind === "review" ? -1 : 1))
+    .slice(0, 6);
+
+  const updates = toItems(((eventsRes.data ?? []) as ActivityRow[]).slice(0, 5), {
+    patientNames: new Map(journeys.map((j) => [j.patient_id, j.patient.full_name])),
+    journeyByPatient,
+    me: "",
+    seenAt: new Date().toISOString(),
   });
 
+  const seg = (n: number) => (upcoming.length ? (n / upcoming.length) * 100 : 0);
+
   return (
-    <main className="space-y-10">
-      <ResetRequests
-        items={(resetRequests ?? []).map((r) => ({
-          id: r.id,
-          name: r.full_name,
-          role: r.role,
-          when: israelParts(r.requested_at).date.split("-").reverse().join("."),
-        }))}
-      />
-      <section aria-labelledby="h-surgeries">
-        <h2 id="h-surgeries" className="mb-3 flex items-baseline gap-2 text-lg font-medium">
-          ניתוחים השבוע <span className="num text-sm text-muted">{surgeriesThisWeek.length}</span>
-        </h2>
-        {surgeriesThisWeek.length === 0 ? (
-          <p className="card px-4 py-8 text-center text-muted">אין ניתוחים ב-7 הימים הקרובים.</p>
-        ) : (
-          <div className="card divide-y divide-line">
-            {surgeriesThisWeek.map((j) => (
-              <Link
-                key={j.id}
-                href={`/clinic/patients/${j.id}`}
-                className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
-              >
-                <span className="min-w-0 break-words font-medium">{j.patient.full_name}</span>
-                <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
-                  {j.summary.topBlocker?.label ?? "ההכנות הושלמו"}
-                </span>
-                <span className="text-sm text-muted sm:whitespace-nowrap">
-                  <span className={`num font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}><span className="sr-only">מוכנות </span>{j.summary.readiness}%</span>
-                  {" · "}
-                  {formatDate(j.surgery_date)} · {relativeDays(j.surgery_date, t)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+    <main className="space-y-8">
+      <header>
+        <p className="eyebrow">{dayLabel(t)}</p>
+        <h1 className="display mt-1 text-3xl sm:text-4xl">לוח בקרה</h1>
+      </header>
 
-      <nav aria-label="סינון פעולות לפי סטטוס" className="chip-row !mb-0 !flex-wrap !overflow-visible">
-        {TABS.map(([key, label]) => {
-          const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
-          const on = key === active;
-          return (
-            <Link
-              key={key}
-              href={key === "all" ? "/clinic" : `/clinic?status=${key}`}
-              scroll={false}
-              aria-current={on ? "page" : undefined}
-              className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
-            >
-              {label} <span className="num text-xs">{count}</span><span className="sr-only"> פעולות</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {active !== "all" && items.every((i) => i.kind !== active) && (
-        <p role="status" className="card px-4 py-8 text-center text-muted">אין פעולות בסטטוס הזה.</p>
+      {resetRequests > 0 && (
+        <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">
+          <span className="font-medium">
+            <span className="num">{resetRequests}</span> {resetRequests === 1 ? "בקשה לאיפוס סיסמה ממתינה" : "בקשות לאיפוס סיסמה ממתינות"}
+          </span>
+          <span className="shrink-0 text-sm text-accent">לטיפול</span>
+        </Link>
       )}
 
-      {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
-        const list = items
-          .filter((i) => i.kind === kind)
-          .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
-        if (list.length === 0) return null;
-        return (
-          <section key={kind} aria-label={active === "all" ? undefined : ACTION_LABEL[kind]} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
-            {active === "all" && (
-              <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
-                {ACTION_LABEL[kind]} <span className="num text-sm text-muted">{list.length}</span>
-              </h2>
+      <section aria-label="מדדים עיקריים" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi href="/clinic/tasks?status=review" label="ממתינים לבדיקה" value={String(reviewCount)} sub="מסמכים ומשימות שהמטופלים שלחו" tone={reviewCount > 0 ? "warn" : undefined} />
+        <Kpi href="/clinic/tasks?status=overdue" label="משימות באיחור" value={String(overdueCount)} sub="עברו את תאריך היעד" tone={overdueCount > 0 ? "bad" : "ok"} />
+        <Kpi href="/clinic/patients?days=7" label="ניתוחים ב-7 ימים" value={String(thisWeek.length)} sub={thisWeek.length ? "הקרוב: " + formatDate(thisWeek[0].surgery_date) : "אין ניתוחים השבוע"} />
+        <Kpi
+          href="/clinic/patients?notReady=1"
+          label="מוכנים לניתוח"
+          value={readyPct === null ? "—" : `${readyPct}%`}
+          sub={soon.length ? `${soonReady} מתוך ${soon.length} עם ניתוח ב-${READY_WINDOW_DAYS} ימים הקרובים` : `אין ניתוחים ב-${READY_WINDOW_DAYS} ימים הקרובים`}
+          tone={readyPct === null ? undefined : readyPct === 100 ? "ok" : readyPct < 50 ? "bad" : "warn"}
+        />
+      </section>
+
+      <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
+        <div className="min-w-0 space-y-8 lg:col-span-3">
+          <section aria-labelledby="h-week">
+            <SectionTitle id="h-week" count={thisWeek.length} href="/clinic/calendar" linkLabel="ליומן">ניתוחים השבוע</SectionTitle>
+            {thisWeek.length === 0 ? (
+              <p className="card px-4 py-8 text-center text-muted">אין ניתוחים ב-7 הימים הקרובים.</p>
+            ) : (
+              <div className="card divide-y divide-line">
+                {thisWeek.map((j) => (
+                  <Link key={j.id} href={`/clinic/patients/${j.id}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row">
+                    <span className="min-w-0 break-words font-medium">{j.patient.full_name}</span>
+                    <span className={`num text-sm font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}>
+                      <span className="sr-only">מוכנות </span>{j.summary.readiness}%
+                    </span>
+                    <span className="min-w-0 break-words text-sm text-muted">{j.summary.topBlocker?.label ?? "ההכנות הושלמו"}</span>
+                    <span className="text-sm text-muted sm:whitespace-nowrap">{formatDate(j.surgery_date)} · {relativeDays(j.surgery_date, t)}</span>
+                  </Link>
+                ))}
+              </div>
             )}
-            <div className="card divide-y divide-line">
-              {list.map((i) => (
-                <Link
-                  key={i.task.id}
-                  href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
-                >
-                  <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                  <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
-                    {i.task.title}
-                    {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">אצל {OWNER_LABEL[i.task.owner]}</span>}
-                  </span>
-                  <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
-                    {i.kind === "review" ? `ניתוח ${formatDate(i.surgeryDate)}` : `${formatDate(i.task.dueDate)} · ${relativeDays(i.task.dueDate, t)}`}
-                  </span>
-                </Link>
-              ))}
+          </section>
+
+          <section aria-labelledby="h-attention">
+            <SectionTitle id="h-attention" count={reviewCount + overdueCount} href="/clinic/tasks" linkLabel="לכל המשימות">דורש טיפול</SectionTitle>
+            {attention.length === 0 ? (
+              <p className="card px-4 py-8 text-center text-muted">אין משימות שממתינות לטיפול. הכול מעודכן.</p>
+            ) : (
+              <div className="card divide-y divide-line">
+                {attention.map((i) => (
+                  <Link key={i.task.id} href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row">
+                    <span className="min-w-0 break-words font-medium">{i.patientName}</span>
+                    <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-warn"}`}>
+                      {i.kind === "review" ? "ממתין לבדיקה" : `באיחור · ${relativeDays(i.task.dueDate, t)}`}
+                    </span>
+                    <span className="col-span-2 min-w-0 break-words text-sm text-muted">
+                      {i.task.title}
+                      {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">אצל {OWNER_LABEL[i.task.owner]}</span>}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="min-w-0 space-y-8 lg:col-span-2">
+          <section aria-labelledby="h-ready">
+            <SectionTitle id="h-ready" count={upcoming.length} href="/clinic/patients" linkLabel="למטופלים">מוכנות המטופלים</SectionTitle>
+            <div className="card p-4">
+              {upcoming.length === 0 ? (
+                <p className="py-4 text-center text-muted">אין מטופלים עם ניתוח עתידי.</p>
+              ) : (
+                <>
+                  <div
+                    role="img"
+                    aria-label={`${readyN} מוכנים, ${progressN} בהכנה, ${lateN} באיחור, מתוך ${upcoming.length} מטופלים`}
+                    className="flex h-3 overflow-hidden rounded-full bg-line"
+                  >
+                    <div className="bg-ok" style={{ width: `${seg(readyN)}%` }} />
+                    <div className="bg-accent" style={{ width: `${seg(progressN)}%` }} />
+                    <div className="bg-bad" style={{ width: `${seg(lateN)}%` }} />
+                  </div>
+                  <ul className="mt-4 space-y-2 text-sm">
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-ok" /> <span className="flex-1">מוכנים</span><span className="num font-medium">{readyN}</span></li>
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-accent" /> <span className="flex-1">בהכנה</span><span className="num font-medium">{progressN}</span></li>
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-bad" /> <span className="flex-1">יש משימות באיחור</span><span className="num font-medium">{lateN}</span></li>
+                  </ul>
+                </>
+              )}
             </div>
           </section>
-        );
-      })}
+
+          <section aria-labelledby="h-updates">
+            <SectionTitle id="h-updates" href="/clinic/activity" linkLabel="לכל העדכונים">עדכונים אחרונים</SectionTitle>
+            <ActivityList items={updates} />
+          </section>
+        </div>
+      </div>
     </main>
   );
 }
