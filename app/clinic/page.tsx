@@ -73,7 +73,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const kpiSurgeries = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= surgeryDays);
   const soon = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= readyDays);
   const soonReady = soon.filter((j) => j.summary.readiness === 100).length;
-  const readyPct = soon.length ? Math.round((soonReady / soon.length) * 100) : null;
 
   const readyN = upcoming.filter((j) => j.summary.readinessState === "ready").length;
   const lateN = upcoming.filter((j) => j.summary.readinessState === "not_ready").length;
@@ -116,8 +115,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} />
         <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
         <KpiWindow
-          label={t("מוכנים לניתוח")} value={readyPct === null ? "—" : `${readyPct}%`} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
-          tone={readyPct === null ? "none" : readyPct === 100 ? "ok" : readyPct < 50 ? "bad" : "warn"}
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
+          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
         />
       </section>
 
