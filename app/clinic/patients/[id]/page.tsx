@@ -14,7 +14,7 @@ import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
 import { loadPatientExtras } from "@/lib/patient-extras";
-import { stageOf, STAGE_LABEL, STAGE_PILL } from "@/lib/journey";
+import { stageOf } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
@@ -104,16 +104,12 @@ export default async function PatientPage({
   for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
 
   const autoStage = stageOf(summary);
-  const stage = extras?.stage ?? autoStage;
 
   return (
     <main>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
-            <span className={`pill ${STAGE_PILL[stage]}`}>{tr(STAGE_LABEL[stage])}</span>
-          </div>
+          <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
         <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>
