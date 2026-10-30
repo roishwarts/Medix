@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EditorTask } from "@/components/editor/types";
-import { Icon } from "@/components/ui";
 import { TemplateForm } from "@/components/template-form";
 import { deleteTemplate, saveTemplate } from "../actions";
 
@@ -57,9 +55,6 @@ export default async function TemplatePage({
 
   return (
     <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
-      <Link href="/clinic/templates" className="back-link">
-        <Icon name="arrow" size={14} /> כל התבניות
-      </Link>
       <h1 className="display text-3xl sm:text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         הגדירו את שלבי הפרוטוקול: מי אחראי על כל משימה, מתי היא מתבצעת ביחס ליום הניתוח ומה צריך להסתיים לפניה.

@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 type Tone = "neutral" | "ok" | "warn" | "bad";
 
 const TONE: Record<Tone, { box: string; icon: string }> = {
-  neutral: { box: "border-dashed border-line-strong bg-white/50", icon: "text-muted" },
+  neutral: { box: "border-dashed border-line-strong bg-surface/50", icon: "text-muted" },
   ok: { box: "border-ok/25 bg-ok-soft", icon: "text-ok" },
   warn: { box: "border-warn/25 bg-warn-soft", icon: "text-warn" },
   bad: { box: "border-bad/25 bg-bad-soft", icon: "text-bad" },
@@ -79,7 +79,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         <h1 className="display mt-3 break-words text-3xl">{task.title}</h1>
         {task.description && <p className="mt-3 whitespace-pre-line break-words text-lg text-muted">{task.description}</p>}
 
-        <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-line bg-white/60 p-4 text-sm sm:grid-cols-2">
+        <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-line bg-surface/60 p-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="eyebrow">{isAppt ? "מועד התור" : "מועד יעד"}</dt>
             <dd className="mt-1 font-medium">

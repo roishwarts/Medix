@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
-import { Icon } from "@/components/ui";
 import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
@@ -39,9 +37,6 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   const note = "mt-3 text-sm text-muted";
   return (
     <main>
-      <Link href="/admin" className="back-link">
-        <Icon name="arrow" size={14} /> כל המרפאות
-      </Link>
       <h1 className="display break-words text-3xl sm:text-4xl">{clinic.name}</h1>
       <p className="mt-1 text-muted">
         נוצרה <span className="num">{israelParts(clinic.created_at).date.split("-").reverse().join(".")}</span> · <span className="num">{patientCount ?? 0}</span> מטופלים

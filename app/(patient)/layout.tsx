@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
-import { NavLink } from "@/components/nav-link";
+import { AppHeader, type NavItem } from "@/components/app-header";
+import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = await getClinicName();
@@ -13,25 +14,17 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const profile = await requireProfile(["patient", "caregiver"]);
   const caregiver = profile.role === "caregiver" ? await getCaregiverLink() : null;
   const clinicName = await getClinicName();
+  const t = await getT();
+  const items: NavItem[] = [
+    { href: "/journey", label: t("ראשי") },
+    { href: "/calendar", label: t("יומן") },
+    ...(profile.role === "patient" ? [{ href: "/family", label: t("משפחה") }] : []),
+  ];
   return (
     <div className="min-h-dvh pb-16">
       <ImpersonationBanner />
-      <div className="topbar">
-        <div className="mx-auto w-full max-w-5xl px-5">
-          <div className="flex items-center justify-between gap-3">
-            <nav className="flex min-w-0 gap-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <NavLink href="/journey">ראשי</NavLink>
-              <NavLink href="/calendar">יומן</NavLink>
-              {profile.role === "patient" && <NavLink href="/family">משפחה</NavLink>}
-            </nav>
-            <div className="flex shrink-0 items-center gap-1">
-              <span className="max-w-[7rem] text-center text-xs leading-tight text-muted sm:max-w-none sm:text-sm">{clinicName}</span>
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="mx-auto w-full max-w-5xl px-5 pt-6">
+      <AppHeader items={items} brand={clinicName} home="/journey" logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} maxWidth="max-w-5xl" />
+      <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">
       {profile.role === "caregiver" && (
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
           {caregiver ? (

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getImpersonation } from "@/lib/impersonation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityList } from "@/components/activity-list";
@@ -81,8 +80,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         })}
       </nav>
 
-      {/* An admin viewing as this person must not clear their unread markers. */}
-      <ActivityList items={items} markSeen={!(await getImpersonation())} />
+      <ActivityList items={items} markSeen />
       {items.length >= 150 && <p role="status" className="mt-3 text-center text-sm text-muted">מוצגים 150 העדכונים האחרונים.</p>}
     </main>
   );

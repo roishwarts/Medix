@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import type { EditorTask } from "@/components/editor/types";
-import { Icon } from "@/components/ui";
 import { TemplateForm } from "@/components/template-form";
 import { deleteBaseTemplate, saveBaseTemplate } from "../actions";
 
@@ -59,9 +57,6 @@ export default async function BaseTemplatePage({
 
   return (
     <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
-      <Link href="/admin/templates" className="back-link">
-        <Icon name="arrow" size={14} /> כל תבניות הבסיס
-      </Link>
       <p className="eyebrow">תבנית בסיס</p>
       <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">

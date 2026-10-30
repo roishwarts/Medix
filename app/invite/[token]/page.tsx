@@ -75,7 +75,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         {invite.inviter ? <>{invite.inviter} מזמינ/ה אותך להצטרף. </> : null}
         כדי להתחיל, צריך רק לבחור שם משתמש וסיסמה.
       </p>
-      <dl className="mb-6 divide-y divide-line rounded-2xl border border-line bg-white/60 text-sm">
+      <dl className="mb-6 divide-y divide-line rounded-2xl border border-line bg-surface/60 text-sm">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <dt className="text-muted">קרבה</dt>
           <dd className="font-medium">{invite.relation}</dd>
