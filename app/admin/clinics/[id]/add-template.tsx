@@ -6,21 +6,30 @@ import { addTemplateToClinic } from "../../actions";
 export function AddTemplate({ clinicId, bases }: { clinicId: string; bases: { id: string; name: string }[] }) {
   const [baseId, setBaseId] = useState(bases[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  if (bases.length === 0) return null;
+  if (bases.length === 0) {
+    return <p className="mt-3 text-sm text-muted">אין תבניות בסיס להוספה כרגע. תבניות בסיס נוצרות במסך התבניות.</p>;
+  }
   return (
     <div className="card mt-3 p-4">
       <label htmlFor="base" className="lbl">הוספת תבנית בסיס</label>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <select id="base" className="field min-w-0 sm:flex-1" value={baseId} onChange={(e) => setBaseId(e.target.value)} disabled={pending}>
+        <select id="base" className="field min-w-0 sm:flex-1" value={baseId} onChange={(e) => { setBaseId(e.target.value); setOk(null); }} disabled={pending}>
           {bases.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <button type="button" className="btn btn-sm min-h-11 shrink-0 sm:min-h-11" disabled={pending} onClick={() => {
           setError(null);
-          start(async () => { const res = await addTemplateToClinic(clinicId, baseId); if (res.error) setError(res.error); });
+          setOk(null);
+          start(async () => {
+            const res = await addTemplateToClinic(clinicId, baseId);
+            if (res.error) setError(res.error);
+            else setOk(`${bases.find((b) => b.id === baseId)?.name ?? "התבנית"} נוספה למרפאה`);
+          });
         }}>{pending ? "מעתיק…" : "הוספה למרפאה"}</button>
       </div>
       {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+      {ok && <p role="status" className="mt-2 text-sm text-ok">{ok}</p>}
     </div>
   );
 }

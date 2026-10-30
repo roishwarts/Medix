@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
 import { newTask, type EditorTask } from "./types";
 
@@ -10,13 +10,30 @@ export function TaskEditor({
   tasks,
   onChange,
   journeyMode,
+  focusTask,
 }: {
   tasks: EditorTask[];
   onChange: (t: EditorTask[]) => void;
   journeyMode?: boolean;
+  // Set (to a new object each time, even for the same id) to open a task, scroll to it and flash it —
+  // used to point at the task a save failed on, e.g. a missing title or a dependency cycle.
+  focusTask?: { id: string; nonce: number } | null;
 }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
   const uid = useId();
+  const itemRefs = useRef(new Map<string, HTMLLIElement>());
+
+  useEffect(() => {
+    if (!focusTask) return;
+    const el = itemRefs.current.get(focusTask.id);
+    setOpen(focusTask.id);
+    setFlash(focusTask.id);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => setFlash(null), 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTask?.id, focusTask?.nonce]);
 
   const update = (id: string, patch: Partial<EditorTask>) =>
     onChange(tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)));
@@ -53,10 +70,15 @@ export function TaskEditor({
       <ol className="space-y-2">
         {tasks.map((t, i) => {
           const isOpen = open === t.id;
-          const others = tasks.filter((o) => o.id !== t.id);
+          const others = [...tasks.filter((o) => o.id !== t.id)].sort((a, b) => b.due_offset_days - a.due_offset_days);
           const after = t.due_offset_days < 0;
+          const isFlashing = flash === t.id;
           return (
-            <li key={t.id} className="card">
+            <li
+              key={t.id}
+              ref={(el) => { if (el) itemRefs.current.set(t.id, el); else itemRefs.current.delete(t.id); }}
+              className={`card transition-shadow ${isFlashing ? "ring-2 ring-bad" : ""}`}
+            >
               <div className="flex items-center gap-2 px-3 py-2">
                 <div className="flex">
                   <button type="button" aria-label="הזזה למעלה" className="grid size-11 place-items-center rounded-full text-muted hover:bg-paper hover:text-ink disabled:opacity-30 sm:size-9" disabled={i === 0} onClick={() => move(i, -1)}><Icon name="up" size={16} /></button>
@@ -82,13 +104,23 @@ export function TaskEditor({
                 <div id={`${uid}-${t.id}-panel`} className="space-y-4 border-t border-line px-4 py-4">
                   <div>
                     <label className="lbl" htmlFor={`${uid}-${t.id}-title`}>כותרת</label>
-                    <input id={`${uid}-${t.id}-title`} autoComplete="off" className="field" value={t.title} onChange={(e) => update(t.id, { title: e.target.value })} />
+                    <input
+                      id={`${uid}-${t.id}-title`}
+                      autoComplete="off"
+                      required
+                      aria-invalid={isFlashing && !t.title.trim()}
+                      className={`field ${isFlashing && !t.title.trim() ? "border-bad" : ""}`}
+                      value={t.title}
+                      onChange={(e) => update(t.id, { title: e.target.value })}
+                    />
                   </div>
                   <div>
                     <label className="lbl" htmlFor={`${uid}-${t.id}-desc`}>הסבר למטופל</label>
                     <textarea id={`${uid}-${t.id}-desc`} className="field" value={t.description} onChange={(e) => update(t.id, { description: e.target.value })} />
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <p className="eyebrow mb-2">תזמון ואחריות</p>
+                    <div className="grid gap-4 sm:grid-cols-3">
                     <div>
                       <label className="lbl" htmlFor={`${uid}-${t.id}-kind`}>סוג</label>
                       <select id={`${uid}-${t.id}-kind`} className="field" value={t.kind} onChange={(e) => update(t.id, { kind: e.target.value as EditorTask["kind"] })}>
@@ -120,6 +152,7 @@ export function TaskEditor({
                         <option value="after">אחרי</option>
                       </select>
                     </div>
+                    </div>
                   </div>
                   {t.kind === "appointment" && (
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -135,15 +168,21 @@ export function TaskEditor({
                       )}
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                    <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.mandatory} onChange={(e) => update(t.id, { mandatory: e.target.checked })} /> חובה (נספר במוכנות)</label>
-                    <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.requires_evidence} onChange={(e) => update(t.id, { requires_evidence: e.target.checked, requires_review: e.target.checked || t.requires_review })} /> דורש העלאת מסמך</label>
-                    <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.requires_review || t.requires_evidence} disabled={t.requires_evidence} onChange={(e) => update(t.id, { requires_review: e.target.checked })} /> דורש אישור צוות</label>
+                  <div>
+                    <p className="eyebrow mb-2">דרישות</p>
+                    <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                      <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.mandatory} onChange={(e) => update(t.id, { mandatory: e.target.checked })} /> חובה (נספר במוכנות)</label>
+                      <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.requires_evidence} onChange={(e) => update(t.id, { requires_evidence: e.target.checked, requires_review: e.target.checked || t.requires_review })} /> דורש העלאת מסמך</label>
+                      <label className="flex min-h-11 items-center gap-2.5"><input type="checkbox" className="size-5 accent-accent" checked={t.requires_review || t.requires_evidence} disabled={t.requires_evidence} onChange={(e) => update(t.id, { requires_review: e.target.checked })} /> דורש אישור צוות</label>
+                    </div>
                   </div>
                   <fieldset>
-                    <legend className="lbl">המשימה נפתחת רק אחרי שהמשימות האלה אושרו</legend>
+                    <legend className="eyebrow mb-2">
+                      המשימה נפתחת רק אחרי שהמשימות האלה אושרו
+                      {t.depends_on.length > 0 && ` · נבחרו ${t.depends_on.length}`}
+                    </legend>
                     {others.length === 0 ? (
-                      <p className="text-sm text-muted">אין משימות אחרות.</p>
+                      <p className="text-sm text-muted">אין משימות אחרות להוסיף כתלות.</p>
                     ) : (
                       <div className="grid max-h-56 gap-0.5 overflow-y-auto rounded-xl border border-line p-1.5 sm:grid-cols-2">
                         {others.map((o) => (

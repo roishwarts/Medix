@@ -2,10 +2,19 @@ import { findCycle, type EditorTask } from "@/components/editor/types";
 import { israelLocalToIso } from "@/lib/dates";
 
 export function validateTasks(tasks: EditorTask[]): string | null {
-  if (tasks.length === 0) return "יש להוסיף לפחות משימה אחת";
-  if (tasks.some((t) => !t.title.trim())) return "לכל משימה צריכה להיות כותרת";
-  const cycle = findCycle(tasks);
-  if (cycle) return `יש תלות מעגלית סביב "${cycle}"`;
+  return validateTasksDetailed(tasks)?.error ?? null;
+}
+
+// Same validation, but also names the offending task so the UI can open and highlight it.
+export function validateTasksDetailed(tasks: EditorTask[]): { error: string; taskId?: string } | null {
+  if (tasks.length === 0) return { error: "יש להוסיף לפחות משימה אחת" };
+  const missing = tasks.find((t) => !t.title.trim());
+  if (missing) return { error: "לכל משימה צריכה להיות כותרת", taskId: missing.id };
+  const cycleId = findCycle(tasks);
+  if (cycleId) {
+    const cycleTask = tasks.find((t) => t.id === cycleId);
+    return { error: `יש תלות מעגלית סביב "${cycleTask?.title || "משימה"}"`, taskId: cycleId };
+  }
   return null;
 }
 

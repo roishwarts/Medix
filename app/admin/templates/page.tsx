@@ -18,7 +18,7 @@ export default async function BaseTemplatesPage() {
           <p className="eyebrow">ספריית המערכת</p>
           <h1 className="display mt-1 text-4xl">תבניות בסיס</h1>
         </div>
-        <Link href="/admin/templates/new" className="btn btn-primary">תבנית חדשה מאפס</Link>
+        <Link href="/admin/templates/new" className="btn btn-primary max-sm:w-full">תבנית חדשה מאפס</Link>
       </div>
       <p className="mt-2 max-w-xl text-muted">
         תבניות שמרפאה חדשה יכולה להתחיל מהן. כל מרפאה מקבלת עותק משלה, ושינוי כאן לא משפיע על מרפאות קיימות.
@@ -26,10 +26,18 @@ export default async function BaseTemplatesPage() {
 
       <section aria-labelledby="base-templates-title" className="mt-6">
         <h2 id="base-templates-title" className="sr-only">רשימת תבניות הבסיס</h2>
+        {(templates ?? []).length > 0 && (
+          <p className="mb-2 text-sm font-medium text-muted">
+            <span className="num">{templates!.length}</span> {templates!.length === 1 ? "תבנית בסיס" : "תבניות בסיס"}
+          </p>
+        )}
         {(templates ?? []).length === 0 ? (
-          <div className="card px-4 py-10 text-center text-muted">אין תבניות בסיס עדיין.</div>
+          <div className="card mt-6 px-4 py-12 text-center">
+            <p className="font-medium">אין תבניות בסיס עדיין.</p>
+            <p className="mt-1 text-muted">תבנית בסיס היא נקודת המוצא שמוצעת לכל מרפאה חדשה. אפשר להתחיל מתבנית חדשה מאפס.</p>
+          </div>
         ) : (
-          <ul className="card divide-y divide-line">
+          <ul className="card divide-y divide-line" aria-label="רשימת תבניות בסיס">
             {(templates ?? []).map((t) => {
               const tasks = (t.template_tasks as { count: number }[])?.[0]?.count ?? 0;
               const tasksLabel = tasks === 1 ? "משימה אחת" : `${tasks} משימות`;
@@ -43,7 +51,11 @@ export default async function BaseTemplatesPage() {
                       {t.name}
                     </Link>
                     <p className="break-words text-sm text-muted">
-                      <span className="num">{tasksLabel}</span>
+                      {tasks === 0 ? (
+                        <span className="pill pill-warn">ללא משימות</span>
+                      ) : (
+                        <span className="num">{tasksLabel}</span>
+                      )}
                       {t.procedure ? ` · ${t.procedure}` : ""}
                     </p>
                   </div>

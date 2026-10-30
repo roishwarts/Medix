@@ -23,8 +23,8 @@ export function AddUserForm({ clinicId }: { clinicId: string }) {
         </div>
         <div>
           <label htmlFor="username" className="lbl">שם משתמש</label>
-          <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" required />
-          <p className="mt-1 text-sm text-muted">3–30 תווים באנגלית, מספרים או <bdi dir="ltr">. _ -</bdi></p>
+          <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" aria-describedby="add-user-username-hint" required />
+          <p id="add-user-username-hint" className="mt-1 text-sm text-muted">3–30 תווים באנגלית, מספרים או <bdi dir="ltr">. _ -</bdi></p>
         </div>
         <div>
           <PasswordField label="סיסמה זמנית" />

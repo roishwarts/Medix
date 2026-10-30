@@ -35,7 +35,7 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
     }),
   );
 
-  const h2 = "display mb-3 text-xl";
+  const h2 = "eyebrow mb-3";
   const note = "mt-3 text-sm text-muted";
   return (
     <main>
@@ -48,7 +48,7 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
       </p>
 
       <section className="mt-8" aria-labelledby="address-h">
-        <h2 id="address-h" className="display mb-3 text-xl">מיקום המרפאה</h2>
+        <h2 id="address-h" className={h2}>מיקום המרפאה</h2>
         <ClinicAddress clinicId={id} initial={clinic.address ?? ""} />
       </section>
 
@@ -75,7 +75,10 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
             ))}
           </ul>
         ) : (
-          <p className="card px-4 py-6 text-center text-muted">אין משתמשים.</p>
+          <div className="card px-4 py-10 text-center">
+            <p className="font-medium">אין משתמשי צוות עדיין.</p>
+            <p className="mt-1 text-muted">הוספת רופא או איש צוות נוספים אפשרית למטה.</p>
+          </div>
         )}
         <AddUserForm clinicId={id} />
       </section>
@@ -87,7 +90,10 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
             {(templates ?? []).map((t) => <li key={t.id} className="break-words px-4 py-3">{t.name}</li>)}
           </ul>
         ) : (
-          <p className="card px-4 py-6 text-center text-muted">אין תבניות.</p>
+          <div className="card px-4 py-10 text-center">
+            <p className="font-medium">אין תבניות עדיין.</p>
+            <p className="mt-1 text-muted">אפשר להוסיף עותק של תבנית בסיס, ולהתחיל ממנה.</p>
+          </div>
         )}
         <p className={note}>הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.</p>
         <AddTemplate clinicId={id} bases={bases ?? []} />

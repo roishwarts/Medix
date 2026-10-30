@@ -132,18 +132,35 @@ export function SubjectCard({ id, title, tasks, doneCount, total, people }: { id
 
   return (
     <section className="card overflow-hidden">
-      <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="min-w-0">
-          <h2 className="display break-words text-lg">{title}</h2>
-          <p className="text-xs text-muted"><span className="num">{doneCount}</span> מתוך <span className="num">{total}</span> הושלמו</p>
+      <header className="border-b border-line px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="display break-words text-lg">{title}</h2>
+            <p className="text-xs text-muted">
+              {total === 0 ? "אין משימות עדיין" : <><span className="num">{doneCount}</span> מתוך <span className="num">{total}</span> הושלמו</>}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {total > 0 && doneCount === total && (
+              <span className="pill pill-ok"><Icon name="check" size={11} />הושלם</span>
+            )}
+            {!confirmDel && (
+              <button
+                className="btn btn-quiet btn-sm size-11 shrink-0 px-0 sm:size-9" aria-label={`מחיקת הנושא ${title}`} disabled={pending}
+                onClick={() => setConfirmDel(true)}
+              >
+                <Icon name="trash" />
+              </button>
+            )}
+          </div>
         </div>
-        {!confirmDel && (
-          <button
-            className="btn btn-quiet btn-sm size-11 shrink-0 px-0 sm:size-9" aria-label={`מחיקת הנושא ${title}`} disabled={pending}
-            onClick={() => setConfirmDel(true)}
+        {total > 0 && (
+          <div
+            className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-line"
+            role="progressbar" aria-valuenow={doneCount} aria-valuemin={0} aria-valuemax={total} aria-label={`התקדמות בנושא ${title}`}
           >
-            <Icon name="trash" />
-          </button>
+            <div className="h-full bg-ok" style={{ width: `${Math.round((doneCount / total) * 100)}%` }} />
+          </div>
         )}
       </header>
       {confirmDel && (
@@ -157,7 +174,7 @@ export function SubjectCard({ id, title, tasks, doneCount, total, people }: { id
       )}
       <ul className="divide-y divide-line">
         {tasks.map((t) => <TaskRow key={t.id} task={t} people={people} />)}
-        {tasks.length === 0 && <li className="px-4 py-4 text-sm text-muted">אין משימות בנושא הזה.</li>}
+        {tasks.length === 0 && <li className="px-4 py-6 text-center text-sm text-muted">אין משימות בנושא הזה עדיין. אפשר להוסיף אחת בטופס שמתחת.</li>}
       </ul>
       <form onSubmit={add} className="flex flex-wrap gap-2 border-t border-line bg-paper/60 p-3">
         <input className="field min-w-0 flex-1 basis-48" value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder="משימה חדשה…" aria-label={`משימה חדשה ב${title}`} />

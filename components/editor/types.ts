@@ -33,7 +33,7 @@ export function newTask(): EditorTask {
   };
 }
 
-// Returns the title of a task that is part of a dependency cycle, if any.
+// Returns the id of a task that is part of a dependency cycle, if any.
 export function findCycle(tasks: EditorTask[]): string | null {
   const byId = new Map(tasks.map((t) => [t.id, t]));
   const state = new Map<string, 1 | 2>();
@@ -41,7 +41,7 @@ export function findCycle(tasks: EditorTask[]): string | null {
   const visit = (id: string) => {
     if (bad) return;
     if (state.get(id) === 2) return;
-    if (state.get(id) === 1) { bad = byId.get(id)?.title ?? id; return; }
+    if (state.get(id) === 1) { bad = id; return; }
     state.set(id, 1);
     for (const d of byId.get(id)?.depends_on ?? []) if (byId.has(d)) visit(d);
     state.set(id, 2);

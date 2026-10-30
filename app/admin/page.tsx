@@ -1,64 +1,104 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
+import { Icon } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
   const { db } = await requireAdmin();
-  const [{ data: clinics }, { data: people }, { data: patients }] = await Promise.all([
+  const [{ data: clinics, error: clinicsError }, { data: people }, { data: patients }] = await Promise.all([
     db.from("clinics").select("id, name, created_at").order("created_at", { ascending: false }),
     db.from("profiles").select("clinic_id, role, full_name, disabled").in("role", ["doctor", "staff"]),
     db.from("patients").select("clinic_id"),
   ]);
 
+  if (clinicsError) {
+    return (
+      <main>
+        <h1 className="display text-4xl">מרפאות</h1>
+        <p role="alert" className="card mt-6 p-4 text-bad">
+          שגיאה בטעינת רשימת המרפאות. נסו לרענן את הדף.
+        </p>
+      </main>
+    );
+  }
+
   const count = (clinics ?? []).length;
+  const rows = (clinics ?? []).map((c) => {
+    const staff = (people ?? []).filter((p) => p.clinic_id === c.id);
+    const doctors = staff.filter((p) => p.role === "doctor");
+    return { clinic: c, staff, doctors, patientCount: (patients ?? []).filter((p) => p.clinic_id === c.id).length };
+  });
+  const noDoctorCount = rows.filter((r) => r.doctors.length === 0).length;
 
   return (
     <main>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">{count === 0 ? "אין מרפאות" : count === 1 ? "מרפאה אחת" : `${count} מרפאות`}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="eyebrow">{count === 0 ? "אין מרפאות" : count === 1 ? "מרפאה אחת" : `${count} מרפאות`}</p>
+            {noDoctorCount > 0 && (
+              <span className="pill pill-bad">
+                <Icon name="alert" size={12} />
+                {noDoctorCount === 1 ? "מרפאה אחת ללא רופא" : `${noDoctorCount} מרפאות ללא רופא`}
+              </span>
+            )}
+          </div>
           <h1 className="display mt-1 text-4xl">מרפאות</h1>
         </div>
-        <Link href="/admin/clinics/new" className="btn btn-primary">מרפאה חדשה</Link>
+        <Link href="/admin/clinics/new" className="btn btn-primary">
+          <Icon name="plus" size={14} />
+          מרפאה חדשה
+        </Link>
       </div>
 
-      <div className="card mt-6 overflow-x-auto">
-        <table className="w-full">
-          <caption className="sr-only">רשימת המרפאות</caption>
-          <thead>
-            <tr className="border-b border-line text-sm text-muted">
-              <th scope="col" className="px-4 py-3 text-start font-medium">מרפאה</th>
-              <th scope="col" className="px-4 py-3 text-start font-medium">רופא</th>
-              <th scope="col" className="px-4 py-3 text-start font-medium">צוות</th>
-              <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">מטופלים</th>
-              <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">נוצרה</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {(clinics ?? []).map((c) => {
-              const staff = (people ?? []).filter((p) => p.clinic_id === c.id);
-              const doctors = staff.filter((p) => p.role === "doctor");
-              const href = `/admin/clinics/${c.id}`;
-              // Every cell is a link, so tapping anywhere on the row opens the clinic.
-              const cell = "block min-h-12 break-words px-4 py-3.5";
-              return (
-                <tr key={c.id} className="link-row">
-                  <td className="min-w-32"><Link href={href} className={`${cell} font-medium`}>{c.name}</Link></td>
-                  <td className="min-w-24"><Link href={href} tabIndex={-1} className={`${cell} text-muted`}>{doctors.map((d) => d.full_name).join(", ") || "—"}</Link></td>
-                  <td><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{staff.length}</Link></td>
-                  <td className="hidden whitespace-nowrap sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{(patients ?? []).filter((p) => p.clinic_id === c.id).length}</Link></td>
-                  <td className="hidden whitespace-nowrap sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}><span dir="ltr">{israelParts(c.created_at).date.split("-").reverse().join(".")}</span></Link></td>
-                </tr>
-              );
-            })}
-            {(clinics ?? []).length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-muted">אין מרפאות עדיין. לחצו על ״מרפאה חדשה״ כדי להתחיל.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {count === 0 ? (
+        <div className="card mt-6 px-4 py-12 text-center">
+          <p className="font-medium">אין מרפאות עדיין</p>
+          <p className="mt-1 text-sm text-muted">כל המרפאות שתיצרו יופיעו כאן.</p>
+          <Link href="/admin/clinics/new" className="btn btn-primary mt-4 inline-flex">
+            <Icon name="plus" size={14} />
+            יצירת מרפאה ראשונה
+          </Link>
+        </div>
+      ) : (
+        <div className="card mt-6 overflow-x-auto">
+          <table className="w-full">
+            <caption className="sr-only">רשימת המרפאות</caption>
+            <thead>
+              <tr className="border-b border-line text-sm text-muted">
+                <th scope="col" className="px-4 py-3 text-start font-medium">מרפאה</th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">רופא</th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">צוות</th>
+                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">מטופלים</th>
+                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">נוצרה</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {rows.map(({ clinic: c, staff, doctors, patientCount }) => {
+                const href = `/admin/clinics/${c.id}`;
+                // Every cell is a link, so tapping anywhere on the row opens the clinic.
+                const cell = "block min-h-12 break-words px-4 py-3.5";
+                return (
+                  <tr key={c.id} className="link-row">
+                    <td className="min-w-32">
+                      <Link href={href} className={`${cell} flex flex-wrap items-center gap-2 font-medium`}>
+                        {c.name}
+                        {doctors.length === 0 && <span className="pill pill-bad">ללא רופא</span>}
+                      </Link>
+                    </td>
+                    <td className="min-w-24"><Link href={href} tabIndex={-1} className={`${cell} text-muted`}>{doctors.map((d) => d.full_name).join(", ") || "—"}</Link></td>
+                    <td><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{staff.length}</Link></td>
+                    <td className="hidden whitespace-nowrap sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}>{patientCount}</Link></td>
+                    <td className="hidden whitespace-nowrap sm:table-cell"><Link href={href} tabIndex={-1} className={`${cell} num text-muted`}><span dir="ltr">{israelParts(c.created_at).date.split("-").reverse().join(".")}</span></Link></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 }

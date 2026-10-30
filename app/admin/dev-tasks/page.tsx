@@ -13,6 +13,7 @@ const FILTERS = [
   ["done", "הושלם"],
 ] as const;
 type Filter = (typeof FILTERS)[number][0];
+const STATUS_RANK: Record<DevTask["status"], number> = { doing: 0, todo: 1, done: 2 };
 
 export default async function DevTasksPage({ searchParams }: { searchParams: Promise<{ status?: string; who?: string }> }) {
   const { status, who: whoParam } = await searchParams;
@@ -74,7 +75,7 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
       </nav>
 
       {people.length > 0 && (
-        <nav aria-label="סינון משימות לפי אחראי" className="chip-row !mb-1 flex-wrap overflow-visible">
+        <nav aria-label="סינון משימות לפי אחראי" className="chip-row mt-3 flex-wrap overflow-visible border-t border-line pt-3">
           {([["all", "כולם"], ...people.map((p) => [p.id, p.name] as const), ["none", "ללא אחראי"]] as const).map(([key, label]) => (
             <Link key={key} href={href(active, key)} scroll={false} aria-current={key === who ? "page" : undefined} className="chip min-h-11">
               {label} <span className="num text-xs">{countWho(key)}</span>
@@ -87,15 +88,27 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
 
       <div className="mt-4 space-y-5">
         {(active !== "all" || who !== "all") && shownTotal === 0 && (subjects ?? []).length > 0 && (
-          <p className="card px-4 py-8 text-center text-muted">אין משימות שמתאימות לסינון.</p>
+          <div className="card mt-6 px-4 py-12 text-center">
+            <p className="font-medium">אין משימות שמתאימות לסינון.</p>
+            <p className="mt-1 text-muted">
+              נסו <Link href={href("all", "all")} scroll={false} className="underline">לנקות את הסינון</Link> ולראות הכול.
+            </p>
+          </div>
         )}
         {(subjects ?? []).map((s) => {
           const mine = all.filter((t) => t.subject_id === s.id);
-          const shown = mine.filter((t) => byWho(t, who) && byStatus(t, active));
+          const shown = mine
+            .filter((t) => byWho(t, who) && byStatus(t, active))
+            .sort((a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status]);
           if ((active !== "all" || who !== "all") && shown.length === 0) return null;
           return <SubjectCard key={s.id} id={s.id} title={s.title} tasks={shown} doneCount={mine.filter((t) => t.status === "done").length} total={mine.length} people={people} />;
         })}
-        {(subjects ?? []).length === 0 && <p className="card px-4 py-8 text-center text-muted">אין נושאים עדיין. הוסיפו את הראשון.</p>}
+        {(subjects ?? []).length === 0 && (
+          <div className="card mt-6 px-4 py-12 text-center">
+            <p className="font-medium">אין נושאים עדיין.</p>
+            <p className="mt-1 text-muted">הוסיפו את הראשון בטופס שבתחתית העמוד.</p>
+          </div>
+        )}
       </div>
 
       <AddSubject />
