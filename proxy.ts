@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+export const UID_HEADER = "x-medix-uid";
+export const AAL_HEADER = "x-medix-aal";
+
 const VIEW_ONLY_MESSAGE = "אתה במצב צפייה כמנהל, ולכן אי אפשר לערוך פרטים.";
 
 export async function proxy(request: NextRequest) {
@@ -56,7 +59,20 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
-  return response;
+
+  // The session was verified once, here. Pass the result to the page so it does not verify it again
+  // (that is a network round trip on every request for projects that still use the shared JWT secret).
+  // Any value sent by the browser is discarded first, so these headers can only come from this function.
+  const forwarded = new Headers(request.headers);
+  forwarded.delete(UID_HEADER);
+  forwarded.delete(AAL_HEADER);
+  if (signedIn && data?.claims?.sub) {
+    forwarded.set(UID_HEADER, data.claims.sub);
+    forwarded.set(AAL_HEADER, String((data.claims as { aal?: string }).aal ?? "aal1"));
+  }
+  const next = NextResponse.next({ request: { headers: forwarded } });
+  response.cookies.getAll().forEach((c) => next.cookies.set(c));
+  return next;
 }
 
 export const config = {
