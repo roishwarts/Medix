@@ -33,7 +33,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
 
   // Everything except the stage tab, so each tab can show how many patients it holds.
   const base = all
-    .filter((j) => (sp.notReady ? j.summary.readiness < 100 : true))
+    .filter((j) => (sp.notReady ? j.summary.daysToSurgery >= 0 && j.summary.readiness < 100 : true))
     .filter((j) => (days ? j.summary.daysToSurgery >= 0 && j.summary.daysToSurgery <= days : true))
     .filter((j) => (sp.hospital ? placeOf.get(j.patient_id)?.hospital === sp.hospital : true))
     .filter((j) => (sp.q ? j.patient.full_name.includes(sp.q.trim()) : true));

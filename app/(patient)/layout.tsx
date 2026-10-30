@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
@@ -37,6 +38,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
           )}
         </p>
       )}
+      <BackButton home="/journey" />
       {children}
       </div>
     </div>

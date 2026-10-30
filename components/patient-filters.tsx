@@ -6,10 +6,10 @@ export const DAY_PRESETS = [7, 14, 21, 30, 60, 90];
 // Hospital + "surgery within N days" filter, shared by the dashboard and the patients list.
 // The number box accepts any value, so a secretary can use a time frame that is not in the presets.
 export function PatientFilters({
-  action, hospitals, hospital, days, hidden = {}, t, children,
+  action, hospitals, hospital, days, hidden = {}, t, children, compact = false,
 }: {
   action: string; hospitals: string[]; hospital?: string; days?: number | null;
-  hidden?: Record<string, string | undefined>; t: T; children?: React.ReactNode;
+  hidden?: Record<string, string | undefined>; t: T; children?: React.ReactNode; compact?: boolean;
 }) {
   const link = (d: number | null) => {
     const p = new URLSearchParams();
@@ -20,6 +20,23 @@ export function PatientFilters({
     return q ? `${action}?${q}` : action;
   };
   const presets = days && !DAY_PRESETS.includes(days) ? [...DAY_PRESETS, days].sort((a, b) => a - b) : DAY_PRESETS;
+  if (compact) {
+    // One slim line: no card, no chips, labels only for screen readers.
+    return (
+      <form action={action} role="search" aria-label={t("סינון מטופלים")} className="flex flex-wrap items-center gap-2">
+        {Object.entries(hidden).map(([k, v]) => v ? <input key={k} type="hidden" name={k} value={v} /> : null)}
+        <select name="hospital" aria-label={t("בית חולים")} defaultValue={hospital ?? ""} className="field !min-h-9 w-auto max-w-[11rem] py-1 text-sm">
+          <option value="">{t("כל בתי החולים")}</option>
+          {hospitals.map((h) => <option key={h} value={h}>{h}</option>)}
+        </select>
+        <input name="days" type="number" inputMode="numeric" min={1} max={3650} list="day-presets" aria-label={t("ניתוח בתוך (ימים)")}
+          defaultValue={days ?? ""} placeholder={t("כל הניתוחים")} className="field num !min-h-9 w-32 py-1 text-sm" />
+        <datalist id="day-presets">{DAY_PRESETS.map((d) => <option key={d} value={d} />)}</datalist>
+        <button className="btn btn-sm !min-h-9">{t("סינון")}</button>
+        {(hospital || days) && <Link href={action} className="btn btn-quiet btn-sm !min-h-9">{t("ניקוי")}</Link>}
+      </form>
+    );
+  }
   return (
     <div className="space-y-3">
       <form action={action} role="search" aria-label={t("סינון מטופלים")} className="card flex flex-wrap items-end gap-x-4 gap-y-2 p-4">
@@ -35,7 +52,7 @@ export function PatientFilters({
         <div className="w-40">
           <label htmlFor="days" className="lbl">{t("ניתוח בתוך (ימים)")}</label>
           <input id="days" name="days" type="number" inputMode="numeric" min={1} max={3650} list="day-presets"
-            defaultValue={days ?? ""} placeholder={t("כל מועד")} className="field num" />
+            defaultValue={days ?? ""} placeholder={t("כל הניתוחים")} className="field num" />
           <datalist id="day-presets">{DAY_PRESETS.map((d) => <option key={d} value={d} />)}</datalist>
         </div>
         <div className="flex gap-2">
@@ -44,7 +61,7 @@ export function PatientFilters({
         </div>
       </form>
       <nav aria-label={t("מועד הניתוח")} className="chip-row flex-wrap">
-        <Link href={link(null)} scroll={false} aria-current={!days ? "page" : undefined} className="chip min-h-11">{t("כל מועד")}</Link>
+        <Link href={link(null)} scroll={false} aria-current={!days ? "page" : undefined} className="chip min-h-11">{t("כל הניתוחים")}</Link>
         {presets.map((d) => (
           <Link key={d} href={link(d)} scroll={false} aria-current={days === d ? "page" : undefined} className="chip min-h-11">{t("{n} ימים", { n: d })}</Link>
         ))}
