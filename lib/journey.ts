@@ -199,7 +199,7 @@ export const ACTION_LABEL: Record<ActionKind, string> = {
   review: "ממתין לבדיקת הצוות",
   overdue: "באיחור",
   clinic: "משימות לצוות ולרופא",
-  upcoming: "מועד קרוב אצל המטופל",
+  upcoming: "משימות למטופלים",
 };
 
 export function actionItems(

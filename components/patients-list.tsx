@@ -56,7 +56,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
     <>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <h1 className="display text-4xl">{title}</h1>
-      <div role="search" aria-label={t("סינון מטופלים")} className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <div role="search" aria-label={t("סינון מטופלים")} className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2">
         <input
           type="search" value={q} onChange={(e) => { setQ(e.target.value); sync({ q: e.target.value }); }}
           aria-label={t("חיפוש שם")} placeholder={t("חיפוש שם")} autoComplete="off" enterKeyHint="search"

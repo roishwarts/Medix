@@ -16,7 +16,7 @@ const TABS: [ActionKind | "all", string][] = [
   ["review", "ממתין לבדיקה"],
   ["overdue", "באיחור"],
   ["clinic", "משימות לצוות"],
-  ["upcoming", "מועד קרוב"],
+  ["upcoming", "משימות למטופלים"],
 ];
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -41,8 +41,27 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   return (
     <main className="space-y-10">
       <header>
-        <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-        <p className="mt-1 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
+        <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 flex-1 !flex-wrap justify-center !overflow-visible">
+          {TABS.map(([key, label]) => {
+            const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
+            const on = key === active;
+            return (
+              <Link
+                key={key}
+                href={key === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${key}`}
+                scroll={false}
+                aria-current={on ? "page" : undefined}
+                className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
+              >
+                {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        </div>
+        <p className="mt-2 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
@@ -52,24 +71,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           when: israelParts(r.requested_at).date.split("-").reverse().join("."),
         }))}
       />
-      <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 !flex-wrap !overflow-visible">
-        {TABS.map(([key, label]) => {
-          const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
-          const on = key === active;
-          return (
-            <Link
-              key={key}
-              href={key === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${key}`}
-              scroll={false}
-              aria-current={on ? "page" : undefined}
-              className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
-            >
-              {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
       {active !== "all" && items.every((i) => i.kind !== active) && (
         <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
       )}
@@ -80,7 +81,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
+          <section key={kind} className="max-w-3xl" aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
               <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
                 {t(ACTION_LABEL[kind])} <span className="num text-sm text-muted">{list.length}</span>
@@ -91,7 +92,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                 <Link
                   key={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
+                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-2 link-row sm:grid-cols-[9rem_minmax(0,1fr)_auto]"
                 >
                   <span className="min-w-0 break-words font-medium">{i.patientName}</span>
                   <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
