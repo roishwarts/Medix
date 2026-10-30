@@ -27,9 +27,9 @@ begin
   returning id into v_journey;
 
   insert into journey_tasks (journey_id, clinic_id, template_task_id, title, description, owner,
-    due_offset_days, requires_evidence, requires_review, mandatory, position)
+    due_offset_days, requires_evidence, requires_review, mandatory, position, kind, location)
   select v_journey, v_clinic, t.id, t.title, t.description, t.owner,
-    t.due_offset_days, t.requires_evidence, t.requires_review, t.mandatory, t.position
+    t.due_offset_days, t.requires_evidence, t.requires_review, t.mandatory, t.position, t.kind, t.location
   from template_tasks t where t.template_id = p_template;
 
   update journey_tasks jt
@@ -44,7 +44,7 @@ begin
 end $$;
 
 -- Doctor and staff may both edit a template's patient-facing info (unlike the task list, which stays doctor-only).
-create function save_template_patient_info(p_template uuid, p_patient_info text) returns void
+create or replace function save_template_patient_info(p_template uuid, p_patient_info text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_staff() then raise exception 'not allowed'; end if;
@@ -54,7 +54,7 @@ begin
 end $$;
 
 -- Lets staff adjust one patient's general info after their journey already started, without touching the template.
-create function save_journey_patient_info(p_journey uuid, p_patient_info text) returns void
+create or replace function save_journey_patient_info(p_journey uuid, p_patient_info text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_staff() then raise exception 'not allowed'; end if;
@@ -110,7 +110,7 @@ create policy clinic_videos_write on clinic_videos for all
   with check (is_staff() and clinic_id = auth_clinic());
 
 -- Storage path convention: "<clinic_id>/<file>".
-create function clinic_video_access(path text) returns boolean
+create or replace function clinic_video_access(path text) returns boolean
 language plpgsql stable security definer set search_path = public as $$
 declare
   first_part text := split_part(path, '/', 1);
