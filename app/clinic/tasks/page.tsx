@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
+import { getLang } from "@/lib/prefs-server";
 import { loadJourneys } from "@/lib/queries";
-import { ACTION_LABEL, OWNER_LABEL, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
+import { ACTION_LABEL, ownerLabel, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
 import { formatDate, israelParts, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { ResetRequests } from "../reset-requests";
@@ -18,6 +20,7 @@ const TABS: [ActionKind | "all", string][] = [
 ];
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const [t, lang] = await Promise.all([getT(), getLang()]);
   const { status } = await searchParams;
   const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
   const supabase = await createClient();
@@ -29,17 +32,17 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       .is("handled_at", null)
       .order("requested_at"),
   ]);
-  const t = today();
+  const t0 = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
-    actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t),
+    actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0),
   );
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
 
   return (
     <main className="space-y-10">
       <header>
-        <h1 className="display text-3xl sm:text-4xl">משימות</h1>
-        <p className="mt-1 text-muted">כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.</p>
+        <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
+        <p className="mt-1 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
@@ -49,7 +52,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           when: israelParts(r.requested_at).date.split("-").reverse().join("."),
         }))}
       />
-      <nav aria-label="סינון פעולות לפי סטטוס" className="chip-row !mb-0 !flex-wrap !overflow-visible">
+      <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 !flex-wrap !overflow-visible">
         {TABS.map(([key, label]) => {
           const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
           const on = key === active;
@@ -61,14 +64,14 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               aria-current={on ? "page" : undefined}
               className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
             >
-              {label} <span className="num text-xs">{count}</span><span className="sr-only"> פעולות</span>
+              {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
             </Link>
           );
         })}
       </nav>
 
       {active !== "all" && items.every((i) => i.kind !== active) && (
-        <p role="status" className="card px-4 py-8 text-center text-muted">אין פעולות בסטטוס הזה.</p>
+        <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
       )}
 
       {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
@@ -77,10 +80,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} aria-label={active === "all" ? undefined : ACTION_LABEL[kind]} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
+          <section key={kind} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
               <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
-                {ACTION_LABEL[kind]} <span className="num text-sm text-muted">{list.length}</span>
+                {t(ACTION_LABEL[kind])} <span className="num text-sm text-muted">{list.length}</span>
               </h2>
             )}
             <div className="card divide-y divide-line">
@@ -93,10 +96,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                   <span className="min-w-0 break-words font-medium">{i.patientName}</span>
                   <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
                     {i.task.title}
-                    {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">אצל {OWNER_LABEL[i.task.owner]}</span>}
+                    {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
                   </span>
                   <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
-                    {i.kind === "review" ? `ניתוח ${formatDate(i.surgeryDate)}` : `${formatDate(i.task.dueDate)} · ${relativeDays(i.task.dueDate, t)}`}
+                    {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
                   </span>
                 </Link>
               ))}

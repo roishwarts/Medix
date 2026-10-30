@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
-import { OWNER_LABEL } from "@/lib/journey";
+import { ownerLabel, blockerLabel } from "@/lib/journey";
+import { getT } from "@/lib/i18n/server";
+import { getLang } from "@/lib/prefs-server";
 import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";
 import { Icon, ReadinessBar } from "@/components/ui";
 import { LiveTaskPill } from "@/components/task-optimistic";
@@ -11,6 +13,9 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
+import { PatientSettings } from "./patient-settings";
+import { loadPatientExtras } from "@/lib/patient-extras";
+import { stageOf } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
@@ -39,6 +44,7 @@ export default async function PatientPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { id } = await params;
+  const [tr, lang] = await Promise.all([getT(), getLang()]);
   const { status } = await searchParams;
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
@@ -86,7 +92,9 @@ export default async function PatientPage({
         }),
     ),
   ]);
+  const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
+    t: tr,
     patientNames: new Map(),
     journeyByPatient: new Map([[journey.patient_id, id]]),
     me: "",
@@ -103,21 +111,21 @@ export default async function PatientPage({
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
             <p className="text-muted">{journey.procedure || journey.template_name}</p>
-            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">עריכת המסלול של המטופל</Link>
+            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>
           </div>
           {(placement?.hospital || placement?.company) && (
             <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              {placement?.hospital && <span><span className="text-muted">בית חולים:</span> <span className="font-medium">{placement.hospital}</span></span>}
-              {placement?.company && <span><span className="text-muted">חברה:</span> <span className="font-medium">{placement.company}</span></span>}
+              {placement?.hospital && <span><span className="text-muted">{tr("בית חולים:")}</span> <span className="font-medium">{placement.hospital}</span></span>}
+              {placement?.company && <span><span className="text-muted">{tr("חברה:")}</span> <span className="font-medium">{placement.company}</span></span>}
             </p>
           )}
           <p className="mt-3">
-            ניתוח: <span className="font-medium">{formatDateLong(journey.surgery_date)}</span>{" "}
-            <span className="text-muted">({relativeDays(journey.surgery_date)})</span>
+            {tr("ניתוח:")} <span className="font-medium">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
+            <span className="text-muted">({relativeDays(journey.surgery_date, undefined, lang)})</span>
           </p>
         </div>
         <div className="w-full sm:max-w-xs">
-          <p className="mb-1 text-sm text-muted">מוכנות לניתוח</p>
+          <p className="mb-1 text-sm text-muted">{tr("מוכנות לניתוח")}</p>
           <div className="flex items-center gap-3">
             <span className="num text-sm font-medium">{summary.readiness}%</span>
             <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
@@ -125,25 +133,27 @@ export default async function PatientPage({
         </div>
       </div>
 
+      <PatientSettings patientId={journey.patient_id} autoStage={stageOf(summary)} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
+
       {summary.topBlocker && (
         <section className="mt-8">
-          <h2 className="eyebrow mb-2">שלב נוכחי</h2>
+          <h2 className="eyebrow mb-2">{tr("שלב נוכחי")}</h2>
           <div className="card flex items-center justify-between gap-3 px-4 py-3">
-            <span>{summary.topBlocker.label}</span>
-            <span className="shrink-0 text-sm text-muted">יעד {formatDate(summary.topBlocker.task.dueDate)}</span>
+            <span>{blockerLabel(summary.topBlocker, tr)}</span>
+            <span className="shrink-0 text-sm text-muted">{tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}</span>
           </div>
         </section>
       )}
 
       <details className="fold mt-8">
         <summary>
-          <span className="font-medium">פרטי המטופל ובני משפחה</span>
-          <span className="text-sm text-muted">{(caregivers ?? []).length > 0 ? `${(caregivers ?? []).length} בני משפחה` : ""}</span>
+          <span className="font-medium">{tr("פרטי המטופל ובני משפחה")}</span>
+          <span className="text-sm text-muted">{(caregivers ?? []).length > 0 ? tr("{n} בני משפחה", { n: (caregivers ?? []).length }) : ""}</span>
         </summary>
         <div className="pt-4">
         <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies} />
         <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
-        <h3 className="eyebrow mb-2 mt-6">בני משפחה</h3>
+        <h3 className="eyebrow mb-2 mt-6">{tr("בני משפחה")}</h3>
         <CaregiverList
           isPatient={false}
           items={(caregivers ?? []).map((c) => ({
@@ -164,13 +174,13 @@ export default async function PatientPage({
           }))}
         />
         <AddCaregiver patientId={journey.patient_id} />
-        <p className="mt-2 text-xs text-muted">בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.</p>
+        <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </div>
       </details>
 
       <section className="mt-10">
-        <h2 className="eyebrow mb-1">כל המשימות</h2>
-        <nav aria-label="סינון משימות לפי סטטוס" className="chip-row">
+        <h2 className="eyebrow mb-1">{tr("כל המשימות")}</h2>
+        <nav aria-label={tr("סינון משימות לפי סטטוס")} className="chip-row">
           {FILTERS.map(([key, label]) => {
             const count = summary.tasks.filter((t) => matches(t, key)).length;
             const on = key === active;
@@ -182,12 +192,12 @@ export default async function PatientPage({
                 aria-current={on ? "page" : undefined}
                 className="chip min-h-11"
               >
-                {label} <span className="num text-xs">{count}</span>
+                {tr(label)} <span className="num text-xs">{count}</span>
               </Link>
             );
           })}
         </nav>
-        {visibleTasks.length === 0 && <p className="card px-4 py-8 text-center text-muted">אין משימות בסטטוס הזה.</p>}
+        {visibleTasks.length === 0 && <p className="card px-4 py-8 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
         <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
           {visibleTasks.map((t) => (
             <div key={t.id} className={`px-4 py-4 ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
@@ -195,14 +205,14 @@ export default async function PatientPage({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="break-words font-medium">{t.title}</p>
-                    {!t.mandatory && <span className="pill pill-neutral">רשות</span>}
+                    {!t.mandatory && <span className="pill pill-neutral">{tr("רשות")}</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">
-                    {t.kind === "appointment" ? "תור" : OWNER_LABEL[t.owner]} ·{" "}
+                    {t.kind === "appointment" ? tr("תור") : ownerLabel(t.owner, tr)} ·{" "}
                     {t.kind === "appointment"
-                      ? t.scheduled_at ? `${formatDate(t.eventDate)} ${t.eventTime}` : "טרם נקבע מועד"
-                      : `יעד ${formatDate(t.dueDate)}`}
-                    {t.state === "locked" && ` · ממתין ל: ${t.blockedBy.map((b) => b.title).join(", ")}`}
+                      ? t.scheduled_at ? `${formatDate(t.eventDate, lang)} ${t.eventTime}` : tr("טרם נקבע מועד")
+                      : tr("יעד {date}", { date: formatDate(t.dueDate, lang) })}
+                    {t.state === "locked" && ` · ${tr("ממתין ל: {list}", { list: t.blockedBy.map((b) => b.title).join(", ") })}`}
                   </p>
                 </div>
                 <LiveTaskPill taskId={t.id} state={t.state} overdue={t.overdue} />
@@ -220,11 +230,11 @@ export default async function PatientPage({
                   )}
                   {t.submitted_by && cgByUser.get(t.submitted_by) && (
                     <p className="text-muted">
-                      הוגש על ידי {cgByUser.get(t.submitted_by)!.full_name} ({cgByUser.get(t.submitted_by)!.relation})
+                      {tr("הוגש על ידי {name} ({relation})", { name: cgByUser.get(t.submitted_by)!.full_name, relation: cgByUser.get(t.submitted_by)!.relation })}
                     </p>
                   )}
-                  {t.patient_note && <p className="text-muted">הערת המטופל: {t.patient_note}</p>}
-                  {t.review_note && <p className="text-bad">הערת הצוות: {t.review_note}</p>}
+                  {t.patient_note && <p className="text-muted">{tr("הערת המטופל: {note}", { note: t.patient_note })}</p>}
+                  {t.review_note && <p className="text-bad">{tr("הערת הצוות: {note}", { note: t.review_note })}</p>}
                 </div>
               )}
 
@@ -242,7 +252,7 @@ export default async function PatientPage({
       </section>
 
       <section className="mt-10">
-        <h2 className="eyebrow mb-3">היסטוריה</h2>
+        <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
         <ActivityList items={history} showPatient={false} />
       </section>
     </main>

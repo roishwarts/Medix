@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import type { EditorTask } from "@/components/editor/types";
-import { Icon } from "@/components/ui";
 import { TemplateForm } from "@/components/template-form";
 import { deleteBaseTemplate, saveBaseTemplate } from "../actions";
 
@@ -15,6 +14,7 @@ export default async function BaseTemplatePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
+  const t = await getT();
   const { db } = await requireAdmin();
   const { id } = await params;
   const { from } = await searchParams;
@@ -35,7 +35,7 @@ export default async function BaseTemplatePage({
       .maybeSingle();
     if (!tpl) notFound();
     const { data: rows } = await db.from("template_tasks").select("*").eq("template_id", sourceId).order("position");
-    name = isNew ? `${tpl.name} (עותק)` : tpl.name;
+    name = isNew ? `${tpl.name} (${(await getT())("עותק")})` : tpl.name;
     procedure = tpl.procedure ?? "";
     description = tpl.description ?? "";
 
@@ -59,13 +59,10 @@ export default async function BaseTemplatePage({
 
   return (
     <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
-      <Link href="/admin/templates" className="back-link">
-        <Icon name="arrow" size={14} /> כל תבניות הבסיס
-      </Link>
-      <p className="eyebrow">תבנית בסיס</p>
-      <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? "שכפול תבנית" : "תבנית חדשה") : "עריכת תבנית"}</h1>
+      <p className="eyebrow">{t("תבנית בסיס")}</p>
+      <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? t("שכפול תבנית") : t("תבנית חדשה")) : t("עריכת תבנית")}</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        תבנית בסיס היא נקודת מוצא שמרפאות מעתיקות ומתאימות. הגדירו את המשימות, מי אחראי עליהן, מתי הן מתבצעות ביחס ליום הניתוח ומה צריך להסתיים לפניהן.
+        {t("תבנית בסיס היא נקודת מוצא שמרפאות מעתיקות ומתאימות. הגדירו את המשימות, מי אחראי עליהן, מתי הן מתבצעות ביחס ליום הניתוח ומה צריך להסתיים לפניהן.")}
       </p>
       <TemplateForm
         key={id + (from ?? "")}

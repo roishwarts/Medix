@@ -2,13 +2,15 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LOGIN_DOMAIN } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 
 export type ForgotState = { error?: string; sent?: boolean } | undefined;
 
 // Patients and caregivers ask the clinic for a reset link. The answer never reveals whether the username exists.
 export async function requestPasswordReset(_: ForgotState, formData: FormData): Promise<ForgotState> {
+  const t = await getT();
   const username = String(formData.get("username") ?? "").trim().toLowerCase();
-  if (!username) return { error: "יש להזין שם משתמש" };
+  if (!username) return { error: t("יש להזין שם משתמש") };
 
   const admin = createAdminClient();
   if (admin && /^[a-z0-9._-]{3,30}$/.test(username)) {

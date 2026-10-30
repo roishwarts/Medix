@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
-import { Icon } from "@/components/ui";
 import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
@@ -13,6 +12,7 @@ import { ClinicAddress } from "./clinic-address";
 export const dynamic = "force-dynamic";
 
 export default async function ClinicPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   const { id } = await params;
   const { db } = await requireAdmin();
   const { data: clinic } = await db.from("clinics").select("*").eq("id", id).maybeSingle();
@@ -39,35 +39,32 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   const note = "mt-3 text-sm text-muted";
   return (
     <main>
-      <Link href="/admin" className="back-link">
-        <Icon name="arrow" size={14} /> כל המרפאות
-      </Link>
       <h1 className="display break-words text-3xl sm:text-4xl">{clinic.name}</h1>
       <p className="mt-1 text-muted">
-        נוצרה <span className="num">{israelParts(clinic.created_at).date.split("-").reverse().join(".")}</span> · <span className="num">{patientCount ?? 0}</span> מטופלים
+        {t("נוצרה {date}", { date: israelParts(clinic.created_at).date.split("-").reverse().join(".") })} · {t("{n} מטופלים", { n: patientCount ?? 0 })}
       </p>
 
       <section className="mt-8" aria-labelledby="address-h">
-        <h2 id="address-h" className={h2}>מיקום המרפאה</h2>
+        <h2 id="address-h" className={h2}>{t("מיקום המרפאה")}</h2>
         <ClinicAddress clinicId={id} initial={clinic.address ?? ""} />
       </section>
 
-      <section className="mt-10" aria-label="אימות דו-שלבי">
+      <section className="mt-10" aria-label={t("אימות דו-שלבי")}>
         <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
       </section>
 
       <section className="mt-10" aria-labelledby="options-h">
-        <h2 id="options-h" className={h2}>בתי חולים וחברות</h2>
+        <h2 id="options-h" className={h2}>{t("בתי חולים וחברות")}</h2>
         <ClinicOptions
           clinicId={id}
           hospitals={(options ?? []).filter((o) => o.kind === "hospital")}
           companies={(options ?? []).filter((o) => o.kind === "company")}
         />
-        <p className={note}>הרופא והצוות בוחרים מהרשימות האלה לכל מטופל: באיזה בית חולים הפרוצדורה, ועם איזו חברה עובדים.</p>
+        <p className={note}>{t("הרופא והצוות בוחרים מהרשימות האלה לכל מטופל: באיזה בית חולים הפרוצדורה, ועם איזו חברה עובדים.")}</p>
       </section>
 
       <section className="mt-10" aria-labelledby="users-h">
-        <h2 id="users-h" className={h2}>משתמשי צוות</h2>
+        <h2 id="users-h" className={h2}>{t("משתמשי צוות")}</h2>
         {users.length > 0 ? (
           <ul className="card divide-y divide-line">
             {users.map((u) => (
@@ -76,26 +73,26 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
           </ul>
         ) : (
           <div className="card px-4 py-10 text-center">
-            <p className="font-medium">אין משתמשי צוות עדיין.</p>
-            <p className="mt-1 text-muted">הוספת רופא או איש צוות נוספים אפשרית למטה.</p>
+            <p className="font-medium">{t("אין משתמשי צוות עדיין.")}</p>
+            <p className="mt-1 text-muted">{t("הוספת רופא או איש צוות נוספים אפשרית למטה.")}</p>
           </div>
         )}
         <AddUserForm clinicId={id} />
       </section>
 
       <section className="mt-10" aria-labelledby="templates-h">
-        <h2 id="templates-h" className={h2}>תבניות של המרפאה</h2>
+        <h2 id="templates-h" className={h2}>{t("תבניות של המרפאה")}</h2>
         {(templates ?? []).length > 0 ? (
           <ul className="card divide-y divide-line">
             {(templates ?? []).map((t) => <li key={t.id} className="break-words px-4 py-3">{t.name}</li>)}
           </ul>
         ) : (
           <div className="card px-4 py-10 text-center">
-            <p className="font-medium">אין תבניות עדיין.</p>
-            <p className="mt-1 text-muted">אפשר להוסיף עותק של תבנית בסיס, ולהתחיל ממנה.</p>
+            <p className="font-medium">{t("אין תבניות עדיין.")}</p>
+            <p className="mt-1 text-muted">{t("אפשר להוסיף עותק של תבנית בסיס, ולהתחיל ממנה.")}</p>
           </div>
         )}
-        <p className={note}>הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.</p>
+        <p className={note}>{t("הרופא עורך את התבניות שלו בעצמו. כאן אפשר רק להוסיף עותק של תבנית בסיס.")}</p>
         <AddTemplate clinicId={id} bases={bases ?? []} />
       </section>
     </main>

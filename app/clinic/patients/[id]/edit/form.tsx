@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,7 @@ export function JourneyEditForm({
   surgeryDate: string;
   initialTasks: EditorTask[];
 }) {
+  const t = useT();
   const router = useRouter();
   const [date, setDate] = useState(surgeryDate);
   const [tasks, setTasks] = useState(initialTasks);
@@ -35,7 +37,7 @@ export function JourneyEditForm({
   return (
     <div className="mt-8 space-y-8">
       <div className="max-w-xs">
-        <label className="lbl" htmlFor="date">תאריך ניתוח</label>
+        <label className="lbl" htmlFor="date">{t("תאריך ניתוח")}</label>
         <input
           id="date"
           type="date"
@@ -45,19 +47,19 @@ export function JourneyEditForm({
           aria-describedby="date-hint"
           onChange={(e) => setDate(e.target.value)}
         />
-        <p id="date-hint" className="mt-1.5 text-sm text-muted">מועדי המשימות מחושבים לפי תאריך זה.</p>
+        <p id="date-hint" className="mt-1.5 text-sm text-muted">{t("מועדי המשימות מחושבים לפי תאריך זה.")}</p>
       </div>
       {tasks.length === 0 && (
         <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
-          עדיין אין משימות במסלול. אפשר להוסיף משימה ראשונה למטה.
+          {t("עדיין אין משימות במסלול. אפשר להוסיף משימה ראשונה למטה.")}
         </p>
       )}
       <TaskEditor tasks={tasks} onChange={setTasks} journeyMode />
       <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface/95 px-4 py-3 shadow-lg backdrop-blur">
         <button className="btn btn-primary min-h-11" onClick={save} disabled={pending} aria-busy={pending}>
-          {pending ? "שומר…" : "שמירת שינויים"}
+          {pending ? t("שומר…") : t("שמירת שינויים")}
         </button>
-        <Link href={`/clinic/patients/${journeyId}`} className="btn btn-quiet min-h-11" aria-disabled={pending}>ביטול</Link>
+        <Link href={`/clinic/patients/${journeyId}`} className="btn btn-quiet min-h-11" aria-disabled={pending}>{t("ביטול")}</Link>
         <div id="pedit-error" aria-live="polite" className="min-w-0 flex-1 basis-48 text-sm">
           {error && <p role="alert" className="font-medium text-bad">{error}</p>}
         </div>

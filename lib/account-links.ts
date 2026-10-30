@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -21,7 +22,7 @@ type NewLink =
 // so only the newest link works.
 export async function createAccountLink(input: NewLink): Promise<{ url: string } | { error: string }> {
   const admin = createAdminClient();
-  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת" };
+  if (!admin) return { error: (await getT())("חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת") };
 
   const target = input.purpose === "patient_join" ? { patient_id: input.patientId } : { user_id: input.userId };
   const [col, val] = Object.entries(target)[0];
@@ -37,7 +38,7 @@ export async function createAccountLink(input: NewLink): Promise<{ url: string }
     expires_at: new Date(Date.now() + ms).toISOString(),
     ...target,
   });
-  if (error) return { error: "יצירת הקישור נכשלה" };
+  if (error) return { error: (await getT())("יצירת הקישור נכשלה") };
 
   const path = input.purpose === "patient_join" ? "join" : "reset";
   return { url: `${await getOrigin()}/${path}/${token}` };

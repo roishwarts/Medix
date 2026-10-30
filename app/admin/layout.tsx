@@ -1,26 +1,21 @@
 import { requireAdmin } from "@/lib/admin";
+import { getT } from "@/lib/i18n/server";
 import { LogoutButton } from "@/components/logout-button";
-import { NavLink } from "@/components/nav-link";
+import { AppHeader, type NavItem } from "@/components/app-header";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = await getT();
   await requireAdmin();
+  const ITEMS: NavItem[] = [
+    { href: "/admin", label: t("מרפאות"), exact: true },
+    { href: "/admin/templates", label: t("תבניות בסיס") },
+    { href: "/admin/users", label: t("משתמשים") },
+    { href: "/admin/dev-tasks", label: t("משימות פיתוח") },
+  ];
   return (
     <div className="min-h-dvh">
-      <header className="topbar">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-5">
-          <nav className="order-2 flex min-w-0 gap-0.5 max-sm:w-full overflow-x-auto sm:order-1 whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <NavLink href="/admin" exact>מרפאות</NavLink>
-            <NavLink href="/admin/templates">תבניות בסיס</NavLink>
-            <NavLink href="/admin/users">משתמשים</NavLink>
-            <NavLink href="/admin/dev-tasks">משימות פיתוח</NavLink>
-          </nav>
-          <div className="order-1 flex items-center gap-2 max-sm:w-full max-sm:justify-between max-sm:pt-1 sm:order-2">
-            <span className="text-sm text-muted">ניהול המערכת</span>
-            <LogoutButton />
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-6xl px-5 py-8">{children}</div>
+      <AppHeader items={ITEMS} brand={t("ניהול המערכת")} home="/admin" logout={<LogoutButton />} />
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">{children}</div>
     </div>
   );
 }

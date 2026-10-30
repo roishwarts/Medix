@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
 import { Icon } from "@/components/ui";
@@ -34,6 +35,7 @@ const RANK: Record<RoleKey, number> = { admin: 0, doctor: 1, staff: 2, patient: 
 const dmy = (iso: string) => israelParts(iso).date.split("-").reverse().join(".");
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ role?: string; q?: string; clinic?: string; status?: string; sort?: string }> }) {
+  const t = await getT();
   const sp = await searchParams;
   const active: Filter = FILTERS.some(([k]) => k === sp.role) ? (sp.role as Filter) : "all";
   const q = (sp.q ?? "").trim();
@@ -76,7 +78,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   for (const a of admins ?? []) {
     if (profileIds.has(a.user_id)) continue;
     const u = auth.get(a.user_id);
-    rows.push({ id: a.user_id, name: u?.email.split("@")[0] ?? "מנהל", role: "admin", clinicId: null, clinic: "—", username: u?.email.split("@")[0] ?? "", disabled: false, last: u?.last ?? null, created: u?.created ?? null });
+    rows.push({ id: a.user_id, name: u?.email.split("@")[0] ?? t("מנהל"), role: "admin", clinicId: null, clinic: "—", username: u?.email.split("@")[0] ?? "", disabled: false, last: u?.last ?? null, created: u?.created ?? null });
   }
 
   const matchesQuery = (r: Row) => !q || `${r.name} ${r.username} ${r.clinic}`.toLowerCase().includes(q.toLowerCase());
@@ -109,42 +111,42 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
-      <p className="eyebrow">{rows.length} משתמשים</p>
-      <h1 className="display mt-1 text-4xl">משתמשים</h1>
-      <p className="mt-2 text-muted">לחיצה על משתמש פותחת את המערכת כפי שהוא רואה אותה, בתצוגה בלבד. ניהול משתמשי צוות — השבתה, איפוס סיסמה — נעשה בכרטיס המרפאה.</p>
+      <p className="eyebrow">{t("{n} משתמשים", { n: rows.length })}</p>
+      <h1 className="display mt-1 text-4xl">{t("משתמשים")}</h1>
+      <p className="mt-2 text-muted">{t("לחיצה על משתמש פותחת את המערכת כפי שהוא רואה אותה, ואפשר לעשות בה כל מה שהוא יכול. ניהול משתמשי צוות — השבתה, איפוס סיסמה — נעשה בכרטיס המרפאה.")}</p>
 
       <form role="search" className="mt-6 flex flex-wrap gap-2">
         {active !== "all" && <input type="hidden" name="role" value={active} />}
-        <input name="q" type="search" enterKeyHint="search" autoComplete="off" defaultValue={q} className="field min-w-0 flex-1 basis-48" placeholder="שם, שם משתמש או מרפאה" aria-label="חיפוש משתמשים" />
-        <select name="clinic" defaultValue={clinicId} className="field min-h-11 w-auto shrink-0" aria-label="סינון לפי מרפאה">
-          <option value="">כל המרפאות</option>
+        <input name="q" type="search" enterKeyHint="search" autoComplete="off" defaultValue={q} className="field min-w-0 flex-1 basis-48" placeholder={t("שם, שם משתמש או מרפאה")} aria-label={t("חיפוש משתמשים")} />
+        <select name="clinic" defaultValue={clinicId} className="field min-h-11 w-auto shrink-0" aria-label={t("סינון לפי מרפאה")}>
+          <option value="">{t("כל המרפאות")}</option>
           {clinicOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select name="status" defaultValue={status} className="field min-h-11 w-auto shrink-0" aria-label="סינון לפי סטטוס">
-          {(Object.keys(STATUS_LABEL) as Status[]).map((k) => <option key={k} value={k}>{STATUS_LABEL[k]}</option>)}
+        <select name="status" defaultValue={status} className="field min-h-11 w-auto shrink-0" aria-label={t("סינון לפי סטטוס")}>
+          {(Object.keys(STATUS_LABEL) as Status[]).map((k) => <option key={k} value={k}>{t(STATUS_LABEL[k])}</option>)}
         </select>
-        <select name="sort" defaultValue={sort} className="field min-h-11 w-auto shrink-0" aria-label="מיון">
-          {(Object.keys(SORT_LABEL) as Sort[]).map((k) => <option key={k} value={k}>מיון: {SORT_LABEL[k]}</option>)}
+        <select name="sort" defaultValue={sort} className="field min-h-11 w-auto shrink-0" aria-label={t("מיון")}>
+          {(Object.keys(SORT_LABEL) as Sort[]).map((k) => <option key={k} value={k}>{t("מיון: {by}", { by: t(SORT_LABEL[k]) })}</option>)}
         </select>
-        <button className="btn btn-sm min-h-11 shrink-0 self-center">חיפוש</button>
-        {hasFilters && <Link href="/admin/users" className="btn btn-quiet btn-sm min-h-11 shrink-0 self-center">איפוס סינון</Link>}
+        <button className="btn btn-sm min-h-11 shrink-0 self-center">{t("חיפוש")}</button>
+        {hasFilters && <Link href="/admin/users" className="btn btn-quiet btn-sm min-h-11 shrink-0 self-center">{t("איפוס סינון")}</Link>}
       </form>
 
-      <nav aria-label="סינון לפי תפקיד" className="chip-row mt-4 flex-wrap! overflow-visible!">
+      <nav aria-label={t("סינון לפי תפקיד")} className="chip-row mt-4 flex-wrap! overflow-visible!">
         {FILTERS.map(([key, label]) => (
           <Link key={key} href={href({ role: key })} scroll={false} aria-current={key === active ? "page" : undefined} className="chip">
-            {label} <span className="num text-xs">{count(key)}</span>
+            {t(label)} <span className="num text-xs">{count(key)}</span>
           </Link>
         ))}
       </nav>
 
-      <p className="sr-only" role="status" aria-live="polite">{shown.length === 0 ? "אין משתמשים שמתאימים" : `מוצגים ${shown.length} משתמשים`}</p>
+      <p className="sr-only" role="status" aria-live="polite">{shown.length === 0 ? t("אין משתמשים שמתאימים") : t("מוצגים {n} משתמשים", { n: shown.length })}</p>
 
       {shown.length === 0 ? (
         <div className="card mt-6 px-4 py-12 text-center">
-          <p className="font-medium">אין משתמשים שמתאימים לסינון</p>
-          <p className="mt-1 text-sm text-muted">נסו לשנות את החיפוש, המרפאה או התפקיד.</p>
-          {hasFilters && <Link href="/admin/users" className="btn mt-4 inline-flex">איפוס הסינון</Link>}
+          <p className="font-medium">{t("אין משתמשים שמתאימים לסינון")}</p>
+          <p className="mt-1 text-sm text-muted">{t("נסו לשנות את החיפוש, המרפאה או התפקיד.")}</p>
+          {hasFilters && <Link href="/admin/users" className="btn mt-4 inline-flex">{t("איפוס הסינון")}</Link>}
         </div>
       ) : (
         <ul className="card mt-2 divide-y divide-line">
@@ -153,18 +155,18 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className={`min-w-0 break-words font-medium ${r.disabled ? "text-muted line-through" : ""}`}>{r.name}</span>
-                  <span className={`pill ${ROLE_PILL[r.role]}`}>{ROLE_LABEL[r.role]}</span>
-                  {r.disabled && <span className="pill pill-bad">מושבת</span>}
+                  <span className={`pill ${ROLE_PILL[r.role]}`}>{t(ROLE_LABEL[r.role])}</span>
+                  {r.disabled && <span className="pill pill-bad">{t("מושבת")}</span>}
                   {r.role === "admin" && (
                     <span className="inline-flex items-center gap-1 text-xs text-muted">
-                      <Icon name="lock" size={12} /> אין תצוגה כמנהל מערכת
+                      <Icon name="lock" size={12} /> {t("אין תצוגה כמנהל מערכת")}
                     </span>
                   )}
                 </div>
                 <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted">
                   {r.clinic !== "—" && <span className="break-words">{r.clinic}</span>}
                   {r.username && <span dir="ltr" className="num break-all">{r.username}</span>}
-                  <span>{r.last ? `כניסה אחרונה ${dmy(r.last)}` : "טרם נכנס"}</span>
+                  <span>{r.last ? t("כניסה אחרונה {date}", { date: dmy(r.last) }) : t("טרם נכנס")}</span>
                 </p>
               </div>
             );

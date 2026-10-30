@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TaskEditor } from "@/components/editor/task-editor";
@@ -20,6 +21,7 @@ export function TemplateForm({
   deleteAction: (id: string) => Promise<{ error?: string }>;
   basePath: string; // e.g. "/clinic/templates"
 }) {
+  const t = useT();
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [procedure, setProcedure] = useState(initial.procedure);
@@ -50,11 +52,11 @@ export function TemplateForm({
     setSaved(false);
 
     if (!name.trim()) {
-      setError("יש לתת שם לתבנית");
+      setError(t("יש לתת שם לתבנית"));
       nameRef.current?.focus();
       return;
     }
-    const invalid = validateTasksDetailed(tasks);
+    const invalid = validateTasksDetailed(tasks, t);
     if (invalid) {
       setError(invalid.error);
       if (invalid.taskId) setFocusTask({ id: invalid.taskId, nonce: Date.now() });
@@ -71,7 +73,7 @@ export function TemplateForm({
   }
 
   function remove() {
-    if (!templateId || !confirm("למחוק את התבנית? מטופלים קיימים לא יושפעו.")) return;
+    if (!templateId || !confirm(t("למחוק את התבנית? מטופלים קיימים לא יושפעו."))) return;
     start(async () => {
       const res = await deleteAction(templateId);
       if (res.error) setError(res.error);
@@ -83,7 +85,7 @@ export function TemplateForm({
     <div className="mt-6 space-y-8">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="lbl" htmlFor="name">שם התבנית</label>
+          <label className="lbl" htmlFor="name">{t("שם התבנית")}</label>
           <input
             id="name"
             ref={nameRef}
@@ -93,15 +95,15 @@ export function TemplateForm({
             className="field"
             value={name}
             onChange={(e) => { setName(e.target.value); markDirty(); }}
-            placeholder="למשל: החלפת ברך – פרוטוקול ד״ר כהן"
+            placeholder={t("למשל: החלפת ברך – פרוטוקול ד״ר כהן")}
           />
         </div>
         <div>
-          <label className="lbl" htmlFor="procedure">פרוצדורה</label>
+          <label className="lbl" htmlFor="procedure">{t("פרוצדורה")}</label>
           <input id="procedure" autoComplete="off" className="field" value={procedure} onChange={(e) => { setProcedure(e.target.value); markDirty(); }} />
         </div>
         <div className="sm:col-span-2">
-          <label className="lbl" htmlFor="desc">תיאור</label>
+          <label className="lbl" htmlFor="desc">{t("תיאור")}</label>
           <input id="desc" autoComplete="off" className="field" value={description} onChange={(e) => { setDescription(e.target.value); markDirty(); }} />
         </div>
       </div>
@@ -109,10 +111,10 @@ export function TemplateForm({
       <TaskEditor tasks={tasks} onChange={(t) => { setTasks(t); markDirty(); }} focusTask={focusTask} />
 
       <div className="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-5 py-4 backdrop-blur">
-        <button className="btn btn-primary" onClick={save} disabled={pending} aria-busy={pending}>{pending ? "שומר…" : "שמירת תבנית"}</button>
-        {templateId && <button className="btn btn-danger btn-sm" onClick={remove} disabled={pending}>מחיקה</button>}
+        <button className="btn btn-primary" onClick={save} disabled={pending} aria-busy={pending}>{pending ? t("שומר…") : t("שמירת תבנית")}</button>
+        {templateId && <button className="btn btn-danger btn-sm" onClick={remove} disabled={pending}>{t("מחיקה")}</button>}
         <div aria-live="polite" className="basis-full sm:basis-auto">
-          {saved && <span role="status" className="text-sm text-ok">נשמר</span>}
+          {saved && <span role="status" className="text-sm text-ok">{t("נשמר")}</span>}
           {error && <span role="alert" className="text-sm text-bad">{error}</span>}
         </div>
       </div>

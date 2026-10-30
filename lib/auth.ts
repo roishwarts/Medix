@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
 
@@ -16,6 +17,10 @@ export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local
 
 // The verified session claims, read once per request. With asymmetric signing keys this needs no network call.
 const getClaimsOnce = cache(async () => {
+  // proxy.ts already verified the session and passes the result along (it strips anything the browser sends).
+  const h = await headers();
+  const uid = h.get("x-medix-uid");
+  if (uid) return { sub: uid, aal: h.get("x-medix-aal") ?? "aal1" };
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   return (data?.claims ?? null) as { sub?: string; aal?: string } | null;

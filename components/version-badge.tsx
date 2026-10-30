@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/components/i18n-provider";
 
 const POLL_MS = 20_000;
 const AUTO_RELOAD_AFTER_MS = 8_000;
@@ -16,6 +17,7 @@ function isTyping() {
 // A small, unobtrusive corner badge: shows the build currently running in this tab,
 // and lets you jump to the latest one manually or (when nobody's mid-form) automatically.
 export function VersionBadge() {
+  const t = useT();
   const [newVersion, setNewVersion] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const dismissed = useRef(false);
@@ -63,15 +65,15 @@ export function VersionBadge() {
         className="fixed inset-x-3 bottom-3 z-50 flex items-center justify-between gap-3 rounded-2xl border border-accent-line bg-surface px-4 py-2.5 text-sm shadow-lg sm:inset-x-auto sm:start-3"
       >
         <span>
-          גרסה חדשה פורסמה{countdown !== null && countdown > 0 ? ` · מרענן בעוד ${countdown}` : ""}
+          {t("גרסה חדשה פורסמה")}{countdown !== null && countdown > 0 ? ` · ${t("מרענן בעוד {n}", { n: countdown })}` : ""}
         </span>
         <div className="flex shrink-0 gap-2">
           <button type="button" className="btn btn-sm btn-primary min-h-9" onClick={() => location.reload()}>
-            רענון עכשיו
+            {t("רענון עכשיו")}
           </button>
           <button
             type="button"
-            aria-label="התעלמות מהעדכון"
+            aria-label={t("התעלמות מהעדכון")}
             className="btn btn-sm btn-quiet min-h-9"
             onClick={() => {
               dismissed.current = true;
@@ -79,7 +81,7 @@ export function VersionBadge() {
               setNewVersion(null);
             }}
           >
-            לא עכשיו
+            {t("לא עכשיו")}
           </button>
         </div>
       </div>
@@ -90,8 +92,8 @@ export function VersionBadge() {
     <button
       type="button"
       onClick={() => location.reload()}
-      title="רענון"
-      aria-label={`גרסה נוכחית: ${CURRENT_VERSION}. לחיצה לרענון`}
+      title={t("רענון")}
+      aria-label={t("גרסה נוכחית: {v}. לחיצה לרענון", { v: CURRENT_VERSION })}
       className="fixed bottom-2 start-2 z-40 flex items-center gap-1 rounded-full bg-ink/5 px-2 py-1 text-xs text-muted opacity-60 transition hover:opacity-100 hover:bg-ink/10"
     >
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">

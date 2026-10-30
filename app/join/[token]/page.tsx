@@ -3,14 +3,18 @@ import { hashToken } from "@/lib/invite";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/ui";
+import { getT } from "@/lib/i18n/server";
 import { JoinForm } from "./form";
 
-export const metadata: Metadata = { title: "הצטרפות" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("הצטרפות") };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function JoinPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const t = await getT();
   const admin = createAdminClient();
 
   let info: { firstName: string; clinic: string } | null = null;
@@ -33,16 +37,16 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
       {info ? (
         <div className="card p-6 sm:p-8">
           {info.clinic && <p className="eyebrow mb-3">{info.clinic}</p>}
-          <h1 className="display mb-2 text-3xl">שלום {info.firstName}</h1>
-          <p className="mb-7 text-base leading-relaxed text-muted">כאן עוקבים אחרי ההכנה לניתוח. צריך רק לבחור שם משתמש וסיסמה.</p>
+          <h1 className="display mb-2 text-3xl">{t("שלום {name}", { name: info.firstName })}</h1>
+          <p className="mb-7 text-base leading-relaxed text-muted">{t("כאן עוקבים אחרי ההכנה לניתוח. צריך רק לבחור שם משתמש וסיסמה.")}</p>
           <JoinForm token={token} />
         </div>
       ) : (
         <div className="card p-6 text-center sm:p-8">
           <span className="pill-warn mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full" aria-hidden="true"><Icon name="alert" size={22} /></span>
-          <h1 className="display mb-3 text-2xl">הקישור אינו תקף</h1>
-          <p className="mb-6 text-base leading-relaxed text-muted">הקישור פג תוקף, הוחלף בחדש, או כבר נוצל. בקש/י מהמרפאה קישור חדש.</p>
-          <Link href="/login" className="btn w-full">כבר יש לך משתמש? כניסה</Link>
+          <h1 className="display mb-3 text-2xl">{t("הקישור אינו תקף")}</h1>
+          <p className="mb-6 text-base leading-relaxed text-muted">{t("הקישור פג תוקף, הוחלף בחדש, או כבר נוצל. בקש/י מהמרפאה קישור חדש.")}</p>
+          <Link href="/login" className="btn w-full">{t("כבר יש לך משתמש? כניסה")}</Link>
         </div>
       )}
     </main>

@@ -1,5 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
+import { DEFAULT_PREFS, PREFS_COOKIE, serializePrefs, type Lang } from "@/lib/prefs";
 import { NextResponse, type NextRequest } from "next/server";
+
+export const UID_HEADER = "x-medix-uid";
+export const AAL_HEADER = "x-medix-aal";
 
 const VIEW_ONLY_MESSAGE = "אתה במצב צפייה כמנהל, ולכן אי אפשר לערוך פרטים.";
 
@@ -27,8 +31,9 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = isLogin || path.startsWith("/invite/") || path.startsWith("/join/") || path.startsWith("/reset/") || path.startsWith("/forgot");
 
-  // "View as" mode is read-only: every write (a POST, i.e. a server action) is refused.
-  if (signedIn && request.method === "POST" && !isLogin) {
+  // "View as" can be made read-only (set VIEW_AS_READ_ONLY=1 in Vercel, e.g. once real patients are using the system).
+  // By default the admin can do everything the user can, to test the system from their side.
+  if (process.env.VIEW_AS_READ_ONLY === "1" && signedIn && request.method === "POST" && !isLogin) {
     const raw = request.cookies.get("medix_view_as")?.value;
     try {
       const body = raw?.split(".")[0];
@@ -56,7 +61,29 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
-  return response;
+
+  // The session was verified once, here. Pass the result to the page so it does not verify it again
+  // (that is a network round trip on every request for projects that still use the shared JWT secret).
+  // Any value sent by the browser is discarded first, so these headers can only come from this function.
+  const forwarded = new Headers(request.headers);
+  forwarded.delete(UID_HEADER);
+  forwarded.delete(AAL_HEADER);
+  forwarded.set("x-medix-path", request.nextUrl.pathname);
+  if (signedIn && data?.claims?.sub) {
+    forwarded.set(UID_HEADER, data.claims.sub);
+    forwarded.set(AAL_HEADER, String((data.claims as { aal?: string }).aal ?? "aal1"));
+  }
+  // A link from the clinic can carry ?lang=xx: a person who has not chosen a language yet sees the page in it.
+  const wanted = request.nextUrl.searchParams.get("lang");
+  const langCookie = wanted && ["he", "en", "ru", "ar"].includes(wanted) && !request.cookies.has(PREFS_COOKIE) ? wanted : null;
+  if (langCookie) {
+    const value = serializePrefs({ ...DEFAULT_PREFS, lang: langCookie as Lang });
+    forwarded.set("cookie", [forwarded.get("cookie"), `${PREFS_COOKIE}=${value}`].filter(Boolean).join("; "));
+  }
+  const next = NextResponse.next({ request: { headers: forwarded } });
+  if (langCookie) next.cookies.set(PREFS_COOKIE, JSON.stringify({ ...DEFAULT_PREFS, lang: langCookie as Lang }), { path: "/", maxAge: 31536000, sameSite: "lax" });
+  response.cookies.getAll().forEach((c) => next.cookies.set(c));
+  return next;
 }
 
 export const config = {
