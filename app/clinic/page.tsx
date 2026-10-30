@@ -115,7 +115,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} />
         <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
         <KpiWindow
-          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}`} param="rd" days={readyDays}
           tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
         />
       </section>
