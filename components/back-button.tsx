@@ -15,13 +15,14 @@ const parentOf = (path: string, home: string) => {
 
 let pagesVisited = 0; // how many pages were opened inside the app, to know whether "back" can really go back
 
-// Sits at the top of the page content (not in the top bar). Not shown on the main page of each area.
-export function BackButton({ home }: { home: string }) {
+// Sits at the top of the page content (not in the top bar).
+export function BackButton({ home, roots = [] }: { home: string; roots?: string[] }) {
   const t = useT();
   const path = usePathname();
   const router = useRouter();
   useEffect(() => { pagesVisited += 1; }, [path]);
-  if (path === home) return null;
+  // Only on pages that lead somewhere deeper (a patient, a template...), not on the main page of each tab.
+  if (path === home || roots.includes(path)) return null;
   return (
     <button
       type="button"

@@ -39,7 +39,7 @@ export function AppHeader({
 
   return (
     <>
-      <header className="topbar">
+      <header className="topbar hidden md:block">
         <div className="mx-auto flex max-w-6xl items-center gap-1.5 px-3 py-1 sm:px-5">
           {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
           <nav aria-label={t("ניווט ראשי")} className="hidden min-w-0 flex-1 gap-1 overflow-x-auto whitespace-nowrap md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
