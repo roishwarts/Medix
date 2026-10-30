@@ -19,18 +19,18 @@ export default async function ClinicLayout({ children }: { children: React.React
   const profile = await requireProfile(["staff", "doctor"]);
   const clinicName = await getClinicName();
   const items: NavItem[] = [
-    { href: "/clinic", label: t("ראשי"), exact: true },
-    { href: "/clinic/tasks", label: t("משימות") },
-    { href: "/clinic/patients", label: t("מטופלים") },
-    { href: "/clinic/calendar", label: t("יומן") },
-    { href: "/clinic/activity", label: t("עדכונים"), badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
-    ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות") }] : []),
-    { href: "/clinic/content", label: t("תוכן למטופלים") },
+    { href: "/clinic", label: t("ראשי"), icon: "home", exact: true },
+    { href: "/clinic/tasks", label: t("משימות"), icon: "tasks" },
+    { href: "/clinic/patients", label: t("מטופלים"), icon: "patients" },
+    { href: "/clinic/calendar", label: t("יומן"), icon: "calendar", more: true },
+    { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
+    ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
+    { href: "/clinic/content", label: t("תוכן למטופלים"), icon: "content", more: true },
   ];
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh pb-24 md:pb-0">
       <ImpersonationBanner />
-      <AppHeader items={items} brand={clinicName} home="/clinic" logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      <AppHeader items={items} brand={clinicName} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" />{children}</div>
     </div>
   );
