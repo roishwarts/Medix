@@ -33,6 +33,7 @@ export default async function ClinicLayout({ children }: { children: React.React
               </Suspense>
             </NavLink>
             {profile.role === "doctor" && <NavLink href="/clinic/templates">תבניות</NavLink>}
+            <NavLink href="/clinic/content">תוכן למטופלים</NavLink>
           </nav>
           </div>
           <div className="order-1 flex shrink-0 items-center gap-2 max-sm:w-full max-sm:justify-between max-sm:pt-1 sm:order-2">

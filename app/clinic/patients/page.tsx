@@ -33,7 +33,10 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
           <p className="eyebrow">{all.length} מטופלים במסלול</p>
           <h1 className="display mt-1 text-4xl">מטופלים</h1>
         </div>
-        <Link href="/clinic/patients/new" className="btn btn-primary">מטופל חדש</Link>
+        <div className="flex gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
+          <Link href="/clinic/content" className="btn">תוכן למטופלים</Link>
+          <Link href="/clinic/patients/new" className="btn btn-primary">מטופל חדש</Link>
+        </div>
       </div>
 
       <form role="search" aria-label="סינון מטופלים" className="card mt-6 flex flex-wrap items-end gap-x-4 gap-y-2 p-4">
