@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
 import { hashToken } from "@/lib/invite";
+import { getT } from "@/lib/i18n/server";
 
 export type InviteState = { error?: string; link?: string; relation?: string; name?: string } | undefined;
 
@@ -14,25 +15,26 @@ const INVITE_DAYS = 7;
 
 export async function createInvite(_: InviteState, formData: FormData): Promise<InviteState> {
   const profile = await requireProfile(["patient"]);
+  const t = await getT();
   const inviteeName = String(formData.get("invitee_name") ?? "").trim();
   const relation = String(formData.get("relation") ?? "").trim();
   const canAct = formData.get("can_act") === "on";
   const consent = formData.get("consent") === "on";
 
-  if (!inviteeName || inviteeName.length > 60) return { error: "יש לכתוב את שם בן המשפחה" };
-  if (!relation || relation.length > 40) return { error: "יש לכתוב קרבה (למשל: בת, בן זוג)" };
-  if (!consent) return { error: "יש לאשר שאת/ה מסכימ/ה לשתף את פרטי המסע" };
+  if (!inviteeName || inviteeName.length > 60) return { error: t("יש לכתוב את שם בן המשפחה") };
+  if (!relation || relation.length > 40) return { error: t("יש לכתוב קרבה (למשל: בת, בן זוג)") };
+  if (!consent) return { error: t("יש לאשר שאת/ה מסכימ/ה לשתף את פרטי המסע") };
 
   const supabase = await createClient();
   const { data: patient } = await supabase.from("patients").select("id, clinic_id").eq("user_id", profile.id).maybeSingle();
-  if (!patient) return { error: "לא נמצא מטופל מקושר לחשבון הזה" };
+  if (!patient) return { error: t("לא נמצא מטופל מקושר לחשבון הזה") };
 
   const { count } = await supabase
     .from("caregiver_invites")
     .select("id", { count: "exact", head: true })
     .is("used_at", null)
     .gt("expires_at", new Date().toISOString());
-  if ((count ?? 0) >= 10) return { error: "יש יותר מדי הזמנות פתוחות. אפשר לבטל הזמנה קיימת." };
+  if ((count ?? 0) >= 10) return { error: t("יש יותר מדי הזמנות פתוחות. אפשר לבטל הזמנה קיימת.") };
 
   const token = randomBytes(32).toString("base64url");
   const { error } = await supabase.from("caregiver_invites").insert({
@@ -45,7 +47,7 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
     token_hash: hashToken(token),
     expires_at: new Date(Date.now() + INVITE_DAYS * 86400000).toISOString(),
   });
-  if (error) return { error: "יצירת ההזמנה נכשלה" };
+  if (error) return { error: t("יצירת ההזמנה נכשלה") };
 
   const h = await headers();
   const proto = h.get("x-forwarded-proto") ?? "https";
@@ -56,9 +58,10 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
 
 export async function revokeInvite(id: string) {
   await requireProfile(["patient"]);
+  const t = await getT();
   const supabase = await createClient();
   const { error } = await supabase.from("caregiver_invites").delete().eq("id", id);
-  if (error) return { error: "הביטול נכשל" };
+  if (error) return { error: t("הביטול נכשל") };
   revalidatePath("/family");
   return {};
 }
@@ -66,15 +69,16 @@ export async function revokeInvite(id: string) {
 // Used by the patient and by clinic staff. RLS decides which rows the caller can see at all.
 export async function removeCaregiver(id: string) {
   await requireProfile(["patient", "staff", "doctor"]);
+  const t = await getT();
   const supabase = await createClient();
   const { data: row } = await supabase.from("patient_caregivers").select("user_id").eq("id", id).maybeSingle();
-  if (!row) return { error: "לא נמצא" };
+  if (!row) return { error: t("לא נמצא") };
 
   const admin = createAdminClient();
-  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת" };
+  if (!admin) return { error: t("חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת") };
   // The caregiver account exists only for this link; deleting it removes profile and link too.
   const { error } = await admin.auth.admin.deleteUser(row.user_id);
-  if (error) return { error: "ההסרה נכשלה" };
+  if (error) return { error: t("ההסרה נכשלה") };
   revalidatePath("/family");
   revalidatePath("/clinic", "layout");
   return {};
@@ -82,14 +86,15 @@ export async function removeCaregiver(id: string) {
 
 export async function setCaregiverPermission(id: string, canAct: boolean) {
   await requireProfile(["patient"]);
+  const t = await getT();
   const supabase = await createClient();
   const { data: row } = await supabase.from("patient_caregivers").select("id").eq("id", id).maybeSingle();
-  if (!row) return { error: "לא נמצא" };
+  if (!row) return { error: t("לא נמצא") };
 
   const admin = createAdminClient();
-  if (!admin) return { error: "חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת" };
+  if (!admin) return { error: t("חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת") };
   const { error } = await admin.from("patient_caregivers").update({ can_act: canAct }).eq("id", id);
-  if (error) return { error: "העדכון נכשל" };
+  if (error) return { error: t("העדכון נכשל") };
   revalidatePath("/family");
   return {};
 }

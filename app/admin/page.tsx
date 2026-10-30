@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
 import { Icon } from "@/components/ui";
@@ -6,6 +7,7 @@ import { Icon } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
+  const t = await getT();
   const { db } = await requireAdmin();
   const [{ data: clinics, error: clinicsError }, { data: people }, { data: patients }] = await Promise.all([
     db.from("clinics").select("id, name, created_at").order("created_at", { ascending: false }),
@@ -16,9 +18,9 @@ export default async function AdminHome() {
   if (clinicsError) {
     return (
       <main>
-        <h1 className="display text-4xl">מרפאות</h1>
+        <h1 className="display text-4xl">{t("מרפאות")}</h1>
         <p role="alert" className="card mt-6 p-4 text-bad">
-          שגיאה בטעינת רשימת המרפאות. נסו לרענן את הדף.
+          {t("שגיאה בטעינת רשימת המרפאות. נסו לרענן את הדף.")}
         </p>
       </main>
     );
@@ -37,42 +39,42 @@ export default async function AdminHome() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="eyebrow">{count === 0 ? "אין מרפאות" : count === 1 ? "מרפאה אחת" : `${count} מרפאות`}</p>
+            <p className="eyebrow">{count === 0 ? t("אין מרפאות") : count === 1 ? t("מרפאה אחת") : t("{n} מרפאות", { n: count })}</p>
             {noDoctorCount > 0 && (
               <span className="pill pill-bad">
                 <Icon name="alert" size={12} />
-                {noDoctorCount === 1 ? "מרפאה אחת ללא רופא" : `${noDoctorCount} מרפאות ללא רופא`}
+                {noDoctorCount === 1 ? t("מרפאה אחת ללא רופא") : t("{n} מרפאות ללא רופא", { n: noDoctorCount })}
               </span>
             )}
           </div>
-          <h1 className="display mt-1 text-4xl">מרפאות</h1>
+          <h1 className="display mt-1 text-4xl">{t("מרפאות")}</h1>
         </div>
         <Link href="/admin/clinics/new" className="btn btn-primary">
           <Icon name="plus" size={14} />
-          מרפאה חדשה
+          {t("מרפאה חדשה")}
         </Link>
       </div>
 
       {count === 0 ? (
         <div className="card mt-6 px-4 py-12 text-center">
-          <p className="font-medium">אין מרפאות עדיין</p>
-          <p className="mt-1 text-sm text-muted">כל המרפאות שתיצרו יופיעו כאן.</p>
+          <p className="font-medium">{t("אין מרפאות עדיין")}</p>
+          <p className="mt-1 text-sm text-muted">{t("כל המרפאות שתיצרו יופיעו כאן.")}</p>
           <Link href="/admin/clinics/new" className="btn btn-primary mt-4 inline-flex">
             <Icon name="plus" size={14} />
-            יצירת מרפאה ראשונה
+            {t("יצירת מרפאה ראשונה")}
           </Link>
         </div>
       ) : (
         <div className="card mt-6 overflow-x-auto">
           <table className="w-full">
-            <caption className="sr-only">רשימת המרפאות</caption>
+            <caption className="sr-only">{t("רשימת המרפאות")}</caption>
             <thead>
               <tr className="border-b border-line text-sm text-muted">
-                <th scope="col" className="px-4 py-3 text-start font-medium">מרפאה</th>
-                <th scope="col" className="px-4 py-3 text-start font-medium">רופא</th>
-                <th scope="col" className="px-4 py-3 text-start font-medium">צוות</th>
-                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">מטופלים</th>
-                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">נוצרה</th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">{t("מרפאה")}</th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">{t("רופא")}</th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">{t("צוות")}</th>
+                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">{t("מטופלים")}</th>
+                <th scope="col" className="hidden px-4 py-3 text-start font-medium sm:table-cell">{t("נוצרה")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -85,7 +87,7 @@ export default async function AdminHome() {
                     <td className="min-w-32">
                       <Link href={href} className={`${cell} flex flex-wrap items-center gap-2 font-medium`}>
                         {c.name}
-                        {doctors.length === 0 && <span className="pill pill-bad">ללא רופא</span>}
+                        {doctors.length === 0 && <span className="pill pill-bad">{t("ללא רופא")}</span>}
                       </Link>
                     </td>
                     <td className="min-w-24"><Link href={href} tabIndex={-1} className={`${cell} text-muted`}>{doctors.map((d) => d.full_name).join(", ") || "—"}</Link></td>

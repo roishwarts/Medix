@@ -1,5 +1,6 @@
 import type { PatientJourney } from "./queries";
 import { today } from "./dates";
+import type { T } from "./i18n";
 
 export type CalKind = "surgery" | "appointment" | "deadline";
 export type CalTone = "ok" | "bad" | "warn" | "info" | "neutral" | "accent";
@@ -20,21 +21,21 @@ const stateTone = (state: string, overdue: boolean): CalTone =>
   state === "done" ? "ok" : overdue ? "bad" : state === "review" ? "warn" : "neutral";
 
 // What a patient (or caregiver) sees: the surgery, appointments, and their own deadlines.
-export function patientEvents(j: PatientJourney): CalEvent[] {
+export function patientEvents(j: PatientJourney, t: T): CalEvent[] {
   const out: CalEvent[] = [
-    { id: `s-${j.id}`, date: j.surgery_date, time: null, title: "יום הניתוח", kind: "surgery", tone: "accent", href: "/journey" },
+    { id: `s-${j.id}`, date: j.surgery_date, time: null, title: t("יום הניתוח"), kind: "surgery", tone: "accent", href: "/journey" },
   ];
-  for (const t of j.summary.tasks) {
-    const href = `/journey/tasks/${t.id}`;
-    if (t.kind === "appointment") {
+  for (const task of j.summary.tasks) {
+    const href = `/journey/tasks/${task.id}`;
+    if (task.kind === "appointment") {
       out.push({
-        id: t.id, date: t.eventDate, time: t.eventTime, title: t.title, kind: "appointment",
-        tone: stateTone(t.state, t.overdue), href, sub: t.location ?? undefined,
+        id: task.id, date: task.eventDate, time: task.eventTime, title: task.title, kind: "appointment",
+        tone: stateTone(task.state, task.overdue), href, sub: task.location ?? undefined,
       });
-    } else if (t.owner === "patient") {
+    } else if (task.owner === "patient") {
       out.push({
-        id: t.id, date: t.dueDate, time: null, title: t.title, kind: "deadline",
-        tone: stateTone(t.state, t.overdue), href,
+        id: task.id, date: task.dueDate, time: null, title: task.title, kind: "deadline",
+        tone: stateTone(task.state, task.overdue), href,
       });
     }
   }
@@ -42,7 +43,7 @@ export function patientEvents(j: PatientJourney): CalEvent[] {
 }
 
 // What the clinic sees: every patient's surgery, appointments, and open deadlines.
-export function clinicEvents(journeys: PatientJourney[]): CalEvent[] {
+export function clinicEvents(journeys: PatientJourney[], t: T): CalEvent[] {
   const out: CalEvent[] = [];
   const t0 = today();
   for (const j of journeys) {
@@ -50,20 +51,20 @@ export function clinicEvents(journeys: PatientJourney[]): CalEvent[] {
     const name = j.patient.full_name;
     const { readiness, readinessState } = j.summary;
     out.push({
-      id: `s-${j.id}`, date: j.surgery_date, time: null, title: `ניתוח – ${name}`, kind: "surgery",
+      id: `s-${j.id}`, date: j.surgery_date, time: null, title: t("ניתוח – {name}", { name }), kind: "surgery",
       tone: readinessState === "ready" ? "ok" : readinessState === "not_ready" ? "bad" : "info",
-      href, sub: `מוכנות ${readiness}%`, patient: name,
+      href, sub: t("מוכנות {n}%", { n: readiness }), patient: name,
     });
-    for (const t of j.summary.tasks) {
-      if (t.kind === "appointment") {
+    for (const task of j.summary.tasks) {
+      if (task.kind === "appointment") {
         out.push({
-          id: t.id, date: t.eventDate, time: t.eventTime, title: t.title, kind: "appointment",
-          tone: stateTone(t.state, t.overdue), href, sub: t.location ?? undefined, patient: name,
+          id: task.id, date: task.eventDate, time: task.eventTime, title: task.title, kind: "appointment",
+          tone: stateTone(task.state, task.overdue), href, sub: task.location ?? undefined, patient: name,
         });
-      } else if (t.state !== "done" && t.state !== "locked") {
+      } else if (task.state !== "done" && task.state !== "locked") {
         out.push({
-          id: t.id, date: t.dueDate, time: null, title: t.title, kind: "deadline",
-          tone: t.dueDate < t0 ? "bad" : stateTone(t.state, t.overdue), href, patient: name,
+          id: task.id, date: task.dueDate, time: null, title: task.title, kind: "deadline",
+          tone: task.dueDate < t0 ? "bad" : stateTone(task.state, task.overdue), href, patient: name,
         });
       }
     }

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
+import { useT } from "@/components/i18n-provider";
 import { requestPasswordReset } from "./actions";
 
 export function ForgotForm() {
+  const t = useT();
   const [state, action, pending] = useActionState(requestPasswordReset, undefined);
   const [username, setUsername] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -21,12 +23,12 @@ export function ForgotForm() {
           <Icon name="check" size={24} />
         </span>
         <div role="status" className="space-y-2">
-          <h1 ref={headingRef} tabIndex={-1} className="display text-2xl outline-none">הבקשה נשלחה למרפאה</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="display text-2xl outline-none">{t("הבקשה נשלחה למרפאה")}</h1>
           <p className="text-muted">
-            אם שם המשתמש קיים, הצוות ישלח אליך קישור לבחירת סיסמה חדשה. זה עשוי לקחת זמן, ואין צורך לשלוח שוב.
+            {t("אם שם המשתמש קיים, הצוות ישלח אליך קישור לבחירת סיסמה חדשה. זה עשוי לקחת זמן, ואין צורך לשלוח שוב.")}
           </p>
         </div>
-        <Link href="/login" className="btn btn-primary w-full">חזרה לכניסה</Link>
+        <Link href="/login" className="btn btn-primary w-full">{t("חזרה לכניסה")}</Link>
       </div>
     );
   }
@@ -35,11 +37,11 @@ export function ForgotForm() {
   return (
     <form action={action} className="space-y-5" noValidate>
       <div className="space-y-2">
-        <h1 className="display text-2xl">שכחתי סיסמה</h1>
-        <p className="text-muted">הזן/י את שם המשתמש ונעביר את הבקשה למרפאה. הצוות ישלח לך קישור לבחירת סיסמה חדשה.</p>
+        <h1 className="display text-2xl">{t("שכחתי סיסמה")}</h1>
+        <p className="text-muted">{t("הזן/י את שם המשתמש ונעביר את הבקשה למרפאה. הצוות ישלח לך קישור לבחירת סיסמה חדשה.")}</p>
       </div>
       <div>
-        <label htmlFor="username" className="lbl">שם משתמש</label>
+        <label htmlFor="username" className="lbl">{t("שם משתמש")}</label>
         <input
           id="username"
           name="username"
@@ -60,9 +62,9 @@ export function ForgotForm() {
       </div>
       <div className="space-y-2">
         <button className="btn btn-primary w-full" disabled={pending} aria-busy={pending}>
-          {pending ? "שולח…" : "בקשת איפוס סיסמה"}
+          {pending ? t("שולח…") : t("בקשת איפוס סיסמה")}
         </button>
-        <Link href="/login" className="btn btn-quiet w-full">חזרה לכניסה</Link>
+        <Link href="/login" className="btn btn-quiet w-full">{t("חזרה לכניסה")}</Link>
       </div>
     </form>
   );

@@ -1,10 +1,12 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useEffect, useRef, useState } from "react";
 
 // While an admin views the system as someone else, every write is refused by the server (see proxy.ts).
 // This listens for those refusals and explains them in a popup instead of leaving a silent failure.
 export function ViewAsGuard() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const okRef = useRef<HTMLButtonElement>(null);
 
@@ -31,9 +33,9 @@ export function ViewAsGuard() {
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
       >
-        <h2 id="view-as-title" className="display text-xl">מצב צפייה בלבד</h2>
-        <p className="mt-2 text-muted">אתה במצב צפייה כמנהל, ולכן אי אפשר לערוך פרטים.</p>
-        <button ref={okRef} className="btn btn-primary mt-5 w-full" onClick={() => setOpen(false)}>הבנתי</button>
+        <h2 id="view-as-title" className="display text-xl">{t("מצב צפייה בלבד")}</h2>
+        <p className="mt-2 text-muted">{t("אתה במצב צפייה כמנהל, ולכן אי אפשר לערוך פרטים.")}</p>
+        <button ref={okRef} className="btn btn-primary mt-5 w-full" onClick={() => setOpen(false)}>{t("הבנתי")}</button>
       </div>
     </div>
   );

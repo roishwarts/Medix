@@ -2,22 +2,24 @@
 
 import { useActionState, useState } from "react";
 import { Icon } from "@/components/ui";
+import { useT } from "@/components/i18n-provider";
 import { login } from "./actions";
 
 export function LoginForm() {
+  const t = useT();
   const [state, action, pending] = useActionState(login, undefined);
   const [user, setUser] = useState("");
   const err = state?.error;
   return (
     <form action={action} className="space-y-4" aria-busy={pending}>
       <div>
-        <label htmlFor="username" className="lbl">שם משתמש</label>
+        <label htmlFor="username" className="lbl">{t("שם משתמש")}</label>
         <input id="username" name="username" value={user} onChange={(e) => setUser(e.target.value)} className="field" dir="ltr" autoComplete="username"
           autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="text" enterKeyHint="next"
           aria-invalid={err ? true : undefined} aria-describedby={err ? "login-error" : undefined} required />
       </div>
       <div>
-        <label htmlFor="password" className="lbl">סיסמה</label>
+        <label htmlFor="password" className="lbl">{t("סיסמה")}</label>
         <input id="password" name="password" type="password" className="field" dir="ltr"
           autoComplete="current-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="go"
           aria-invalid={err ? true : undefined} aria-describedby={err ? "login-error" : undefined} required />
@@ -31,7 +33,7 @@ export function LoginForm() {
         )}
       </div>
       <button className="btn btn-primary w-full" disabled={pending}>
-        {pending ? "נכנס…" : "כניסה"}
+        {pending ? t("נכנס…") : t("כניסה")}
       </button>
     </form>
   );

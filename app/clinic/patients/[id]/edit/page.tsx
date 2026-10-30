@@ -1,17 +1,17 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getT } from "@/lib/i18n/server";
 import { requireProfile } from "@/lib/auth";
 import { loadJourney, TASK_COLUMNS } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { EditorTask } from "@/components/editor/types";
 import type { TaskRow } from "@/lib/journey";
-import { Icon } from "@/components/ui";
 import { israelParts } from "@/lib/dates";
 import { JourneyEditForm } from "./form";
 
 export const dynamic = "force-dynamic";
 
 export default async function EditJourneyPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   const { id } = await params;
   const supabase = await createClient();
   const [, journey, { data }] = await Promise.all([
@@ -38,13 +38,10 @@ export default async function EditJourneyPage({ params }: { params: Promise<{ id
 
   return (
     <main className="max-w-3xl">
-      <Link href={`/clinic/patients/${id}`} className="back-link">
-        <Icon name="arrow" size={14} /> חזרה למטופל
-      </Link>
-      <p className="eyebrow">עריכה למטופל זה בלבד</p>
+      <p className="eyebrow">{t("עריכה למטופל זה בלבד")}</p>
       <h1 className="display mt-1 text-4xl">{journey.patient.full_name}</h1>
       <p className="mt-2 max-w-xl text-muted">
-        השינויים כאן חלים רק על המסלול של המטופל. התבנית המקורית ומטופלים אחרים לא משתנים. התקדמות קיימת נשמרת.
+        {t("השינויים כאן חלים רק על המסלול של המטופל. התבנית המקורית ומטופלים אחרים לא משתנים. התקדמות קיימת נשמרת.")}
       </p>
       <JourneyEditForm journeyId={id} surgeryDate={journey.surgery_date} initialTasks={tasks} />
     </main>

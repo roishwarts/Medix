@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui";
+import { useT } from "@/components/i18n-provider";
 import { submitTask } from "../../actions";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -22,6 +23,7 @@ export function SubmitPanel({
   resubmit?: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -36,12 +38,12 @@ export function SubmitPanel({
       // v0: the file is optional so the whole flow can be demoed without real documents.
       const file = requiresEvidence ? fileRef.current?.files?.[0] : undefined;
       if (file) {
-        if (file.size > MAX_BYTES) return setError("הקובץ גדול מדי (עד 10MB)");
+        if (file.size > MAX_BYTES) return setError(t("הקובץ גדול מדי (עד 10MB)"));
         const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "bin";
         path = `${journeyId}/${taskId}/${crypto.randomUUID()}.${ext}`;
         name = file.name;
         const { error: upErr } = await createClient().storage.from("evidence").upload(path, file, { contentType: file.type || undefined });
-        if (upErr) return setError("העלאת הקובץ נכשלה. נסה/י שוב.");
+        if (upErr) return setError(t("העלאת הקובץ נכשלה. נסה/י שוב."));
       }
       const res = await submitTask(taskId, { path, name, note });
       if (res.error) return setError(res.error);
@@ -55,16 +57,16 @@ export function SubmitPanel({
     setFileName(null);
   }
 
-  const heading = resubmit ? "שליחה מחדש" : requiresEvidence ? "העלאת מסמך" : "סיום המשימה";
+  const heading = resubmit ? t("שליחה מחדש") : requiresEvidence ? t("העלאת מסמך") : t("סיום המשימה");
   const submitLabel = pending
-    ? "שולח…"
+    ? t("שולח…")
     : resubmit
-      ? "שליחה מחדש לבדיקה"
+      ? t("שליחה מחדש לבדיקה")
       : requiresEvidence
-        ? "שליחה לבדיקה"
+        ? t("שליחה לבדיקה")
         : needsReview
-          ? "סיימתי, שליחה לבדיקה"
-          : "סיימתי";
+          ? t("סיימתי, שליחה לבדיקה")
+          : t("סיימתי");
 
   return (
     <form
@@ -80,7 +82,7 @@ export function SubmitPanel({
 
         {requiresEvidence && (
           <div>
-            <label htmlFor="file" className="lbl">מסמך או צילום</label>
+            <label htmlFor="file" className="lbl">{t("מסמך או צילום")}</label>
             <input
               ref={fileRef}
               type="file"
@@ -95,28 +97,28 @@ export function SubmitPanel({
               className="btn h-auto w-full cursor-pointer justify-start gap-2 whitespace-normal py-2.5 text-start peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:cursor-not-allowed"
             >
               <span className="shrink-0"><Icon name={fileName ? "file" : "plus"} /></span>
-              <span className="min-w-0 break-all" dir="auto">{fileName ?? "בחירת קובץ או צילום"}</span>
+              <span className="min-w-0 break-all" dir="auto">{fileName ?? t("בחירת קובץ או צילום")}</span>
             </label>
             {fileName && (
               <button type="button" className="btn btn-quiet -mx-3 mt-1" onClick={clearFile}>
-                הסרת הקובץ
+                {t("הסרת הקובץ")}
               </button>
             )}
             <p id="file-hint" className="mt-1.5 text-sm text-muted">
-              תמונה או PDF, עד <span dir="ltr" className="num">10MB</span>. בטלפון אפשר לצלם ישירות.
+              {t("תמונה או PDF, עד {size}. בטלפון אפשר לצלם ישירות.", { size: "10MB" })}
             </p>
           </div>
         )}
 
         <div>
-          <label htmlFor="note" className="lbl">הערה לצוות (לא חובה)</label>
+          <label htmlFor="note" className="lbl">{t("הערה לצוות (לא חובה)")}</label>
           <textarea
             id="note"
             name="note"
             rows={3}
             autoComplete="off"
             className="field"
-            placeholder="למשל: הבדיקה בוצעה בקופה אחרת"
+            placeholder={t("למשל: הבדיקה בוצעה בקופה אחרת")}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />

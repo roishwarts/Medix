@@ -66,6 +66,22 @@ export const OWNER_LABEL: Record<Owner, string> = {
   doctor: "הרופא",
 };
 
+export function ownerLabel(o: Owner, t: (s: string) => string): string {
+  return t(OWNER_LABEL[o]);
+}
+
+// The blocker's label is built from its kind and task so that it can be shown in the viewer's language.
+export function blockerLabel(b: Blocker, t: (s: string, p?: Record<string, string | number>) => string): string {
+  const title = b.task.title;
+  switch (b.kind) {
+    case "overdue": return t("{title} – באיחור ({owner})", { title, owner: ownerLabel(b.task.owner, t) });
+    case "rejected": return t("{title} – הוחזר לתיקון", { title });
+    case "review": return t("{title} – ממתין לבדיקה", { title });
+    case "clinic": return t("{title} – ממתין ל{owner}", { title, owner: ownerLabel(b.task.owner, t) });
+    default: return t("{title} – ממתין למטופל", { title });
+  }
+}
+
 export function computeTasks(rows: TaskRow[], surgeryDate: string, today = getToday()): Task[] {
   const byId = new Map(rows.map((r) => [r.id, r]));
   return rows
@@ -141,6 +157,26 @@ export function summarize(rows: TaskRow[], surgeryDate: string, today = getToday
   };
 }
 
+// Where a patient is on the way, worked out from the journey itself.
+export type Stage = "decided" | "preparing" | "ready" | "recovering" | "finished";
+export const STAGES: Stage[] = ["decided", "preparing", "ready", "recovering", "finished"];
+export const STAGE_LABEL: Record<Stage, string> = {
+  decided: "הוחלט", preparing: "בהכנה", ready: "מוכן", recovering: "בהחלמה", finished: "הסתיים",
+};
+export const STAGE_PILL: Record<Stage, string> = {
+  decided: "pill-neutral", preparing: "pill-info", ready: "pill-ok", recovering: "pill-warn", finished: "pill-neutral",
+};
+// Active = still on the journey. Finished patients stay in the system but are listed apart.
+export const isActiveStage = (s: Stage) => s !== "finished";
+
+export function stageOf(summary: JourneySummary): Stage {
+  if (summary.daysToSurgery < 0) {
+    return summary.tasks.every((t) => t.state === "done") ? "finished" : "recovering";
+  }
+  if (summary.readiness === 100) return "ready";
+  return summary.tasks.some((t) => t.preop && t.state === "done") ? "preparing" : "decided";
+}
+
 // What the patient should do right now.
 export function nowTask(tasks: Task[]): Task | null {
   return (
@@ -163,7 +199,7 @@ export const ACTION_LABEL: Record<ActionKind, string> = {
   review: "ממתין לבדיקת הצוות",
   overdue: "באיחור",
   clinic: "משימות לצוות ולרופא",
-  upcoming: "מועד קרוב אצל המטופל",
+  upcoming: "משימות למטופלים",
 };
 
 export function actionItems(

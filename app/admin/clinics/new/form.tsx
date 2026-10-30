@@ -1,10 +1,12 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useActionState, useState } from "react";
 import { PasswordField } from "@/components/password-field";
 import { createClinic } from "../../actions";
 
 export function NewClinicForm({ bases }: { bases: { id: string; name: string }[] }) {
+  const t = useT();
   const [state, action, pending] = useActionState(createClinic, undefined);
   // React 19 resets uncontrolled fields after an action; keep typed values in state instead.
   const [clinicName, setClinicName] = useState("");
@@ -16,33 +18,33 @@ export function NewClinicForm({ bases }: { bases: { id: string; name: string }[]
   return (
     <form action={action} className="card mt-6 space-y-6 p-5 sm:p-7" aria-busy={pending}>
       <div>
-        <label htmlFor="clinic_name" className="lbl">שם המרפאה</label>
+        <label htmlFor="clinic_name" className="lbl">{t("שם המרפאה")}</label>
         <input id="clinic_name" name="clinic_name" className="field" value={clinicName}
           onChange={(e) => setClinicName(e.target.value)} autoComplete="organization" required />
       </div>
       <fieldset className="grid gap-5 border-t border-line pt-5 sm:grid-cols-2">
-        <legend className="eyebrow pe-2">הרופא</legend>
+        <legend className="eyebrow pe-2">{t("הרופא")}</legend>
         <div className="sm:col-span-2">
-          <label htmlFor="physician" className="lbl">שם הרופא</label>
-          <input id="physician" name="physician" className="field" placeholder="ד״ר ..." value={physician}
+          <label htmlFor="physician" className="lbl">{t("שם הרופא")}</label>
+          <input id="physician" name="physician" className="field" placeholder={t("ד״ר ...")} value={physician}
             onChange={(e) => setPhysician(e.target.value)} autoComplete="off" required />
         </div>
         <div>
-          <label htmlFor="username" className="lbl">שם משתמש</label>
+          <label htmlFor="username" className="lbl">{t("שם משתמש")}</label>
           <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off"
             spellCheck={false} autoComplete="off" aria-describedby="username-hint" value={username}
             onChange={(e) => setUsername(e.target.value)} required />
-          <p id="username-hint" className="mt-1.5 text-xs text-muted">באנגלית, 3 עד 30 תווים. מותרים גם מספרים ונקודה.</p>
+          <p id="username-hint" className="mt-1.5 text-xs text-muted">{t("באנגלית, 3 עד 30 תווים. מותרים גם מספרים ונקודה.")}</p>
         </div>
         <div>
-          <PasswordField label="סיסמה זמנית" />
-          <p className="mt-1.5 text-xs text-muted">לפחות 8 תווים. הרופא יקבל אותה מכם.</p>
+          <PasswordField label={t("סיסמה זמנית")} />
+          <p className="mt-1.5 text-xs text-muted">{t("לפחות 8 תווים. הרופא יקבל אותה מכם.")}</p>
         </div>
       </fieldset>
       <fieldset className="border-t border-line pt-5">
-        <legend className="eyebrow mb-3 pe-2">תבניות להתחלה</legend>
+        <legend className="eyebrow mb-3 pe-2">{t("תבניות להתחלה")}</legend>
         {bases.length === 0 ? (
-          <p className="text-sm text-muted">אין תבניות בסיס עדיין. אפשר ליצור מרפאה בלי תבניות, ולהוסיף אחר כך.</p>
+          <p className="text-sm text-muted">{t("אין תבניות בסיס עדיין. אפשר ליצור מרפאה בלי תבניות, ולהוסיף אחר כך.")}</p>
         ) : (
           <div className="space-y-2">
             {bases.map((b) => (
@@ -59,7 +61,7 @@ export function NewClinicForm({ bases }: { bases: { id: string; name: string }[]
         {state?.error && (
           <p role="alert" id="new-clinic-error" className="rounded-xl bg-bad-soft px-3 py-2 text-sm text-bad">{state.error}</p>
         )}
-        <button className="btn btn-primary w-full sm:w-auto" disabled={pending}>{pending ? "יוצר…" : "יצירת מרפאה"}</button>
+        <button className="btn btn-primary w-full sm:w-auto" disabled={pending}>{pending ? t("יוצר…") : t("יצירת מרפאה")}</button>
       </div>
     </form>
   );
