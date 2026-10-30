@@ -41,8 +41,27 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   return (
     <main className="space-y-10">
       <header>
-        <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-        <p className="mt-1 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
+        <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 flex-1 !flex-wrap justify-center !overflow-visible">
+          {TABS.map(([key, label]) => {
+            const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
+            const on = key === active;
+            return (
+              <Link
+                key={key}
+                href={key === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${key}`}
+                scroll={false}
+                aria-current={on ? "page" : undefined}
+                className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
+              >
+                {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        </div>
+        <p className="mt-2 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
@@ -52,24 +71,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           when: israelParts(r.requested_at).date.split("-").reverse().join("."),
         }))}
       />
-      <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 !flex-wrap !overflow-visible">
-        {TABS.map(([key, label]) => {
-          const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
-          const on = key === active;
-          return (
-            <Link
-              key={key}
-              href={key === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${key}`}
-              scroll={false}
-              aria-current={on ? "page" : undefined}
-              className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
-            >
-              {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
       {active !== "all" && items.every((i) => i.kind !== active) && (
         <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
       )}
