@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { windowLabel } from "@/lib/windows";
 import type { T } from "@/lib/i18n";
 
 export const DAY_PRESETS = [7, 14, 21, 30, 60, 90];
@@ -63,7 +64,7 @@ export function PatientFilters({
       <nav aria-label={t("מועד הניתוח")} className="chip-row flex-wrap">
         <Link href={link(null)} scroll={false} aria-current={!days ? "page" : undefined} className="chip min-h-11">{t("כל הניתוחים")}</Link>
         {presets.map((d) => (
-          <Link key={d} href={link(d)} scroll={false} aria-current={days === d ? "page" : undefined} className="chip min-h-11">{t("{n} ימים", { n: d })}</Link>
+          <Link key={d} href={link(d)} scroll={false} aria-current={days === d ? "page" : undefined} className="chip min-h-11">{windowLabel(d, t)}</Link>
         ))}
       </nav>
     </div>
