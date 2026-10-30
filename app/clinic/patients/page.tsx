@@ -36,17 +36,10 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
 
   return (
     <main>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="display text-4xl">{t("מטופלים")}</h1>
-        <div className="flex flex-wrap gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
-          <Link href="/clinic/content" className="btn">{t("תוכן למטופלים")}</Link>
-          <Link href="/clinic/patients/new" className="btn btn-primary">{t("מטופל חדש")}</Link>
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <PatientsList rows={rows} hospitals={hospitals} initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", days: parseDays(sp.days), stage }} />
-      </div>
+      <PatientsList
+        title={t("מטופלים")} action={<Link href="/clinic/patients/new" className="btn btn-primary">{t("מטופל חדש")}</Link>}
+        rows={rows} hospitals={hospitals} initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", days: parseDays(sp.days), stage }}
+      />
     </main>
   );
 }

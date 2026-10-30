@@ -18,7 +18,8 @@ const PRESETS = [7, 14, 21, 30, 60, 90];
 
 // The patients table with its filters. Filtering happens on the page itself as the user types or chooses,
 // and the address is updated so the filtered view can still be shared or reloaded.
-export function PatientsList({ rows, hospitals, initial }: {
+export function PatientsList({ rows, hospitals, initial, title, action }: {
+  title: string; action: React.ReactNode;
   rows: PatientRow[]; hospitals: string[]; initial: { q: string; hospital: string; days: number | null; stage: StageFilter };
 }) {
   const t = useT();
@@ -53,11 +54,13 @@ export function PatientsList({ rows, hospitals, initial }: {
 
   return (
     <>
-      <div role="search" aria-label={t("סינון מטופלים")} className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <h1 className="display text-4xl">{title}</h1>
+      <div role="search" aria-label={t("סינון מטופלים")} className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <input
           type="search" value={q} onChange={(e) => { setQ(e.target.value); sync({ q: e.target.value }); }}
           aria-label={t("חיפוש שם")} placeholder={t("חיפוש שם")} autoComplete="off" enterKeyHint="search"
-          className="field !min-h-9 w-full py-1 text-sm sm:w-56"
+          className="field !min-h-9 w-full py-1 text-sm sm:w-48"
         />
         <select aria-label={t("בית חולים")} className={sel} value={hospital} onChange={(e) => { setHospital(e.target.value); sync({ hospital: e.target.value }); }}>
           <option value="">{t("כל בתי החולים")}</option>
@@ -86,9 +89,11 @@ export function PatientsList({ rows, hospitals, initial }: {
           {stageOptions.map(([key, label]) => <option key={key} value={key}>{label} ({count(key)})</option>)}
         </select>
       </div>
+        <div className="max-sm:w-full max-sm:[&>*]:w-full">{action}</div>
+      </div>
 
       <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
-      <div className="card mt-4 overflow-x-auto">
+      <div className="card mt-5 overflow-x-auto">
         <table className="w-full text-start">
           <caption className="sr-only">{t("רשימת מטופלים")}</caption>
           <thead>
