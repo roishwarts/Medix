@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { ownerLabel, blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
+import { getClinicOptions } from "@/lib/clinic-options";
+import { PatientFilters, parseDays } from "@/components/patient-filters";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { dayLabel, diffDays, formatDate, relativeDays, today } from "@/lib/dates";
@@ -35,10 +37,11 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; days?: string }> }) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [journeys, resetRes, eventsRes] = await Promise.all([
+  const [allJourneys, resetRes, eventsRes, { data: placements }, options] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -46,8 +49,17 @@ export default async function DashboardPage() {
       .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase.from("patients").select("id, hospital"),
+    getClinicOptions(),
   ]);
   const t0 = today();
+  const days = parseDays(sp.days);
+  const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
+  const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
+  // The hospital and time-frame filter narrow everything on this page.
+  const journeys = allJourneys
+    .filter((j) => (sp.hospital ? hospitalOf.get(j.patient_id) === sp.hospital : true))
+    .filter((j) => (days ? diffDays(j.surgery_date, t0) >= 0 && diffDays(j.surgery_date, t0) <= days : true));
   const resetRequests = resetRes.count ?? 0;
 
   const items: ActionItem[] = journeys.flatMap((j) => actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0));
@@ -86,6 +98,8 @@ export default async function DashboardPage() {
         <p className="eyebrow">{dayLabel(t0, lang)}</p>
         <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
       </header>
+
+      <PatientFilters action="/clinic" hospitals={hospitals} hospital={sp.hospital} days={days} t={t} />
 
       {resetRequests > 0 && (
         <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">
