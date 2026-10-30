@@ -3,7 +3,8 @@ import { loadJourneys } from "@/lib/queries";
 import { ownerLabel, blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { KpiWindow } from "@/components/kpi-window";
-import { PatientFilters, parseDays } from "@/components/patient-filters";
+import { HospitalFilter } from "@/components/hospital-filter";
+import { parseDays } from "@/components/patient-filters";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
@@ -38,7 +39,7 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
   );
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; days?: string; kd?: string; rd?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; kd?: string; rd?: string }> }) {
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang] = await Promise.all([getT(), getLang()]);
@@ -54,13 +55,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     getClinicOptions(),
   ]);
   const t0 = today();
-  const days = parseDays(sp.days);
   const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
   // The hospital and time-frame filter narrow everything on this page.
   const journeys = allJourneys
-    .filter((j) => (sp.hospital ? hospitalOf.get(j.patient_id) === sp.hospital : true))
-    .filter((j) => (days ? diffDays(j.surgery_date, t0) >= 0 && diffDays(j.surgery_date, t0) <= days : true));
+    .filter((j) => (sp.hospital ? hospitalOf.get(j.patient_id) === sp.hospital : true));
   const resetRequests = resetRes.count ?? 0;
 
   const items: ActionItem[] = journeys.flatMap((j) => actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0));
@@ -74,7 +73,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const kpiSurgeries = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= surgeryDays);
   const soon = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= readyDays);
   const soonReady = soon.filter((j) => j.summary.readiness === 100).length;
-  const readyPct = soon.length ? Math.round((soonReady / soon.length) * 100) : null;
 
   const readyN = upcoming.filter((j) => j.summary.readinessState === "ready").length;
   const lateN = upcoming.filter((j) => j.summary.readinessState === "not_ready").length;
@@ -98,11 +96,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <main className="space-y-8">
-      <header>
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h1 className="display text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+        <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
       </header>
-
-      <PatientFilters action="/clinic" hospitals={hospitals} hospital={sp.hospital} days={days} t={t} compact />
 
       {resetRequests > 0 && (
         <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">
@@ -118,8 +115,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} />
         <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
         <KpiWindow
-          label={t("מוכנים לניתוח")} value={readyPct === null ? "—" : `${readyPct}%`} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
-          tone={readyPct === null ? "none" : readyPct === 100 ? "ok" : readyPct < 50 ? "bad" : "warn"}
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
+          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
         />
       </section>
 

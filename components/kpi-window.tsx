@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { windowLabel } from "@/lib/windows";
 import { useT } from "@/components/i18n-provider";
 
 const OPTIONS = [7, 14, 21, 30, 60, 90];
@@ -28,7 +29,7 @@ export function KpiWindow({ label, value, href, param, days, tone = "none" }: {
           router.push(`${path}?${p.toString()}`, { scroll: false });
         }}
       >
-        {options.map((d) => <option key={d} value={d}>{t("בתוך {n} ימים", { n: d })}</option>)}
+        {options.map((d) => <option key={d} value={d}>{windowLabel(d, t)}</option>)}
       </select>
     </div>
   );
