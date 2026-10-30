@@ -30,7 +30,7 @@ export function PatientFilters({
           <option value="">{t("כל בתי החולים")}</option>
           {hospitals.map((h) => <option key={h} value={h}>{h}</option>)}
         </select>
-        <input name="days" type="number" inputMode="numeric" min={1} max={3650} list="day-presets" aria-label={t("ניתוח בתוך (ימים)")}
+        <input name="days" type="number" inputMode="numeric" min={1} max={3650} list="day-presets" aria-label={t("ניתוח בעוד (ימים)")}
           defaultValue={days ?? ""} placeholder={t("כל הניתוחים")} className="field num !min-h-9 w-32 py-1 text-sm" />
         <datalist id="day-presets">{DAY_PRESETS.map((d) => <option key={d} value={d} />)}</datalist>
         <button className="btn btn-sm !min-h-9">{t("סינון")}</button>
@@ -51,7 +51,7 @@ export function PatientFilters({
           </select>
         </div>
         <div className="w-40">
-          <label htmlFor="days" className="lbl">{t("ניתוח בתוך (ימים)")}</label>
+          <label htmlFor="days" className="lbl">{t("ניתוח בעוד (ימים)")}</label>
           <input id="days" name="days" type="number" inputMode="numeric" min={1} max={3650} list="day-presets"
             defaultValue={days ?? ""} placeholder={t("כל הניתוחים")} className="field num" />
           <datalist id="day-presets">{DAY_PRESETS.map((d) => <option key={d} value={d} />)}</datalist>

@@ -38,7 +38,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
           )}
         </p>
       )}
-      <BackButton home="/journey" />
+      <BackButton home="/journey" roots={items.map((i) => i.href)} />
       {children}
       </div>
     </div>
