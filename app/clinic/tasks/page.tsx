@@ -81,7 +81,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
+          <section key={kind} className="max-w-3xl" aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
               <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
                 {t(ACTION_LABEL[kind])} <span className="num text-sm text-muted">{list.length}</span>
@@ -92,7 +92,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                 <Link
                   key={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 link-row sm:grid-cols-[12rem_1fr_auto]"
+                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-2 link-row sm:grid-cols-[9rem_minmax(0,1fr)_auto]"
                 >
                   <span className="min-w-0 break-words font-medium">{i.patientName}</span>
                   <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
