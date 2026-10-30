@@ -9,10 +9,10 @@ import { updatePatientDetails } from "../actions";
 
 type Props = {
   patientId: string; name: string; phone: string; email: string; hospital: string; company: string;
-  hospitals: string[]; companies: string[]; autoStage: Stage; stage: Stage | null; lang: Lang;
+  hospitals: string[]; companies: string[]; autoStage: Stage; stage: Stage | null; lang: Lang; journeyEdit?: React.ReactNode;
 };
 
-export function PatientDetails({ patientId, name, phone, email, hospital, company, hospitals, companies, autoStage, stage, lang }: Props) {
+export function PatientDetails({ patientId, name, phone, email, hospital, company, hospitals, companies, autoStage, stage, lang, journeyEdit }: Props) {
   const t = useT();
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState(
@@ -78,8 +78,9 @@ export function PatientDetails({ patientId, name, phone, email, hospital, compan
         <span className={`pill ${STAGE_PILL[shown]}`}>{t(STAGE_LABEL[shown])}{stage ? ` · ${t("ידני")}` : ""}</span>
       </div>
       <div className={row}><span className="shrink-0 text-muted">{t("שפה")}</span><span lang={lang} className="font-medium">{LANGS.find((l) => l.code === lang)?.label}</span></div>
-      <div className="px-4 py-2">
-        <button className="btn btn-sm min-h-11 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכת פרטים")}</button>
+      <div className="flex flex-wrap gap-2 px-3 py-2">
+        <button className="btn btn-sm min-h-11 !px-3 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכת פרטים")}</button>
+        {journeyEdit}
       </div>
     </div>
   );

@@ -112,7 +112,6 @@ export default async function PatientPage({
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
-        <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>
       </div>
 
       <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
@@ -217,10 +216,12 @@ export default async function PatientPage({
       </div>
 
       <aside className="min-w-0 space-y-6 lg:sticky lg:top-20">
-        <section aria-label={tr("פרטי המטופל")}>
-          <h2 className="eyebrow mb-2">{tr("פרטי המטופל")}</h2>
+        <section aria-label={tr("פרטי המטופל")} className="relative">
+          {/* The title sits above the box, so the box starts level with the summary card. */}
+          <h2 className="eyebrow absolute bottom-full mb-1">{tr("פרטי המטופל")}</h2>
           <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies}
-            autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
+            autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
+            journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         </section>
         <section aria-label={tr("בני משפחה")}>

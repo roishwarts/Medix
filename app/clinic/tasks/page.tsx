@@ -16,7 +16,7 @@ const TABS: [ActionKind | "all", string][] = [
   ["review", "ממתין לבדיקה"],
   ["overdue", "באיחור"],
   ["clinic", "משימות לצוות"],
-  ["upcoming", "מועד קרוב"],
+  ["upcoming", "משימות למטופלים"],
 ];
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
