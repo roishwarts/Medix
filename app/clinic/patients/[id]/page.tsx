@@ -13,9 +13,8 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
-import { PatientSettings } from "./patient-settings";
 import { loadPatientExtras } from "@/lib/patient-extras";
-import { stageOf } from "@/lib/journey";
+import { stageOf, STAGE_LABEL, STAGE_PILL } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
@@ -104,81 +103,45 @@ export default async function PatientPage({
   const urls = new Map<string, string>();
   for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
 
+  const autoStage = stageOf(summary);
+  const stage = extras?.stage ?? autoStage;
+
   return (
     <main>
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="text-muted">{journey.procedure || journey.template_name}</p>
-            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
+            <span className={`pill ${STAGE_PILL[stage]}`}>{tr(STAGE_LABEL[stage])}</span>
           </div>
-          {(placement?.hospital || placement?.company) && (
-            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              {placement?.hospital && <span><span className="text-muted">{tr("בית חולים:")}</span> <span className="font-medium">{placement.hospital}</span></span>}
-              {placement?.company && <span><span className="text-muted">{tr("חברה:")}</span> <span className="font-medium">{placement.company}</span></span>}
-            </p>
-          )}
-          <p className="mt-3">
-            {tr("ניתוח:")} <span className="font-medium">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
-            <span className="text-muted">({relativeDays(journey.surgery_date, undefined, lang)})</span>
-          </p>
+          <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
-        <div className="w-full sm:max-w-xs">
-          <p className="mb-1 text-sm text-muted">{tr("מוכנות לניתוח")}</p>
-          <div className="flex items-center gap-3">
-            <span className="num text-sm font-medium">{summary.readiness}%</span>
-            <div className="flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
-          </div>
-        </div>
+        <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 px-4 text-sm sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>
       </div>
 
-      <PatientSettings patientId={journey.patient_id} autoStage={stageOf(summary)} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
-
-      {summary.topBlocker && (
-        <section className="mt-8">
-          <h2 className="eyebrow mb-2">{tr("שלב נוכחי")}</h2>
-          <div className="card flex items-center justify-between gap-3 px-4 py-3">
-            <span>{blockerLabel(summary.topBlocker, tr)}</span>
+      <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+      <div className="min-w-0 space-y-10">
+      <section className="card divide-y divide-line">
+        <div className="grid gap-x-8 gap-y-3 px-4 py-3 sm:grid-cols-2 sm:items-center">
+          <p>
+            <span className="text-sm text-muted">{tr("ניתוח:")}</span>{" "}
+            <span className="font-medium">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
+            <span className="text-sm text-muted">({relativeDays(journey.surgery_date, undefined, lang)})</span>
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="shrink-0 text-sm text-muted">{tr("מוכנות לניתוח")}</span>
+            <span className="num text-sm font-medium">{summary.readiness}%</span>
+            <div className="min-w-16 flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
+          </div>
+        </div>
+        {summary.topBlocker && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <p className="min-w-0"><span className="text-sm text-muted">{tr("שלב נוכחי")}:</span> {blockerLabel(summary.topBlocker, tr)}</p>
             <span className="shrink-0 text-sm text-muted">{tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}</span>
           </div>
-        </section>
-      )}
-
-      <details className="fold mt-8">
-        <summary>
-          <span className="font-medium">{tr("פרטי המטופל ובני משפחה")}</span>
-          <span className="text-sm text-muted">{(caregivers ?? []).length > 0 ? tr("{n} בני משפחה", { n: (caregivers ?? []).length }) : ""}</span>
-        </summary>
-        <div className="pt-4">
-        <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies} />
-        <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
-        <h3 className="eyebrow mb-2 mt-6">{tr("בני משפחה")}</h3>
-        <CaregiverList
-          isPatient={false}
-          items={(caregivers ?? []).map((c) => ({
-            id: c.id,
-            name: c.full_name,
-            relation: c.relation,
-            canAct: c.can_act,
-            since: israelParts(c.created_at).date.split("-").reverse().join("."),
-          }))}
-        />
-        <PendingInvites
-          items={(openInvites ?? []).map((i) => ({
-            id: i.id,
-            name: i.invitee_name ?? "",
-            relation: i.relation,
-            canAct: i.can_act,
-            expires: israelParts(i.expires_at).date.split("-").reverse().join("."),
-          }))}
-        />
-        <AddCaregiver patientId={journey.patient_id} />
-        <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
-        </div>
-      </details>
-
-      <section className="mt-10">
+        )}
+      </section>
+      <section>
         <h2 className="eyebrow mb-1">{tr("כל המשימות")}</h2>
         <nav aria-label={tr("סינון משימות לפי סטטוס")} className="chip-row">
           {FILTERS.map(([key, label]) => {
@@ -251,10 +214,39 @@ export default async function PatientPage({
         </div>
       </section>
 
-      <section className="mt-10">
+      <section>
         <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
         <ActivityList items={history} showPatient={false} />
       </section>
+      </div>
+
+      <aside className="min-w-0 space-y-6 lg:sticky lg:top-20">
+        <section aria-label={tr("פרטי המטופל")}>
+          <h2 className="eyebrow mb-2">{tr("פרטי המטופל")}</h2>
+          <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies}
+            autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
+          <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
+        </section>
+        <section aria-label={tr("בני משפחה")}>
+          <h2 className="eyebrow mb-2">{tr("בני משפחה")}</h2>
+          <CaregiverList
+            isPatient={false}
+            items={(caregivers ?? []).map((c) => ({
+              id: c.id, name: c.full_name, relation: c.relation, canAct: c.can_act,
+              since: israelParts(c.created_at).date.split("-").reverse().join("."),
+            }))}
+          />
+          <PendingInvites
+            items={(openInvites ?? []).map((i) => ({
+              id: i.id, name: i.invitee_name ?? "", relation: i.relation, canAct: i.can_act,
+              expires: israelParts(i.expires_at).date.split("-").reverse().join("."),
+            }))}
+          />
+          <AddCaregiver patientId={journey.patient_id} />
+          <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
+        </section>
+      </aside>
+      </div>
     </main>
   );
 }

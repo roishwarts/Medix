@@ -567,6 +567,7 @@ export const en: Record<string, string> = {
   "בחודש הקרוב": "In the next month",
   "בחודשיים הקרובים": "In the next 2 months",
   "בשלושה חודשים הקרובים": "In the next 3 months",
+  "הגדרות": "Settings",
 };
 export const ru: Record<string, string> = {
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "Таблиц ещё нет. Выполните файл {file} в Supabase SQL editor.",
@@ -1136,6 +1137,7 @@ export const ru: Record<string, string> = {
   "בחודש הקרוב": "В ближайший месяц",
   "בחודשיים הקרובים": "В ближайшие 2 месяца",
   "בשלושה חודשים הקרובים": "В ближайшие 3 месяца",
+  "הגדרות": "Настройки",
 };
 export const ar: Record<string, string> = {
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "الجداول غير موجودة بعد. شغّل الملف {file} في محرر SQL في Supabase.",
@@ -1705,4 +1707,5 @@ export const ar: Record<string, string> = {
   "בחודש הקרוב": "خلال الشهر القادم",
   "בחודשיים הקרובים": "خلال الشهرين القادمين",
   "בשלושה חודשים הקרובים": "خلال الأشهر الثلاثة القادمة",
+  "הגדרות": "الإعدادات",
 };

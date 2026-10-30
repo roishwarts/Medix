@@ -8,14 +8,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const t = await getT();
   await requireAdmin();
   const ITEMS: NavItem[] = [
-    { href: "/admin", label: t("מרפאות"), exact: true },
-    { href: "/admin/templates", label: t("תבניות בסיס") },
-    { href: "/admin/users", label: t("משתמשים") },
-    { href: "/admin/dev-tasks", label: t("משימות פיתוח") },
+    { href: "/admin", label: t("מרפאות"), icon: "clinics", exact: true },
+    { href: "/admin/templates", label: t("תבניות בסיס"), icon: "templates" },
+    { href: "/admin/users", label: t("משתמשים"), icon: "users" },
+    { href: "/admin/dev-tasks", label: t("משימות פיתוח"), icon: "dev" },
   ];
   return (
-    <div className="min-h-dvh">
-      <AppHeader items={ITEMS} brand={t("ניהול המערכת")} home="/admin" logout={<LogoutButton />} />
+    <div className="min-h-dvh pb-24 md:pb-0">
+      <AppHeader items={ITEMS} brand={t("ניהול המערכת")} logout={<LogoutButton />} />
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/admin" />{children}</div>
     </div>
   );

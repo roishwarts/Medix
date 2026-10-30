@@ -1,33 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Icon } from "@/components/ui";
+import { NavIcon, type NavIconName } from "@/components/nav-icons";
 import { NavLink } from "@/components/nav-link";
 import { AccessMenu, AccessControls } from "@/components/access-menu";
 import { useT } from "@/components/i18n-provider";
 
-export type NavItem = { href: string; label: string; exact?: boolean; badge?: React.ReactNode };
+export type NavItem = { href: string; label: string; icon: NavIconName; exact?: boolean; badge?: React.ReactNode; more?: boolean };
 
-function MenuGlyph({ open }: { open: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
-      {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-    </svg>
-  );
-}
-
-// The top bar of every signed-in area. Tabs on wide screens; a menu (hamburger) on phones.
+// The top bar of every signed-in area: tabs on wide screens. On phones the navigation is a bar at the bottom
+// of the screen, with a settings button that opens a sheet (more pages, accessibility, sign out).
 export function AppHeader({
-  items, brand, home, logout, languages = true, greeting, maxWidth = "max-w-6xl",
+  items, brand, logout, languages = true, greeting,
 }: {
-  items: NavItem[]; brand: string; home: string; logout: React.ReactNode; languages?: boolean; greeting?: string; maxWidth?: string;
+  items: NavItem[]; brand: string; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
 }) {
   const t = useT();
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  const panel = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setOpen(false); }, [path]);
   useEffect(() => {
@@ -36,70 +29,83 @@ export function AppHeader({
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", onKey);
-    panel.current?.querySelector<HTMLElement>("a,button")?.focus();
+    sheet.current?.querySelector<HTMLElement>("button")?.focus();
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
   }, [open]);
 
   const active = (i: NavItem) => (i.exact ? path === i.href : path === i.href || path.startsWith(i.href + "/"));
+  const bar = items.filter((i) => !i.more);
+  const more = items.filter((i) => i.more);
 
   return (
-    <header className="topbar">
-      <div className={`mx-auto flex ${maxWidth} items-center gap-1.5 px-3 py-1 sm:px-5`}>
-        <button
-          type="button" className="btn btn-icon btn-quiet size-11 shrink-0 md:hidden" aria-label={t("תפריט")} aria-expanded={open} aria-controls="side-menu"
-          onClick={() => setOpen(true)}
-        >
-          <MenuGlyph open={false} />
-        </button>
-
-        {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
-        <nav aria-label={t("ניווט ראשי")} className="hidden min-w-0 flex-1 gap-1 overflow-x-auto whitespace-nowrap md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {items.map((i) => <NavLink key={i.href} href={i.href} exact={i.exact}>{i.label}{i.badge}</NavLink>)}
-        </nav>
-
-        <div className="ms-auto flex min-w-0 items-center gap-1 md:ms-0">
-          <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
-          <span className="hidden md:block"><AccessMenu languages={languages} /></span>
-          <span className="hidden md:block">{logout}</span>
+    <>
+      <header className="topbar">
+        <div className="mx-auto flex max-w-6xl items-center gap-1.5 px-3 py-1 sm:px-5">
+          {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
+          <nav aria-label={t("ניווט ראשי")} className="hidden min-w-0 flex-1 gap-1 overflow-x-auto whitespace-nowrap md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {items.map((i) => <NavLink key={i.href} href={i.href} exact={i.exact}>{i.label}{i.badge}</NavLink>)}
+          </nav>
+          <div className="flex min-h-11 min-w-0 flex-1 items-center gap-1 md:ms-0 md:flex-none">
+            <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
+            <span className="hidden md:block"><AccessMenu languages={languages} /></span>
+            <span className="hidden md:block">{logout}</span>
+          </div>
         </div>
-      </div>
+      </header>
+
+      {/* Phone navigation */}
+      <nav aria-label={t("ניווט ראשי")} className="bottom-bar fixed inset-x-0 bottom-0 z-40 md:hidden">
+        <ul className="mx-auto flex max-w-lg items-stretch justify-around">
+          {bar.map((i) => (
+            <li key={i.href} className="min-w-0 flex-1">
+              <Link href={i.href} aria-current={active(i) ? "page" : undefined} className={`bar-item ${active(i) ? "bar-item-on" : ""}`}>
+                <span className="relative"><NavIcon name={i.icon} />{i.badge && <span className="absolute -top-1.5 start-3 [&>span]:ms-0 [&>span]:scale-90">{i.badge}</span>}</span>
+                <span className="max-w-full truncate">{i.label}</span>
+              </Link>
+            </li>
+          ))}
+          <li className="min-w-0 flex-1">
+            <button type="button" className={`bar-item w-full ${open ? "bar-item-on" : ""}`} aria-expanded={open} aria-haspopup="dialog" aria-controls="settings-sheet" onClick={() => setOpen((v) => !v)}>
+              <NavIcon name="settings" />
+              <span className="max-w-full truncate">{t("הגדרות")}</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
 
       {open && (
-        <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("תפריט")}>
-          <button type="button" aria-label={t("סגירת התפריט")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
-          <div ref={panel} id="side-menu" className="absolute inset-y-0 start-0 flex w-[min(20rem,85vw)] flex-col bg-[var(--color-page)] shadow-2xl">
+        <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("הגדרות")}>
+          <button type="button" aria-label={t("סגירה")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
+          <div ref={sheet} id="settings-sheet" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-[var(--color-page)] shadow-2xl">
             <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
               <div className="min-w-0">
                 {greeting && <p className="display truncate text-lg">{greeting}</p>}
                 <p className="truncate text-sm text-muted">{brand}</p>
               </div>
-              <button type="button" className="btn btn-icon btn-quiet size-11 shrink-0" aria-label={t("סגירת התפריט")} onClick={() => setOpen(false)}>
-                <MenuGlyph open />
-              </button>
+              <button type="button" className="btn btn-quiet btn-sm" onClick={() => setOpen(false)}>{t("סגירה")}</button>
             </div>
-            <nav aria-label={t("ניווט ראשי")} className="flex-1 overflow-y-auto p-3">
-              <ul className="space-y-1">
-                {items.map((i) => (
-                  <li key={i.href}>
-                    <Link
-                      href={i.href} prefetch={false} aria-current={active(i) ? "page" : undefined}
-                      className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-4 text-base transition-colors ${active(i) ? "glass-on font-medium text-ink" : "text-ink hover:bg-[var(--hover-tint)]"}`}
-                    >
-                      <span>{i.label}</span>
-                      {i.badge}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <section aria-label={t("נגישות והעדפות")} className="max-h-[55dvh] overflow-y-auto border-t border-line p-4">
-              <h2 className="display mb-3 text-base">{t("נגישות והעדפות")}</h2>
-              <AccessControls languages={languages} />
-            </section>
-            <div className="border-t border-line p-3">{logout}</div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {more.length > 0 && (
+                <ul className="mb-4 space-y-1">
+                  {more.map((i) => (
+                    <li key={i.href}>
+                      <Link href={i.href} aria-current={active(i) ? "page" : undefined}
+                        className={`flex min-h-12 items-center gap-3 rounded-2xl px-3 text-base ${active(i) ? "glass-on font-medium" : "hover:bg-[var(--hover-tint)]"}`}>
+                        <NavIcon name={i.icon} /> <span>{i.label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <section aria-label={t("נגישות והעדפות")} className={more.length > 0 ? "border-t border-line pt-4" : ""}>
+                <h2 className="display mb-3 text-base">{t("נגישות והעדפות")}</h2>
+                <AccessControls languages={languages} />
+              </section>
+            </div>
+            <div className="border-t border-line p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{logout}</div>
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }

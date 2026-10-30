@@ -17,14 +17,14 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const clinicName = await getClinicName();
   const t = await getT();
   const items: NavItem[] = [
-    { href: "/journey", label: t("ראשי") },
-    { href: "/calendar", label: t("יומן") },
-    ...(profile.role === "patient" ? [{ href: "/family", label: t("משפחה") }] : []),
+    { href: "/journey", label: t("ראשי"), icon: "home" },
+    { href: "/calendar", label: t("יומן"), icon: "calendar" },
+    ...(profile.role === "patient" ? [{ href: "/family", label: t("משפחה"), icon: "family" as const }] : []),
   ];
   return (
-    <div className="min-h-dvh pb-16">
+    <div className="min-h-dvh pb-24 md:pb-16">
       <ImpersonationBanner />
-      <AppHeader items={items} brand={clinicName} home="/journey" logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} maxWidth="max-w-5xl" />
+      <AppHeader items={items} brand={clinicName} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">
       {profile.role === "caregiver" && (
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
