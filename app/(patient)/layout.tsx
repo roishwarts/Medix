@@ -7,7 +7,7 @@ import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = await getClinicName();
-  return { title: name || "כניסה" };
+  return { title: name || (await getT())("כניסה") };
 }
 
 export default async function PatientLayout({ children }: { children: React.ReactNode }) {
@@ -29,11 +29,11 @@ export default async function PatientLayout({ children }: { children: React.Reac
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
           {caregiver ? (
             <>
-              את/ה צופה במסע של <span className="font-medium">{caregiver.patient_name}</span> ({caregiver.relation}).{" "}
-              {caregiver.can_act ? "אפשר לשלוח משימות בשמו/ה. הטקסטים מנוסחים למטופל." : "מצב צפייה בלבד."}
+              {t("את/ה צופה במסע של")} <span className="font-medium">{caregiver.patient_name}</span> ({caregiver.relation}).{" "}
+              {caregiver.can_act ? t("אפשר לשלוח משימות בשמו/ה. הטקסטים מנוסחים למטופל.") : t("מצב צפייה בלבד.")}
             </>
           ) : (
-            "החשבון הזה לא מקושר למטופל. פנה/י למטופל כדי לקבל הזמנה חדשה."
+            t("החשבון הזה לא מקושר למטופל. פנה/י למטופל כדי לקבל הזמנה חדשה.")
           )}
         </p>
       )}

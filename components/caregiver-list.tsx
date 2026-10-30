@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useT } from "@/components/i18n-provider";
 import { removeCaregiver, setCaregiverPermission } from "@/app/(patient)/family/actions";
 
 export type CaregiverItem = { id: string; name: string; relation: string; canAct: boolean; since: string };
 
 export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; isPatient: boolean }) {
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -21,8 +23,8 @@ export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; is
   if (items.length === 0) {
     return (
       <div className="card px-4 py-6 text-center">
-        <p className="text-muted">אין בני משפחה מקושרים.</p>
-        <p className="mt-1 text-sm text-muted">אפשר להזמין בן משפחה בטופס שמתחת.</p>
+        <p className="text-muted">{t("אין בני משפחה מקושרים.")}</p>
+        <p className="mt-1 text-sm text-muted">{t("אפשר להזמין בן משפחה בטופס שמתחת.")}</p>
       </div>
     );
   }
@@ -35,28 +37,28 @@ export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; is
             <div>
               <p className="font-medium">{c.name} <span className="font-normal text-muted">· {c.relation}</span></p>
               <p className="text-sm text-muted">
-                {c.canAct ? "יכול/ה לפעול בשמך" : "צפייה בלבד"} · מאז {c.since}
+                {c.canAct ? t("יכול/ה לפעול בשמך") : t("צפייה בלבד")} · {t("מאז {date}", { date: c.since })}
               </p>
             </div>
             <div className="flex gap-2">
               {isPatient && (
                 <button className="btn btn-sm" disabled={pending}
                   onClick={() => run(() => setCaregiverPermission(c.id, !c.canAct))}>
-                  {c.canAct ? "הגבלה לצפייה" : "מתן הרשאת פעולה"}
+                  {c.canAct ? t("הגבלה לצפייה") : t("מתן הרשאת פעולה")}
                 </button>
               )}
               {confirming === c.id ? (
                 <>
                   <button className="btn btn-danger btn-sm" disabled={pending}
                     onClick={() => { setConfirming(null); run(() => removeCaregiver(c.id)); }}>
-                    להסיר את {c.name}? הגישה תיחסם
+                    {t("להסיר את {name}? הגישה תיחסם", { name: c.name })}
                   </button>
-                  <button className="btn btn-quiet btn-sm" onClick={() => setConfirming(null)}>ביטול</button>
+                  <button className="btn btn-quiet btn-sm" onClick={() => setConfirming(null)}>{t("ביטול")}</button>
                 </>
               ) : (
-                <button className="btn btn-danger btn-sm" disabled={pending} aria-label={`הסרת ${c.name}`}
+                <button className="btn btn-danger btn-sm" disabled={pending} aria-label={t("הסרת {name}", { name: c.name })}
                   onClick={() => setConfirming(c.id)}>
-                  הסרה
+                  {t("הסרה")}
                 </button>
               )}
             </div>

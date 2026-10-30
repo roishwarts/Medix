@@ -3,7 +3,10 @@
 import { useActionState, useState } from "react";
 import { setNewPassword } from "./actions";
 
+import { useT } from "@/components/i18n-provider";
+
 export function ResetForm({ token }: { token: string }) {
+  const t = useT();
   const [state, action, pending] = useActionState(setNewPassword.bind(null, token), undefined);
   const [show, setShow] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -18,13 +21,13 @@ export function ResetForm({ token }: { token: string }) {
         const value = new FormData(e.currentTarget).get("password");
         if (String(value ?? "").length < 8) {
           e.preventDefault();
-          setLocalError("הסיסמה צריכה להכיל לפחות 8 תווים");
+          setLocalError(t("הסיסמה צריכה להכיל לפחות 8 תווים"));
           e.currentTarget.querySelector<HTMLInputElement>("#password")?.focus();
         } else setLocalError(null);
       }}
     >
       <div>
-        <label htmlFor="password" className="lbl">סיסמה חדשה</label>
+        <label htmlFor="password" className="lbl">{t("סיסמה חדשה")}</label>
         <div className="relative">
           <input
             id="password"
@@ -47,13 +50,13 @@ export function ResetForm({ token }: { token: string }) {
             aria-pressed={show}
             className="absolute inset-y-0 right-0 flex min-w-16 items-center justify-center rounded-r-xl px-3 text-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
-            {show ? "הסתרה" : "הצגה"}
+            {show ? t("הסתרה") : t("הצגה")}
           </button>
         </div>
-        <p id="password-hint" className="mt-1.5 text-sm text-muted">לפחות 8 תווים. עדיף שילוב של אותיות ומספרים.</p>
+        <p id="password-hint" className="mt-1.5 text-sm text-muted">{t("לפחות 8 תווים. עדיף שילוב של אותיות ומספרים.")}</p>
       </div>
       {error && <p id="password-error" role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-sm text-bad">{error}</p>}
-      <button className="btn btn-primary w-full" disabled={pending} aria-busy={pending}>{pending ? "שומר…" : "שמירת סיסמה והתחברות"}</button>
+      <button className="btn btn-primary w-full" disabled={pending} aria-busy={pending}>{pending ? t("שומר…") : t("שמירת סיסמה והתחברות")}</button>
     </form>
   );
 }

@@ -1,9 +1,10 @@
 import type { Lang } from "@/lib/prefs";
 import * as common from "./common";
+import * as patient from "./patient";
 
 // Every file in this folder adds translations for one area of the app. The Hebrew text is the key.
 export type Shard = Record<Exclude<Lang, "he">, Record<string, string>>;
-const shards: Shard[] = [common];
+const shards: Shard[] = [common, patient];
 
 export const dictionaries: Shard = { en: {}, ru: {}, ar: {} };
 for (const shard of shards) {

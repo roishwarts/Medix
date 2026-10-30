@@ -66,6 +66,22 @@ export const OWNER_LABEL: Record<Owner, string> = {
   doctor: "הרופא",
 };
 
+export function ownerLabel(o: Owner, t: (s: string) => string): string {
+  return t(OWNER_LABEL[o]);
+}
+
+// The blocker's label is built from its kind and task so that it can be shown in the viewer's language.
+export function blockerLabel(b: Blocker, t: (s: string, p?: Record<string, string | number>) => string): string {
+  const title = b.task.title;
+  switch (b.kind) {
+    case "overdue": return t("{title} – באיחור ({owner})", { title, owner: ownerLabel(b.task.owner, t) });
+    case "rejected": return t("{title} – הוחזר לתיקון", { title });
+    case "review": return t("{title} – ממתין לבדיקה", { title });
+    case "clinic": return t("{title} – ממתין ל{owner}", { title, owner: ownerLabel(b.task.owner, t) });
+    default: return t("{title} – ממתין למטופל", { title });
+  }
+}
+
 export function computeTasks(rows: TaskRow[], surgeryDate: string, today = getToday()): Task[] {
   const byId = new Map(rows.map((r) => [r.id, r]));
   return rows

@@ -1,3 +1,4 @@
+import { Tr } from "@/components/i18n-provider";
 import type { Readiness, TaskState } from "@/lib/journey";
 
 export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "alert" | "arrow" | "file" | "plus" | "trash" | "up" | "down"; size?: number }) {
@@ -7,7 +8,8 @@ export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "
     case "lock": return <svg {...common}><rect x="3.5" y="7" width="9" height="6.5" rx="1" /><path d="M5.5 7V5.2a2.5 2.5 0 015 0V7" /></svg>;
     case "clock": return <svg {...common}><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.2l2 1.3" /></svg>;
     case "alert": return <svg {...common}><path d="M8 3.5v5.2M8 11.3v.2" /></svg>;
-    case "arrow": return <svg {...common}><path d="M13 8H3m4-4L3 8l4 4" /></svg>;
+    // Points "forward": left in right-to-left languages, right in left-to-right ones.
+    case "arrow": return <span className="inline-flex ltr:-scale-x-100"><svg {...common}><path d="M13 8H3m4-4L3 8l4 4" /></svg></span>;
     case "file": return <svg {...common}><path d="M4 2.5h5l3 3v8H4z" /><path d="M9 2.5v3h3" /></svg>;
     case "plus": return <svg {...common}><path d="M8 3v10M3 8h10" /></svg>;
     case "trash": return <svg {...common}><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5" /></svg>;
@@ -34,7 +36,7 @@ const STATE_TEXT: Record<TaskState, [string, string]> = {
 };
 
 export function TaskStatePill({ state, overdue }: { state: TaskState; overdue?: boolean }) {
-  if (overdue) return <span className="pill pill-bad">באיחור</span>;
+  if (overdue) return <span className="pill pill-bad"><Tr k="באיחור" /></span>;
   const [text, cls] = STATE_TEXT[state];
-  return <span className={`pill ${cls}`}>{text}</span>;
+  return <span className={`pill ${cls}`}><Tr k={text} /></span>;
 }

@@ -32,7 +32,7 @@ function BackButton({ home }: { home: string }) {
       className="btn btn-icon size-11 shrink-0"
       onClick={() => (pagesVisited > 1 ? router.back() : router.push(parentOf(path, home)))}
     >
-      <span className="inline-flex rtl:-scale-x-100"><Icon name="arrow" size={18} /></span>
+      <span className="inline-flex -scale-x-100"><Icon name="arrow" size={18} /></span>
     </button>
   );
 }

@@ -1,6 +1,9 @@
+import { getT } from "@/lib/i18n/server";
 import { ForgotForm } from "./form";
 
-export const metadata = { title: "שכחתי סיסמה" };
+export async function generateMetadata() {
+  return { title: (await getT())("שכחתי סיסמה") };
+}
 
 export default function ForgotPage() {
   return (

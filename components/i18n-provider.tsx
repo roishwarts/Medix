@@ -12,5 +12,10 @@ export function I18nProvider({ lang, dict, children }: { lang: Lang; dict: Recor
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+// For text inside components that are shared between server and client pages.
+export function Tr({ k, params }: { k: string; params?: Record<string, string | number> }) {
+  return <>{useContext(Ctx).t(k, params)}</>;
+}
+
 export const useT = () => useContext(Ctx).t;
 export const useLang = () => useContext(Ctx).lang;

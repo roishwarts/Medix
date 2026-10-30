@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
+import { getT } from "@/lib/i18n/server";
 import { AcceptForm } from "./form";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "הצטרפות כבן משפחה" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("הצטרפות כבן משפחה") };
+}
 
 type Invite = {
   name: string;
@@ -27,6 +30,7 @@ function Shell({ clinic, children }: { clinic?: string; children: React.ReactNod
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+  const t = await getT();
   const admin = createAdminClient();
 
   let invite: Invite | null = null;
@@ -57,32 +61,32 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!invite) {
     return (
       <Shell>
-        <h1 className="display mb-3 text-2xl sm:text-3xl">ההזמנה אינה תקפה</h1>
-        <p className="mb-6 text-muted">הקישור פג תוקף, בוטל, או כבר נוצל. אפשר לבקש מהמטופל/ת או מהמרפאה הזמנה חדשה.</p>
-        <p className="mb-6 text-sm text-muted">כבר יש לך חשבון? אפשר להיכנס ישירות.</p>
-        <Link href="/login" className="btn btn-primary w-full">למסך הכניסה</Link>
+        <h1 className="display mb-3 text-2xl sm:text-3xl">{t("ההזמנה אינה תקפה")}</h1>
+        <p className="mb-6 text-muted">{t("הקישור פג תוקף, בוטל, או כבר נוצל. אפשר לבקש מהמטופל/ת או מהמרפאה הזמנה חדשה.")}</p>
+        <p className="mb-6 text-sm text-muted">{t("כבר יש לך חשבון? אפשר להיכנס ישירות.")}</p>
+        <Link href="/login" className="btn btn-primary w-full">{t("למסך הכניסה")}</Link>
       </Shell>
     );
   }
 
   return (
     <Shell clinic={invite.clinic}>
-      <p className="eyebrow mb-2">הזמנה להצטרף</p>
+      <p className="eyebrow mb-2">{t("הזמנה להצטרף")}</p>
       <h1 className="display mb-3 text-2xl leading-snug sm:text-3xl">
-        הוזמנת לעקוב אחרי המסע של {invite.patientFirstName}
+        {t("הוזמנת לעקוב אחרי המסע של {name}", { name: invite.patientFirstName })}
       </h1>
       <p className="mb-5 text-muted">
-        {invite.inviter ? <>{invite.inviter} מזמינ/ה אותך להצטרף. </> : null}
-        כדי להתחיל, צריך רק לבחור שם משתמש וסיסמה.
+        {invite.inviter ? <>{t("{name} מזמינ/ה אותך להצטרף.", { name: invite.inviter })} </> : null}
+        {t("כדי להתחיל, צריך רק לבחור שם משתמש וסיסמה.")}
       </p>
       <dl className="mb-6 divide-y divide-line rounded-2xl border border-line bg-surface/60 text-sm">
         <div className="flex items-center justify-between gap-4 px-4 py-3">
-          <dt className="text-muted">קרבה</dt>
+          <dt className="text-muted">{t("קרבה")}</dt>
           <dd className="font-medium">{invite.relation}</dd>
         </div>
         <div className="flex items-center justify-between gap-4 px-4 py-3">
-          <dt className="text-muted">הרשאה</dt>
-          <dd className="text-end font-medium">{invite.can_act ? "צפייה בהכנות ועזרה בהן" : "צפייה בהכנות בלבד"}</dd>
+          <dt className="text-muted">{t("הרשאה")}</dt>
+          <dd className="text-end font-medium">{invite.can_act ? t("צפייה בהכנות ועזרה בהן") : t("צפייה בהכנות בלבד")}</dd>
         </div>
       </dl>
       <AcceptForm token={token} defaultName={invite.name} />

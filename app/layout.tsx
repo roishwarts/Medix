@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
+import { getT } from "@/lib/i18n/server";
 import { getLang, getPrefs } from "@/lib/prefs-server";
 import { dictionaryFor } from "@/lib/i18n";
 import { dirOf } from "@/lib/prefs";
@@ -16,8 +17,6 @@ const rubik = Rubik({
   display: "swap",
 });
 
-const TITLE = "הכנה לניתוח";
-const DESCRIPTION = "כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.";
 
 // Absolute address used for the share image in link previews (WhatsApp, etc.).
 const origin =
@@ -28,15 +27,20 @@ const origin =
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000");
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  const TITLE = t("הכנה לניתוח");
+  const DESCRIPTION = t("כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.");
+  return {
   metadataBase: new URL(origin),
-  title: "כניסה",
+  title: t("כניסה"),
   description: DESCRIPTION,
   robots: { index: false, follow: false },
   openGraph: { type: "website", locale: "he_IL", title: TITLE, description: DESCRIPTION },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
   appleWebApp: { capable: true, title: TITLE, statusBarStyle: "default" },
-};
+  };
+}
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#4b6584" }, { media: "(prefers-color-scheme: dark)", color: "#131417" }] };
 
