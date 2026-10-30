@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/ui";
 import { addPerson, removePerson } from "./actions";
@@ -8,6 +9,7 @@ export type Person = { id: string; name: string };
 
 // The names tasks can be assigned to. Anyone can be added or removed; removing leaves their tasks unassigned.
 export function PeopleManager({ people }: { people: Person[] }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,8 +28,8 @@ export function PeopleManager({ people }: { people: Person[] }) {
   return (
     <details className="fold mt-5">
       <summary>
-        <span className="font-medium">אחראים</span>
-        <span className="text-sm text-muted">{people.length > 0 ? people.map((p) => p.name).join(", ") : "עדיין לא הוגדרו"}</span>
+        <span className="font-medium">{t("אחראים")}</span>
+        <span className="text-sm text-muted">{people.length > 0 ? people.map((p) => p.name).join(", ") : t("עדיין לא הוגדרו")}</span>
       </summary>
       <div className="card mt-2 p-4">
         {people.length > 0 && (
@@ -39,12 +41,12 @@ export function PeopleManager({ people }: { people: Person[] }) {
                   <>
                     <button type="button" className="rounded-full bg-bad-soft px-2 py-0.5 text-xs font-medium text-bad" disabled={pending}
                       onClick={() => start(async () => { const res = await removePerson(p.id); setConfirming(null); if (res.error) setError(res.error); })}>
-                      להסיר? המשימות שלו יישארו ללא אחראי
+                      {t("להסיר? המשימות שלו יישארו ללא אחראי")}
                     </button>
-                    <button type="button" className="rounded-full px-2 py-0.5 text-xs text-muted" onClick={() => setConfirming(null)}>ביטול</button>
+                    <button type="button" className="rounded-full px-2 py-0.5 text-xs text-muted" onClick={() => setConfirming(null)}>{t("ביטול")}</button>
                   </>
                 ) : (
-                  <button type="button" aria-label={`הסרת ${p.name}`} disabled={pending}
+                  <button type="button" aria-label={t("הסרת {name}", { name: p.name })} disabled={pending}
                     className="relative grid size-5 place-items-center rounded-full text-muted before:absolute before:-inset-2.5 before:content-[''] hover:bg-black/10 hover:text-ink"
                     onClick={() => setConfirming(p.id)}>
                     <Icon name="trash" size={12} />
@@ -55,8 +57,8 @@ export function PeopleManager({ people }: { people: Person[] }) {
           </ul>
         )}
         <form onSubmit={add} className="flex gap-2">
-          <input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="שם חדש…" aria-label="הוספת אחראי" autoComplete="off" />
-          <button className="btn btn-sm min-h-11 shrink-0 self-center sm:min-h-9" disabled={pending || !name.trim()}>{pending ? "מוסיף…" : "הוספה"}</button>
+          <input className="field" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder={t("שם חדש…")} aria-label={t("הוספת אחראי")} autoComplete="off" />
+          <button className="btn btn-sm min-h-11 shrink-0 self-center sm:min-h-9" disabled={pending || !name.trim()}>{pending ? t("מוסיף…") : t("הוספה")}</button>
         </form>
         {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
       </div>

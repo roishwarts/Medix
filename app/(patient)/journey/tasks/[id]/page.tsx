@@ -143,7 +143,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           )}
 
           {open && !isAppt && !mine && (
-            <Notice tone="neutral" icon="clock" title={t(task.owner === "doctor" ? "הרופא מטפל בשלב הזה" : "הצוות מטפל בשלב הזה")}>
+            <Notice tone="neutral" icon="clock" title={t(task.owner === "doctor" ? t("הרופא מטפל בשלב הזה") : t("הצוות מטפל בשלב הזה"))}>
               <p>{t("אין צורך בפעולה מצדך. השלב יסומן כשיושלם.")}</p>
             </Notice>
           )}

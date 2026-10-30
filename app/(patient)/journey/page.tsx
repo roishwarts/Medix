@@ -181,7 +181,7 @@ export default async function JourneyPage() {
               <span className="absolute start-0 top-0 grid size-7 place-items-center rounded-full bg-ok text-white" aria-hidden="true"><Icon name="check" size={14} /></span>
               <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />
               <details className="group">
-                <summary className="flex min-h-7 cursor-pointer list-none items-center gap-2 font-medium text-muted [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-7 cursor-pointer list-none flex-wrap items-center gap-x-2 font-medium text-muted [&::-webkit-details-marker]:hidden">
                   <span>{t("{n} שלבים הושלמו", { n: folded.length })}</span>
                   <span className="text-sm text-accent group-open:hidden">{t("הצגה")}</span>
                   <span className="hidden text-sm text-accent group-open:inline">{t("הסתרה")}</span>

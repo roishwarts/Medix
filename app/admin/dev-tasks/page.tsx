@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { AddSubject } from "./add-subject";
 import { SubjectCard, type DevTask } from "./subject-card";
@@ -16,6 +17,7 @@ type Filter = (typeof FILTERS)[number][0];
 const STATUS_RANK: Record<DevTask["status"], number> = { doing: 0, todo: 1, done: 2 };
 
 export default async function DevTasksPage({ searchParams }: { searchParams: Promise<{ status?: string; who?: string }> }) {
+  const t = await getT();
   const { status, who: whoParam } = await searchParams;
   const active: Filter = FILTERS.some(([k]) => k === status) ? (status as Filter) : "all";
   const { db } = await requireAdmin();
@@ -31,9 +33,9 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
   if (error) {
     return (
       <main>
-        <h1 className="display text-4xl">משימות פיתוח</h1>
+        <h1 className="display text-4xl">{t("משימות פיתוח")}</h1>
         <p className="card mt-6 p-4 text-muted">
-          הטבלאות עדיין לא קיימות. יש להריץ ב-Supabase SQL editor את הקובץ <span dir="ltr" className="num">supabase/patch-devtasks.sql</span>.
+          {t("הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.", { file: "supabase/patch-devtasks.sql" })}
         </p>
       </main>
     );
@@ -56,11 +58,11 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
 
   return (
     <main>
-      <p className="eyebrow">{open} פתוחות מתוך {all.length}</p>
-      <h1 className="display mt-1 text-4xl">משימות פיתוח</h1>
-      <p className="mt-2 text-muted">רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.</p>
+      <p className="eyebrow">{t("{open} פתוחות מתוך {total}", { open, total: all.length })}</p>
+      <h1 className="display mt-1 text-4xl">{t("משימות פיתוח")}</h1>
+      <p className="mt-2 text-muted">{t("רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.")}</p>
 
-      <nav aria-label="סינון משימות לפי סטטוס" className="chip-row mt-6 flex-wrap overflow-visible">
+      <nav aria-label={t("סינון משימות לפי סטטוס")} className="chip-row mt-6 flex-wrap overflow-visible">
         {FILTERS.map(([key, label]) => (
           <Link
             key={key}
@@ -69,16 +71,16 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
             aria-current={key === active ? "page" : undefined}
             className="chip min-h-11"
           >
-            {label} <span className="num text-xs">{count(key)}</span>
+            {t(label)} <span className="num text-xs">{count(key)}</span>
           </Link>
         ))}
       </nav>
 
       {people.length > 0 && (
-        <nav aria-label="סינון משימות לפי אחראי" className="chip-row mt-3 flex-wrap overflow-visible border-t border-line pt-3">
+        <nav aria-label={t("סינון משימות לפי אחראי")} className="chip-row mt-3 flex-wrap overflow-visible border-t border-line pt-3">
           {([["all", "כולם"], ...people.map((p) => [p.id, p.name] as const), ["none", "ללא אחראי"]] as const).map(([key, label]) => (
             <Link key={key} href={href(active, key)} scroll={false} aria-current={key === who ? "page" : undefined} className="chip min-h-11">
-              {label} <span className="num text-xs">{countWho(key)}</span>
+              {key === "all" || key === "none" ? t(label) : label} <span className="num text-xs">{countWho(key)}</span>
             </Link>
           ))}
         </nav>
@@ -89,9 +91,9 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
       <div className="mt-4 space-y-5">
         {(active !== "all" || who !== "all") && shownTotal === 0 && (subjects ?? []).length > 0 && (
           <div className="card mt-6 px-4 py-12 text-center">
-            <p className="font-medium">אין משימות שמתאימות לסינון.</p>
+            <p className="font-medium">{t("אין משימות שמתאימות לסינון.")}</p>
             <p className="mt-1 text-muted">
-              נסו <Link href={href("all", "all")} scroll={false} className="underline">לנקות את הסינון</Link> ולראות הכול.
+              {t("נסו")} <Link href={href("all", "all")} scroll={false} className="underline">{t("לנקות את הסינון")}</Link> {t("ולראות הכול.")}
             </p>
           </div>
         )}
@@ -105,8 +107,8 @@ export default async function DevTasksPage({ searchParams }: { searchParams: Pro
         })}
         {(subjects ?? []).length === 0 && (
           <div className="card mt-6 px-4 py-12 text-center">
-            <p className="font-medium">אין נושאים עדיין.</p>
-            <p className="mt-1 text-muted">הוסיפו את הראשון בטופס שבתחתית העמוד.</p>
+            <p className="font-medium">{t("אין נושאים עדיין.")}</p>
+            <p className="mt-1 text-muted">{t("הוסיפו את הראשון בטופס שבתחתית העמוד.")}</p>
           </div>
         )}
       </div>

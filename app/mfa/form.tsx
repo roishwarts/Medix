@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +16,7 @@ function qrSrc(qr: string) {
 const safe = (v: string) => v.replace(/%(?![0-9a-fA-F]{2})/g, "%25");
 
 export function MfaForm({ factorId }: { factorId: string | null }) {
+  const t = useT();
   const router = useRouter();
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [code, setCode] = useState("");
@@ -52,7 +54,7 @@ export function MfaForm({ factorId }: { factorId: string | null }) {
     const supabase = createClient();
     const { error: err } = await supabase.auth.mfa.challengeAndVerify({ factorId: activeId, code: code.trim() });
     if (err) {
-      setError("הקוד שגוי או שפג תוקפו. נסו שוב עם הקוד הנוכחי.");
+      setError(t("הקוד שגוי או שפג תוקפו. נסו שוב עם הקוד הנוכחי."));
       setCode("");
       setBusy(false);
       codeRef.current?.focus();
@@ -79,9 +81,9 @@ export function MfaForm({ factorId }: { factorId: string | null }) {
         <div className="space-y-4">
           <ol className="space-y-2.5 text-sm">
             {[
-              <>מתקינים אפליקציית אימות בטלפון, למשל <bdi dir="ltr">Google Authenticator</bdi> או <bdi dir="ltr">Authy</bdi>.</>,
-              <>סורקים את הקוד, או מזינים את המפתח ידנית.</>,
-              <>מזינים כאן את הקוד שמופיע באפליקציה.</>,
+              <>{t("מתקינים אפליקציית אימות בטלפון, למשל")} <bdi dir="ltr">Google Authenticator</bdi> {t("או")} <bdi dir="ltr">Authy</bdi>.</>,
+              <>{t("סורקים את הקוד, או מזינים את המפתח ידנית.")}</>,
+              <>{t("מזינים כאן את הקוד שמופיע באפליקציה.")}</>,
             ].map((t, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="num mt-px inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-medium text-accent">{i + 1}</span>
@@ -93,27 +95,27 @@ export function MfaForm({ factorId }: { factorId: string | null }) {
             <div role="alert" className="rounded-xl bg-bad-soft px-4 py-4 text-center">
               <p className="flex items-start justify-center gap-2 text-sm leading-relaxed text-bad">
                 <span className="mt-0.5 shrink-0"><Icon name="alert" /></span>
-                <span>לא הצלחנו להתחיל את ההגדרה. נסו שוב בעוד רגע.</span>
+                <span>{t("לא הצלחנו להתחיל את ההגדרה. נסו שוב בעוד רגע.")}</span>
               </p>
-              <button type="button" className="btn btn-sm mt-3" onClick={() => window.location.reload()}>נסו שוב</button>
+              <button type="button" className="btn btn-sm mt-3" onClick={() => window.location.reload()}>{t("נסו שוב")}</button>
             </div>
           ) : enrollment ? (
             <div className="flex flex-col items-center gap-2 rounded-2xl bg-paper px-4 py-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={enrollment.qr} alt="קוד QR לחיבור אפליקציית האימות" width={176} height={176} className="h-44 w-44 rounded-xl bg-white p-2" />
-              <p className="mt-1 text-xs text-[#4b5563]">אי אפשר לסרוק? מזינים את המפתח ידנית:</p>
+              <img src={enrollment.qr} alt={t("קוד QR לחיבור אפליקציית האימות")} width={176} height={176} className="h-44 w-44 rounded-xl bg-white p-2" />
+              <p className="mt-1 text-xs text-[#4b5563]">{t("אי אפשר לסרוק? מזינים את המפתח ידנית:")}</p>
               <div className="flex w-full items-center justify-center gap-2">
                 <code dir="ltr" className="num min-w-0 select-all break-all rounded-lg bg-surface px-3 py-2 text-center text-sm tracking-wide">{enrollment.secret}</code>
-                <button type="button" onClick={copyKey} className="btn btn-sm shrink-0 !min-h-11" aria-label="העתקת המפתח">
-                  {copied ? "הועתק" : "העתקה"}
+                <button type="button" onClick={copyKey} className="btn btn-sm shrink-0 !min-h-11" aria-label={t("העתקת המפתח")}>
+                  {copied ? t("הועתק") : t("העתקה")}
                 </button>
               </div>
-              <span className="sr-only" role="status">{copied ? "המפתח הועתק" : ""}</span>
+              <span className="sr-only" role="status">{copied ? t("המפתח הועתק") : ""}</span>
             </div>
           ) : (
             <div role="status" aria-live="polite" className="flex flex-col items-center gap-2 rounded-2xl bg-paper px-4 py-5">
               <div className="h-44 w-44 animate-pulse rounded-xl bg-line" aria-hidden="true" />
-              <p className="text-xs text-[#4b5563]">מכין קוד…</p>
+              <p className="text-xs text-[#4b5563]">{t("מכין קוד…")}</p>
               <div className="h-11" aria-hidden="true" />
             </div>
           )}
@@ -122,7 +124,7 @@ export function MfaForm({ factorId }: { factorId: string | null }) {
       {!enrollError && (
         <>
           <div>
-            <label htmlFor="code" className="lbl">קוד בן 6 ספרות</label>
+            <label htmlFor="code" className="lbl">{t("קוד בן 6 ספרות")}</label>
             <input
               id="code" name="code" ref={codeRef} className="field num text-center text-xl tracking-[0.4em]" dir="ltr"
               inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}
@@ -137,7 +139,7 @@ export function MfaForm({ factorId }: { factorId: string | null }) {
             </p>
           )}
           <button className="btn btn-primary w-full" disabled={busy || !activeId || code.length !== 6}>
-            {busy ? "מאמת…" : "אימות"}
+            {busy ? t("מאמת…") : t("אימות")}
           </button>
         </>
       )}

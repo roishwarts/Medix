@@ -40,7 +40,7 @@ export function CaregiverList({ items, isPatient }: { items: CaregiverItem[]; is
                 {c.canAct ? t("יכול/ה לפעול בשמך") : t("צפייה בלבד")} · {t("מאז {date}", { date: c.since })}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {isPatient && (
                 <button className="btn btn-sm" disabled={pending}
                   onClick={() => run(() => setCaregiverPermission(c.id, !c.canAct))}>

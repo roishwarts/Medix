@@ -19,7 +19,7 @@ export function diffDays(a: string, b: string): number {
   return Math.round((toUtc(a) - toUtc(b)) / 86400000);
 }
 
-const LOCALE: Record<Lang, string> = { he: "he-IL", en: "en-GB", ru: "ru-RU", ar: "ar" };
+export const LOCALE: Record<Lang, string> = { he: "he-IL", en: "en-GB", ru: "ru-RU", ar: "ar" };
 
 export function formatDate(d: string, lang: Lang = "he"): string {
   return new Intl.DateTimeFormat(LOCALE[lang], { day: "numeric", month: "short", timeZone: "UTC" }).format(

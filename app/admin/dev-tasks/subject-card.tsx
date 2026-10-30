@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n-provider";
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/ui";
 import { addTask, deleteSubject, deleteTask, setTaskAssignee, setTaskStatus, updateTask, type DevStatus } from "./actions";
@@ -11,21 +12,24 @@ const NEXT: Record<DevStatus, DevStatus> = { todo: "doing", doing: "done", done:
 const LABEL: Record<DevStatus, string> = { todo: "לביצוע", doing: "בתהליך", done: "הושלם" };
 
 function StatusDot({ status }: { status: DevStatus }) {
+  const t = useT();
   if (status === "done") return <span className="grid size-6 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={13} /></span>;
   if (status === "doing") return <span className="grid size-6 place-items-center rounded-full border-2 border-accent"><span className="size-2.5 rounded-full bg-accent" /></span>;
   return <span className="block size-6 rounded-full border-2 border-line-strong" />;
 }
 
 function AssigneeSelect({ id, value, people, onChange, disabled, className = "" }: { id?: string; value: string; people: Person[]; onChange: (v: string) => void; disabled?: boolean; className?: string }) {
+  const t = useT();
   return (
-    <select id={id} aria-label="אחראי" className={`field ${className}`} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
-      <option value="">ללא אחראי</option>
+    <select id={id} aria-label={t("אחראי")} className={`field ${className}`} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{t("ללא אחראי")}</option>
       {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
     </select>
   );
 }
 
 function TaskRow({ task: serverTask, people }: { task: DevTask; people: Person[] }) {
+  const t = useT();
   // Shows the new status at once; the server confirms a moment later.
   const [optimistic, setOptimistic] = useState<DevStatus | null>(null);
   const [optAssignee, setOptAssignee] = useState<string | null | undefined>(undefined);
@@ -51,17 +55,17 @@ function TaskRow({ task: serverTask, people }: { task: DevTask; people: Person[]
   if (editing) {
     return (
       <li className="space-y-2 px-4 py-3">
-        <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} aria-label="שם המשימה" autoFocus />
-        <textarea className="field" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} placeholder="הערות (אופציונלי)" aria-label="הערות" />
+        <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} aria-label={t("שם המשימה")} autoFocus />
+        <textarea className="field" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} placeholder={t("הערות (אופציונלי)")} aria-label={t("הערות")} />
         {people.length > 0 && (
           <div>
-            <label htmlFor={`as-${task.id}`} className="lbl">אחראי</label>
+            <label htmlFor={`as-${task.id}`} className="lbl">{t("אחראי")}</label>
             <AssigneeSelect id={`as-${task.id}`} value={assignee} people={people} onChange={setAssignee} />
           </div>
         )}
         <div className="flex gap-2">
-          <button className="btn btn-primary btn-sm min-h-11 sm:min-h-9" disabled={pending || !title.trim()} onClick={() => run(() => updateTask(task.id, title, notes, people.length > 0 ? assignee || null : undefined), () => setEditing(false))}>{pending ? "שומר…" : "שמירה"}</button>
-          <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => { setEditing(false); setTitle(task.title); setNotes(task.notes ?? ""); setAssignee(task.assignee_id ?? ""); setError(null); }}>ביטול</button>
+          <button className="btn btn-primary btn-sm min-h-11 sm:min-h-9" disabled={pending || !title.trim()} onClick={() => run(() => updateTask(task.id, title, notes, people.length > 0 ? assignee || null : undefined), () => setEditing(false))}>{pending ? t("שומר…") : t("שמירה")}</button>
+          <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => { setEditing(false); setTitle(task.title); setNotes(task.notes ?? ""); setAssignee(task.assignee_id ?? ""); setError(null); }}>{t("ביטול")}</button>
         </div>
         {error && <p role="alert" className="text-sm text-bad">{error}</p>}
       </li>
@@ -73,8 +77,8 @@ function TaskRow({ task: serverTask, people }: { task: DevTask; people: Person[]
       <div className="flex flex-wrap items-start gap-x-1 gap-y-0">
         <button
           className="-my-1 -ms-2 grid size-11 shrink-0 place-items-center rounded-full disabled:opacity-60" disabled={pending}
-          aria-label={`${LABEL[task.status]}, לחיצה תעביר ל${LABEL[NEXT[task.status]]}`}
-          title={`${LABEL[task.status]} ← ${LABEL[NEXT[task.status]]}`}
+          aria-label={t("{from}, לחיצה תעביר ל{to}", { from: t(LABEL[task.status]), to: t(LABEL[NEXT[task.status]]) })}
+          title={`${t(LABEL[task.status])} ← ${t(LABEL[NEXT[task.status]])}`}
           onClick={() => { const next = NEXT[task.status]; setOptimistic(next); run(async () => { const res = await setTaskStatus(task.id, next); setOptimistic(null); return res; }); }}
         >
           <StatusDot status={task.status} />
@@ -92,15 +96,15 @@ function TaskRow({ task: serverTask, people }: { task: DevTask; people: Person[]
               onChange={(v) => { const next = v || null; setOptAssignee(next); run(async () => { const res = await setTaskAssignee(task.id, next); setOptAssignee(undefined); return res; }); }}
             />
           )}
-          <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" onClick={() => setEditing(true)}>עריכה</button>
+          <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכה")}</button>
           {confirming ? (
             <>
-              <button className="btn btn-danger btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => run(() => deleteTask(task.id), () => setConfirming(false))}>{pending ? "מוחק…" : "מחיקה"}</button>
-              <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => setConfirming(false)}>ביטול</button>
+              <button className="btn btn-danger btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => run(() => deleteTask(task.id), () => setConfirming(false))}>{pending ? t("מוחק…") : t("מחיקה")}</button>
+              <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => setConfirming(false)}>{t("ביטול")}</button>
             </>
           ) : (
             <button
-              className="btn btn-quiet btn-sm size-11 px-0 sm:size-9" aria-label={`מחיקת המשימה: ${task.title}`} disabled={pending}
+              className="btn btn-quiet btn-sm size-11 px-0 sm:size-9" aria-label={t("מחיקת המשימה: {title}", { title: task.title })} disabled={pending}
               onClick={() => setConfirming(true)}
             >
               <Icon name="trash" />
@@ -114,6 +118,7 @@ function TaskRow({ task: serverTask, people }: { task: DevTask; people: Person[]
 }
 
 export function SubjectCard({ id, title, tasks, doneCount, total, people }: { id: string; title: string; tasks: DevTask[]; doneCount: number; total: number; people: Person[] }) {
+  const t = useT();
   const [text, setText] = useState("");
   const [newAssignee, setNewAssignee] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
@@ -137,16 +142,16 @@ export function SubjectCard({ id, title, tasks, doneCount, total, people }: { id
           <div className="min-w-0">
             <h2 className="display break-words text-lg">{title}</h2>
             <p className="text-xs text-muted">
-              {total === 0 ? "אין משימות עדיין" : <><span className="num">{doneCount}</span> מתוך <span className="num">{total}</span> הושלמו</>}
+              {total === 0 ? t("אין משימות עדיין") : <><span className="num">{doneCount}</span> {t("מתוך")} <span className="num">{total}</span> {t("הושלמו")}</>}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {total > 0 && doneCount === total && (
-              <span className="pill pill-ok"><Icon name="check" size={11} />הושלם</span>
+              <span className="pill pill-ok"><Icon name="check" size={11} />{t("הושלם")}</span>
             )}
             {!confirmDel && (
               <button
-                className="btn btn-quiet btn-sm size-11 shrink-0 px-0 sm:size-9" aria-label={`מחיקת הנושא ${title}`} disabled={pending}
+                className="btn btn-quiet btn-sm size-11 shrink-0 px-0 sm:size-9" aria-label={t("מחיקת הנושא {title}", { title })} disabled={pending}
                 onClick={() => setConfirmDel(true)}
               >
                 <Icon name="trash" />
@@ -157,29 +162,29 @@ export function SubjectCard({ id, title, tasks, doneCount, total, people }: { id
         {total > 0 && (
           <div
             className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-line"
-            role="progressbar" aria-valuenow={doneCount} aria-valuemin={0} aria-valuemax={total} aria-label={`התקדמות בנושא ${title}`}
+            role="progressbar" aria-valuenow={doneCount} aria-valuemin={0} aria-valuemax={total} aria-label={t("התקדמות בנושא {title}", { title })}
           >
             <div className="h-full bg-ok" style={{ width: `${Math.round((doneCount / total) * 100)}%` }} />
           </div>
         )}
       </header>
       {confirmDel && (
-        <div role="alertdialog" aria-label={`אישור מחיקת הנושא ${title}`} className="flex flex-wrap items-center gap-2 border-b border-line bg-bad-soft px-4 py-3">
-          <p className="min-w-0 flex-1 basis-56 break-words text-sm font-medium text-bad">למחוק את הנושא וכל המשימות שבו? אי אפשר לבטל.</p>
+        <div role="alertdialog" aria-label={t("אישור מחיקת הנושא {title}", { title })} className="flex flex-wrap items-center gap-2 border-b border-line bg-bad-soft px-4 py-3">
+          <p className="min-w-0 flex-1 basis-56 break-words text-sm font-medium text-bad">{t("למחוק את הנושא וכל המשימות שבו? אי אפשר לבטל.")}</p>
           <div className="flex gap-2">
-            <button className="btn btn-danger btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => start(async () => { await deleteSubject(id); setConfirmDel(false); })}>{pending ? "מוחק…" : "מחיקה"}</button>
-            <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => setConfirmDel(false)}>ביטול</button>
+            <button className="btn btn-danger btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => start(async () => { await deleteSubject(id); setConfirmDel(false); })}>{pending ? t("מוחק…") : t("מחיקה")}</button>
+            <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => setConfirmDel(false)}>{t("ביטול")}</button>
           </div>
         </div>
       )}
       <ul className="divide-y divide-line">
         {tasks.map((t) => <TaskRow key={t.id} task={t} people={people} />)}
-        {tasks.length === 0 && <li className="px-4 py-6 text-center text-sm text-muted">אין משימות בנושא הזה עדיין. אפשר להוסיף אחת בטופס שמתחת.</li>}
+        {tasks.length === 0 && <li className="px-4 py-6 text-center text-sm text-muted">{t("אין משימות בנושא הזה עדיין. אפשר להוסיף אחת בטופס שמתחת.")}</li>}
       </ul>
       <form onSubmit={add} className="flex flex-wrap gap-2 border-t border-line bg-paper/60 p-3">
-        <input className="field min-w-0 flex-1 basis-48" value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder="משימה חדשה…" aria-label={`משימה חדשה ב${title}`} />
+        <input className="field min-w-0 flex-1 basis-48" value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder={t("משימה חדשה…")} aria-label={t("משימה חדשה ב{title}", { title })} />
         {people.length > 0 && <AssigneeSelect value={newAssignee} people={people} onChange={setNewAssignee} className="w-auto max-w-[10rem] shrink-0" />}
-        <button className="btn btn-sm min-h-11 shrink-0 self-center sm:min-h-9" disabled={pending || !text.trim()}>{pending ? "מוסיף…" : "הוספה"}</button>
+        <button className="btn btn-sm min-h-11 shrink-0 self-center sm:min-h-9" disabled={pending || !text.trim()}>{pending ? t("מוסיף…") : t("הוספה")}</button>
       </form>
       {error && <p role="alert" className="px-4 pb-3 text-sm text-bad">{error}</p>}
     </section>

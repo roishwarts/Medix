@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getT } from "@/lib/i18n/server";
 import { redirect } from "next/navigation";
 import { getAal, getProfile, needsSecondFactor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -9,11 +10,13 @@ import { MfaForm } from "./form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
   const profile = await getProfile();
-  return { title: profile?.clinic_name || "כניסה" };
+  return { title: profile?.clinic_name || t("כניסה") };
 }
 
 export default async function MfaPage() {
+  const t = await getT();
   const profile = await getProfile();
   if (!profile) redirect("/login?error=profile");
   if (!needsSecondFactor(profile) || (await getAal()) === "aal2") redirect("/");
@@ -31,11 +34,11 @@ export default async function MfaPage() {
           </span>
           {profile.clinic_name && <span className="eyebrow">{profile.clinic_name}</span>}
         </div>
-        <h1 className="display text-3xl">אימות דו-שלבי</h1>
+        <h1 className="display text-3xl">{t("אימות דו-שלבי")}</h1>
         <p className="mb-6 mt-1.5 text-muted">
           {factor
-            ? "הזינו את הקוד בן 6 הספרות מאפליקציית האימות בטלפון."
-            : "המרפאה דורשת אימות דו-שלבי. מחברים פעם אחת אפליקציית אימות, ובכל כניסה מזינים קוד קצר."}
+            ? t("הזינו את הקוד בן 6 הספרות מאפליקציית האימות בטלפון.")
+            : t("המרפאה דורשת אימות דו-שלבי. מחברים פעם אחת אפליקציית אימות, ובכל כניסה מזינים קוד קצר.")}
         </p>
         <MfaForm factorId={factor?.id ?? null} />
       </div>

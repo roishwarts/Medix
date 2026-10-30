@@ -138,6 +138,7 @@ body {
   min-height: 100dvh;
 }
 h1, h2, h3 {
+  overflow-wrap: anywhere;
   line-height: 1.2;
   text-wrap: balance;
 }
@@ -183,6 +184,9 @@ p { text-wrap: pretty; }
     font-weight: 500;
   }
   .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
     display: inline-flex;
     align-items: center;
     justify-content: center;
