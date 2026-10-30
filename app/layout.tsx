@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
-import { getProfile } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/admin";
 import { getT } from "@/lib/i18n/server";
 import { getLang, getPrefs } from "@/lib/prefs-server";
 import { dictionaryFor } from "@/lib/i18n";
@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#4b6584" }, { media: "(prefers-color-scheme: dark)", color: "#131417" }] };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [prefs, lang, profile] = await Promise.all([getPrefs(), getLang(), getProfile()]);
+  const [prefs, lang, admin] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin()]);
   return (
     <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={rubik.variable} suppressHydrationWarning>
       <body>
@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>
             <PublicChrome />
             {children}
-            {profile?.role === "admin" && <VersionBadge />}
+            {admin && <VersionBadge />}
           </I18nProvider>
         </PrefsProvider>
       </body>
