@@ -2,25 +2,26 @@ import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { ownerLabel, blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
 import { getClinicOptions } from "@/lib/clinic-options";
+import { KpiWindow } from "@/components/kpi-window";
 import { PatientFilters, parseDays } from "@/components/patient-filters";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import { dayLabel, diffDays, formatDate, relativeDays, today } from "@/lib/dates";
+import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 
 export const dynamic = "force-dynamic";
 
-const READY_WINDOW_DAYS = 14;
+const DEFAULT_SURGERY_DAYS = 7;
+const DEFAULT_READY_DAYS = 14;
 
-function Kpi({ href, label, value, sub, tone }: { href: string; label: string; value: string; sub: string; tone?: "bad" | "warn" | "ok" }) {
+function Kpi({ href, label, value, tone }: { href: string; label: string; value: string; tone?: "bad" | "warn" | "ok" }) {
   const color = tone === "bad" ? "text-bad" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-ink";
   return (
     <Link href={href} className="card block min-h-28 p-4 transition hover:border-line-strong">
       <p className="text-sm text-muted">{label}</p>
       <p className={`display num mt-1 text-4xl ${color}`}>{value}</p>
-      <p className="mt-1 text-xs leading-snug text-muted">{sub}</p>
     </Link>
   );
 }
@@ -37,7 +38,7 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
   );
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; days?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; days?: string; kd?: string; rd?: string }> }) {
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang] = await Promise.all([getT(), getLang()]);
@@ -66,9 +67,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const reviewCount = items.filter((i) => i.kind === "review").length;
   const overdueCount = items.filter((i) => i.kind === "overdue").length;
 
+  const surgeryDays = parseDays(sp.kd) ?? DEFAULT_SURGERY_DAYS;
+  const readyDays = parseDays(sp.rd) ?? DEFAULT_READY_DAYS;
   const upcoming = journeys.filter((j) => diffDays(j.surgery_date, t0) >= 0);
   const thisWeek = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= 7);
-  const soon = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= READY_WINDOW_DAYS);
+  const kpiSurgeries = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= surgeryDays);
+  const soon = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= readyDays);
   const soonReady = soon.filter((j) => j.summary.readiness === 100).length;
   const readyPct = soon.length ? Math.round((soonReady / soon.length) * 100) : null;
 
@@ -95,11 +99,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <main className="space-y-8">
       <header>
-        <p className="eyebrow">{dayLabel(t0, lang)}</p>
-        <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+        <h1 className="display text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
       </header>
 
-      <PatientFilters action="/clinic" hospitals={hospitals} hospital={sp.hospital} days={days} t={t} />
+      <PatientFilters action="/clinic" hospitals={hospitals} hospital={sp.hospital} days={days} t={t} compact />
 
       {resetRequests > 0 && (
         <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">
@@ -111,15 +114,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       )}
 
       <section aria-label={t("מדדים עיקריים")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתינים לבדיקה")} value={String(reviewCount)} sub={t("מסמכים ומשימות שהמטופלים שלחו")} tone={reviewCount > 0 ? "warn" : undefined} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} sub={t("עברו את תאריך היעד")} tone={overdueCount > 0 ? "bad" : "ok"} />
-        <Kpi href="/clinic/patients?days=7" label={t("ניתוחים ב־7 ימים")} value={String(thisWeek.length)} sub={thisWeek.length ? t("הקרוב: {date}", { date: formatDate(thisWeek[0].surgery_date, lang) }) : t("אין ניתוחים השבוע")} />
-        <Kpi
-          href="/clinic/patients?notReady=1"
-          label={t("מוכנים לניתוח")}
-          value={readyPct === null ? "—" : `${readyPct}%`}
-          sub={soon.length ? t("{ready} מתוך {total} עם ניתוח ב־{days} ימים הקרובים", { ready: soonReady, total: soon.length, days: READY_WINDOW_DAYS }) : t("אין ניתוחים ב־{days} ימים הקרובים", { days: READY_WINDOW_DAYS })}
-          tone={readyPct === null ? undefined : readyPct === 100 ? "ok" : readyPct < 50 ? "bad" : "warn"}
+        <Kpi href="/clinic/tasks?status=review" label={t("משימות ממתינות לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} />
+        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
+        <KpiWindow
+          label={t("מוכנים לניתוח")} value={readyPct === null ? "—" : `${readyPct}%`} href={`/clinic/patients?notReady=1&days=${readyDays}`} param="rd" days={readyDays}
+          tone={readyPct === null ? "none" : readyPct === 100 ? "ok" : readyPct < 50 ? "bad" : "warn"}
         />
       </section>
 

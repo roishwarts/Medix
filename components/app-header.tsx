@@ -10,33 +10,6 @@ import { useT } from "@/components/i18n-provider";
 
 export type NavItem = { href: string; label: string; exact?: boolean; badge?: React.ReactNode };
 
-// Pages that have a sensible "up" even when nobody came from inside the app (a link opened directly).
-const PARENT_OVERRIDES: Record<string, string> = { "/journey/tasks": "/journey", "/admin/clinics": "/admin" };
-const parentOf = (path: string, home: string) => {
-  const cut = path.replace(/\/[^/]+$/, "");
-  const parent = PARENT_OVERRIDES[cut] ?? cut;
-  return parent.startsWith(home) ? parent : home;
-};
-
-let pagesVisited = 0; // how many pages were opened inside the app, to know whether "back" can really go back
-
-function BackButton({ home }: { home: string }) {
-  const t = useT();
-  const path = usePathname();
-  const router = useRouter();
-  useEffect(() => { pagesVisited += 1; }, [path]);
-  if (path === home) return null;
-  return (
-    <button
-      type="button" aria-label={t("חזרה")} title={t("חזרה")}
-      className="btn btn-icon size-11 shrink-0"
-      onClick={() => (pagesVisited > 1 ? router.back() : router.push(parentOf(path, home)))}
-    >
-      <span className="inline-flex -scale-x-100"><Icon name="arrow" size={18} /></span>
-    </button>
-  );
-}
-
 function MenuGlyph({ open }: { open: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
@@ -78,8 +51,6 @@ export function AppHeader({
         >
           <MenuGlyph open={false} />
         </button>
-
-        <BackButton home={home} />
 
         {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
         <nav aria-label={t("ניווט ראשי")} className="hidden min-w-0 flex-1 gap-1 overflow-x-auto whitespace-nowrap md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

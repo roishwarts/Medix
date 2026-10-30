@@ -1,4 +1,4 @@
-// Staff and admin screens: dashboard, patients, tasks, templates, content, updates, clinics, users, development tasks, two-step verification.
+// Staff and admin screens.
 export const en: Record<string, string> = {
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "The tables do not exist yet. Run the file {file} in the Supabase SQL editor.",
   "{open} פתוחות מתוך {total}": "{open} open of {total}",
@@ -534,7 +534,6 @@ export const en: Record<string, string> = {
   "יש תלות מעגלית סביב \"{title}\"": "There is a circular dependency around \"{title}\"",
   "כל בתי החולים": "All hospitals",
   "ניתוח בתוך (ימים)": "Surgery within (days)",
-  "כל מועד": "Any time",
   "{n} ימים": "{n} days",
   "מועד הניתוח": "Surgery timing",
   "פעילים": "Active",
@@ -558,6 +557,10 @@ export const en: Record<string, string> = {
   "סימון כבוצע (עקיפת הנעילה)": "Mark as done (override the lock)",
   "אפשר לעקוף את הנעילה ולסמן את המשימה כבוצעה.": "You can override the lock and mark the task as done.",
   "שפה לא תקינה": "Invalid language",
+  "משימות ממתינות לבדיקה": "Tasks waiting for review",
+  "בתוך {n} ימים": "Within {n} days",
+  "ניתוחים": "Surgeries",
+  "כל הניתוחים": "All surgeries",
 };
 export const ru: Record<string, string> = {
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "Таблиц ещё нет. Выполните файл {file} в Supabase SQL editor.",
@@ -1094,7 +1097,6 @@ export const ru: Record<string, string> = {
   "יש תלות מעגלית סביב \"{title}\"": "Обнаружена циклическая зависимость вокруг «{title}»",
   "כל בתי החולים": "Все больницы",
   "ניתוח בתוך (ימים)": "Операция в течение (дней)",
-  "כל מועד": "Любой срок",
   "{n} ימים": "{n} дн.",
   "מועד הניתוח": "Срок операции",
   "פעילים": "Активные",
@@ -1118,6 +1120,10 @@ export const ru: Record<string, string> = {
   "סימון כבוצע (עקיפת הנעילה)": "Отметить выполненным (обойти блокировку)",
   "אפשר לעקוף את הנעילה ולסמן את המשימה כבוצעה.": "Можно обойти блокировку и отметить задачу выполненной.",
   "שפה לא תקינה": "Недопустимый язык",
+  "משימות ממתינות לבדיקה": "Задачи, ожидающие проверки",
+  "בתוך {n} ימים": "В течение {n} дн.",
+  "ניתוחים": "Операции",
+  "כל הניתוחים": "Все операции",
 };
 export const ar: Record<string, string> = {
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "الجداول غير موجودة بعد. شغّل الملف {file} في محرر SQL في Supabase.",
@@ -1654,7 +1660,6 @@ export const ar: Record<string, string> = {
   "יש תלות מעגלית סביב \"{title}\"": "توجد تبعية دائرية حول \"{title}\"",
   "כל בתי החולים": "كل المستشفيات",
   "ניתוח בתוך (ימים)": "عملية خلال (أيام)",
-  "כל מועד": "أي موعد",
   "{n} ימים": "{n} أيام",
   "מועד הניתוח": "موعد العملية",
   "פעילים": "النشطون",
@@ -1678,4 +1683,8 @@ export const ar: Record<string, string> = {
   "סימון כבוצע (עקיפת הנעילה)": "وضع علامة تم (تجاوز القفل)",
   "אפשר לעקוף את הנעילה ולסמן את המשימה כבוצעה.": "يمكنك تجاوز القفل ووضع علامة تم على المهمة.",
   "שפה לא תקינה": "لغة غير صالحة",
+  "משימות ממתינות לבדיקה": "مهام بانتظار المراجعة",
+  "בתוך {n} ימים": "خلال {n} أيام",
+  "ניתוחים": "عمليات",
+  "כל הניתוחים": "كل العمليات",
 };

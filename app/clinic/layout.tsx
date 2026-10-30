@@ -1,3 +1,4 @@
+import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
 import { Suspense } from "react";
@@ -30,7 +31,7 @@ export default async function ClinicLayout({ children }: { children: React.React
     <div className="min-h-dvh">
       <ImpersonationBanner />
       <AppHeader items={items} brand={clinicName} home="/clinic" logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" />{children}</div>
     </div>
   );
 }
