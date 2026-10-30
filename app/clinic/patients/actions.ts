@@ -279,6 +279,18 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
     if (optErr) return { error: t("שמירת בית החולים והחברה נכשלה. ודאו שהורצה התוספת supabase/patch-options.sql.") };
   }
 
+  // Status (manual override) and language of the messages. Saved on their own, so the rest still works before
+  // supabase/patch-lang-stage.sql has been run.
+  if (formData.has("stage") || formData.has("lang")) {
+    const stageRaw = String(formData.get("stage") ?? "");
+    const langRaw = String(formData.get("lang") ?? "he");
+    const patch: Record<string, string | null> = {};
+    if (formData.has("stage")) patch.stage_override = (STAGES as readonly string[]).includes(stageRaw) ? stageRaw : null;
+    if (formData.has("lang") && (["he", "en", "ru", "ar"] as const).some((l) => l === langRaw)) patch.lang = langRaw;
+    const { error: extraErr } = await supabase.from("patients").update(patch).eq("id", patientId);
+    if (extraErr) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };
+  }
+
   // Keep the name shown in the patient's own greeting in sync.
   if (patient.user_id) {
     const admin = createAdminClient();
