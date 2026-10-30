@@ -9,6 +9,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getClinicName, requireProfile } from "@/lib/auth";
 import { israelLocalToIso } from "@/lib/dates";
 import { createAccountLink, getOrigin } from "@/lib/account-links";
+import { patientLang } from "@/lib/patient-extras";
+import { STAGES, type Stage } from "@/lib/journey";
+import type { Lang } from "@/lib/prefs";
 import { hashToken } from "@/lib/invite";
 import { caregiverMessage, joinMessage, resetMessage } from "@/lib/messages";
 
@@ -64,6 +67,10 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
     .single();
   if (patErr || !patient) return { error: t("יצירת המטופל נכשלה") };
 
+  const lang: Lang = (["he", "en", "ru", "ar"] as const).find((l) => l === formData.get("lang")) ?? "he";
+  // Separate update, so creating a patient still works before supabase/patch-lang-stage.sql has been run.
+  if (lang !== "he") await supabase.from("patients").update({ lang }).eq("id", patient.id);
+
   const hospital = String(formData.get("hospital") ?? "").trim();
   const company = String(formData.get("company") ?? "").trim();
   if (hospital || company) {
@@ -96,7 +103,7 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   });
   const created = { journeyId: journeyId as string, patientName: full_name, phone, email: email || null };
   if ("error" in link) return { created: { ...created, linkError: link.error } };
-  return { created: { ...created, link: link.url, message: joinMessage(full_name, await getClinicName(), link.url) } };
+  return { created: { ...created, link: link.url, message: joinMessage(full_name, await getClinicName(), link.url, lang) } };
 }
 
 export type LinkResult = { error?: string; link?: string; message?: string; phone?: string | null; email?: string | null };
@@ -117,7 +124,7 @@ export async function createJoinLink(patientId: string): Promise<LinkResult> {
   const link = await createAccountLink({ purpose: "patient_join", clinicId: profile.clinic_id, patientId, createdBy: profile.id });
   if ("error" in link) return { error: link.error };
   revalidatePath("/clinic", "layout");
-  return { link: link.url, message: joinMessage(patient.full_name, await getClinicName(), link.url), phone: patient.phone, email: patient.email };
+  return { link: link.url, message: joinMessage(patient.full_name, await getClinicName(), link.url, await patientLang(patientId)), phone: patient.phone, email: patient.email };
 }
 
 // A password-reset link for a patient who already has a login (asked for by phone or from the patient page).
@@ -134,7 +141,7 @@ export async function createPatientResetLink(patientId: string): Promise<LinkRes
 
   const link = await createAccountLink({ purpose: "password_reset", clinicId: profile.clinic_id, userId: patient.user_id, createdBy: profile.id });
   if ("error" in link) return { error: link.error };
-  return { link: link.url, message: resetMessage(patient.full_name, link.url), phone: patient.phone, email: patient.email };
+  return { link: link.url, message: resetMessage(patient.full_name, link.url, await patientLang(patientId)), phone: patient.phone, email: patient.email };
 }
 
 // From the "forgot password" requests list on the main page.
@@ -152,11 +159,12 @@ export async function createResetLinkFromRequest(requestId: string): Promise<Lin
   const link = await createAccountLink({ purpose: "password_reset", clinicId: profile.clinic_id, userId: req.user_id, createdBy: profile.id });
   if ("error" in link) return { error: link.error };
 
-  const { data: patient } = await supabase.from("patients").select("phone, email").eq("user_id", req.user_id).maybeSingle();
+  const { data: patient } = await supabase.from("patients").select("phone, email, lang").eq("user_id", req.user_id).maybeSingle();
+  const patientLanguage: Lang = (["he", "en", "ru", "ar"] as const).find((l) => l === patient?.lang) ?? "he";
   const admin = createAdminClient();
   await admin?.from("password_reset_requests").update({ handled_at: new Date().toISOString(), handled_by: profile.id }).eq("id", requestId);
   revalidatePath("/clinic", "layout");
-  return { link: link.url, message: resetMessage(req.full_name, link.url), phone: patient?.phone ?? null, email: patient?.email ?? null };
+  return { link: link.url, message: resetMessage(req.full_name, link.url, patientLanguage), phone: patient?.phone ?? null, email: patient?.email ?? null };
 }
 
 export type CaregiverInviteState = { error?: string; link?: string; message?: string; phone?: string | null; email?: string | null; name?: string } | undefined;
@@ -202,7 +210,7 @@ export async function createCaregiverInviteByStaff(patientId: string, _: Caregiv
 
   const url = `${await getOrigin()}/invite/${token}`;
   revalidatePath("/clinic", "layout");
-  return { link: url, message: caregiverMessage(name, patient.full_name, await getClinicName(), url), phone: phone || null, email: email || null, name };
+  return { link: url, message: caregiverMessage(name, patient.full_name, await getClinicName(), url, await patientLang(patientId)), phone: phone || null, email: email || null, name };
 }
 
 export async function revokeInviteByStaff(inviteId: string): Promise<{ error?: string }> {
@@ -279,4 +287,28 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
   revalidatePath("/clinic", "layout");
   revalidatePath("/journey", "layout");
   return { ok: true };
+}
+
+// Staff and doctors choose the language of the messages sent to a patient (the patient can also change it in the app).
+export async function setPatientLang(patientId: string, lang: Lang): Promise<{ error?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  if (!(["he", "en", "ru", "ar"] as const).includes(lang)) return { error: t("שפה לא תקינה") };
+  const supabase = await createClient();
+  const { error } = await supabase.from("patients").update({ lang }).eq("id", patientId);
+  if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };
+  revalidatePath("/clinic", "layout");
+  return {};
+}
+
+// Staff and doctors can set the patient's status by hand. null goes back to the automatic status.
+export async function setPatientStage(patientId: string, stage: Stage | null): Promise<{ error?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  if (stage !== null && !STAGES.includes(stage)) return { error: t("סטטוס לא תקין") };
+  const supabase = await createClient();
+  const { error } = await supabase.from("patients").update({ stage_override: stage }).eq("id", patientId);
+  if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };
+  revalidatePath("/clinic", "layout");
+  return {};
 }

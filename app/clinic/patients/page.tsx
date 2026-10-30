@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { blockerLabel, stageOf, isActiveStage, STAGES, STAGE_LABEL, STAGE_PILL, type Stage } from "@/lib/journey";
+import { loadPatientExtras } from "@/lib/patient-extras";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { PatientFilters, parseDays } from "@/components/patient-filters";
 import { loadJourneys } from "@/lib/queries";
@@ -18,11 +19,12 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
   const [t, lang] = await Promise.all([getT(), getLang()]);
   const sp = await searchParams;
   const supabase = await createClient();
-  const [all, { data: placements }, options] = await Promise.all([
+  const [all, { data: placements }, options, extras] = await Promise.all([
     loadJourneys(),
     // Separate query so the list still works before the hospital/company patch is applied.
     supabase.from("patients").select("id, hospital, company"),
     getClinicOptions(),
+    loadPatientExtras(),
   ]);
   const placeOf = new Map((placements ?? []).map((p) => [p.id as string, p as { hospital: string | null; company: string | null }]));
   const hospitals = [...new Set([...options.hospitals, ...(placements ?? []).map((p) => p.hospital as string | null).filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
@@ -35,7 +37,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
     .filter((j) => (days ? j.summary.daysToSurgery >= 0 && j.summary.daysToSurgery <= days : true))
     .filter((j) => (sp.hospital ? placeOf.get(j.patient_id)?.hospital === sp.hospital : true))
     .filter((j) => (sp.q ? j.patient.full_name.includes(sp.q.trim()) : true));
-  const stageOfJ = new Map(base.map((j) => [j.id, stageOf(j.summary)]));
+  const stageOfJ = new Map(base.map((j) => [j.id, extras.get(j.patient_id)?.stage ?? stageOf(j.summary)]));
   const inTab = (s: Stage, f: StageFilter) => (f === "all" ? true : f === "active" ? isActiveStage(s) : s === f);
   const rows = base.filter((j) => inTab(stageOfJ.get(j.id)!, stage));
   const tabs: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];

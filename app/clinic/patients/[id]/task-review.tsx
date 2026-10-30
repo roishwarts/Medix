@@ -34,7 +34,15 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
     });
   }
 
-  if (state === "locked") return null;
+  // Staff may override the lock: the task is marked done even though what it waits for is not finished.
+  if (state === "locked") {
+    return (
+      <div className="mt-3">
+        <button className="btn btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => run("accept")}>{t("סימון כבוצע (עקיפת הנעילה)")}</button>
+        {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-3">

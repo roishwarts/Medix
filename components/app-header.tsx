@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
 import { NavLink } from "@/components/nav-link";
-import { AccessMenu } from "@/components/access-menu";
+import { AccessMenu, AccessControls } from "@/components/access-menu";
 import { useT } from "@/components/i18n-provider";
 
 export type NavItem = { href: string; label: string; exact?: boolean; badge?: React.ReactNode };
@@ -88,7 +88,7 @@ export function AppHeader({
 
         <div className="ms-auto flex min-w-0 items-center gap-1 md:ms-0">
           <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
-          <AccessMenu languages={languages} />
+          <span className="hidden md:block"><AccessMenu languages={languages} /></span>
           <span className="hidden md:block">{logout}</span>
         </div>
       </div>
@@ -121,6 +121,10 @@ export function AppHeader({
                 ))}
               </ul>
             </nav>
+            <section aria-label={t("נגישות והעדפות")} className="max-h-[55dvh] overflow-y-auto border-t border-line p-4">
+              <h2 className="display mb-3 text-base">{t("נגישות והעדפות")}</h2>
+              <AccessControls languages={languages} />
+            </section>
             <div className="border-t border-line p-3">{logout}</div>
           </div>
         </div>

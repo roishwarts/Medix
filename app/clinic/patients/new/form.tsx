@@ -1,5 +1,6 @@
 "use client";
 
+import { LANGS } from "@/lib/prefs";
 import { useT } from "@/components/i18n-provider";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -77,6 +78,13 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
           <label htmlFor="surgery_date" className="lbl">{t("תאריך ניתוח")}</label>
           <input id="surgery_date" name="surgery_date" type="date" className="field" defaultValue={v("surgery_date")} required />
         </div>
+      </div>
+      <div className="max-w-xs">
+        <label htmlFor="lang" className="lbl">{t("שפת ההודעות והאפליקציה")}</label>
+        <select id="lang" name="lang" className="field" defaultValue={v("lang") || "he"}>
+          {LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+        </select>
+        <p className="mt-1.5 text-xs text-muted">{t("ההודעות בוואטסאפ ובמייל נשלחות בשפה הזו.")}</p>
       </div>
       {(hospitals.length > 0 || companies.length > 0) && (
         <div className="grid gap-5 sm:grid-cols-2">

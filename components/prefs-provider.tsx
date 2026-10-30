@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { saveMyLanguage } from "@/app/lang-actions";
 import { PREFS_COOKIE, dirOf, serializePrefs, type Prefs } from "@/lib/prefs";
 
 const Ctx = createContext<{ prefs: Prefs; update: (patch: Partial<Prefs>) => void }>({
@@ -26,7 +27,7 @@ export function PrefsProvider({ initial, children }: { initial: Prefs; children:
       const html = document.documentElement;
       html.lang = patch.lang;
       html.dir = dirOf(patch.lang);
-      router.refresh(); // render the screen again in the new language
+      void saveMyLanguage(patch.lang).finally(() => router.refresh()); // remember it for the clinic's messages, then render again
     }
   }, [router]);
 

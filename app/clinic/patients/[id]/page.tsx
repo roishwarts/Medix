@@ -13,6 +13,9 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
+import { PatientSettings } from "./patient-settings";
+import { loadPatientExtras } from "@/lib/patient-extras";
+import { stageOf } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
@@ -89,6 +92,7 @@ export default async function PatientPage({
         }),
     ),
   ]);
+  const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
     patientNames: new Map(),
@@ -128,6 +132,8 @@ export default async function PatientPage({
           </div>
         </div>
       </div>
+
+      <PatientSettings patientId={journey.patient_id} autoStage={stageOf(summary)} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
 
       {summary.topBlocker && (
         <section className="mt-8">

@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { DEFAULT_PREFS, PREFS_COOKIE, serializePrefs, type Lang } from "@/lib/prefs";
 import { NextResponse, type NextRequest } from "next/server";
 
 export const UID_HEADER = "x-medix-uid";
@@ -72,7 +73,15 @@ export async function proxy(request: NextRequest) {
     forwarded.set(UID_HEADER, data.claims.sub);
     forwarded.set(AAL_HEADER, String((data.claims as { aal?: string }).aal ?? "aal1"));
   }
+  // A link from the clinic can carry ?lang=xx: a person who has not chosen a language yet sees the page in it.
+  const wanted = request.nextUrl.searchParams.get("lang");
+  const langCookie = wanted && ["he", "en", "ru", "ar"].includes(wanted) && !request.cookies.has(PREFS_COOKIE) ? wanted : null;
+  if (langCookie) {
+    const value = serializePrefs({ ...DEFAULT_PREFS, lang: langCookie as Lang });
+    forwarded.set("cookie", [forwarded.get("cookie"), `${PREFS_COOKIE}=${value}`].filter(Boolean).join("; "));
+  }
   const next = NextResponse.next({ request: { headers: forwarded } });
+  if (langCookie) next.cookies.set(PREFS_COOKIE, JSON.stringify({ ...DEFAULT_PREFS, lang: langCookie as Lang }), { path: "/", maxAge: 31536000, sameSite: "lax" });
   response.cookies.getAll().forEach((c) => next.cookies.set(c));
   return next;
 }

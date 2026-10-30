@@ -24,7 +24,6 @@ function Glyph() {
 // The button and the panel with colors, text size and (where available) language.
 export function AccessMenu({ languages = true, className = "" }: { languages?: boolean; className?: string }) {
   const t = useT();
-  const { prefs, update } = usePrefs();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
@@ -37,10 +36,6 @@ export function AccessMenu({ languages = true, className = "" }: { languages?: b
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
-
-  const seg = "flex-1 min-h-11 rounded-xl border px-2 text-sm transition-colors";
-  const on = "border-accent bg-accent-soft font-medium text-ink";
-  const off = "border-edge text-muted hover:bg-[var(--hover-tint)] hover:text-ink";
 
   return (
     <div ref={box} className={`relative ${className}`}>
@@ -60,42 +55,56 @@ export function AccessMenu({ languages = true, className = "" }: { languages?: b
             <button type="button" className="btn btn-quiet btn-sm" onClick={() => setOpen(false)}>{t("סגירה")}</button>
           </div>
 
-          <fieldset className="mt-4">
-            <legend className="lbl">{t("תצוגה")}</legend>
-            <div className="flex gap-2">
-              {THEMES.map((x) => (
-                <button key={x.value} type="button" aria-pressed={prefs.theme === x.value} className={`${seg} ${prefs.theme === x.value ? on : off}`} onClick={() => update({ theme: x.value })}>
-                  {t(x.label)}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className="mt-4">
-            <legend className="lbl">{t("גודל טקסט")}: {t(SIZE_LABELS[prefs.size])}</legend>
-            <div className="flex items-center gap-2">
-              <button type="button" className="btn size-11 px-0 text-sm" aria-label={t("הקטנת טקסט")} disabled={prefs.size === 0} onClick={() => update({ size: (prefs.size - 1) as Prefs["size"] })}>A−</button>
-              <div className="flex flex-1 justify-center gap-1.5" aria-hidden>
-                {SIZE_LABELS.map((_, i) => <span key={i} className={`h-2 w-6 rounded-full ${i <= prefs.size ? "bg-accent" : "bg-line"}`} />)}
-              </div>
-              <button type="button" className="btn size-11 px-0 text-lg" aria-label={t("הגדלת טקסט")} disabled={prefs.size === 4} onClick={() => update({ size: (prefs.size + 1) as Prefs["size"] })}>A+</button>
-            </div>
-          </fieldset>
-
-          {languages && (
-            <fieldset className="mt-4">
-              <legend className="lbl">{t("שפה")}</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {LANGS.map((l) => (
-                  <button key={l.code} type="button" lang={l.code} aria-pressed={prefs.lang === l.code} className={`${seg} ${prefs.lang === l.code ? on : off}`} onClick={() => update({ lang: l.code })}>
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          )}
+          <AccessControls languages={languages} />
         </div>
       )}
     </div>
+  );
+}
+
+// Colors, text size and (where available) language. Used in the popover and inside the phone menu.
+export function AccessControls({ languages = true }: { languages?: boolean }) {
+  const t = useT();
+  const { prefs, update } = usePrefs();
+  const seg = "flex-1 min-h-11 rounded-xl border px-2 text-sm transition-colors";
+  const on = "border-accent bg-accent-soft font-medium text-ink";
+  const off = "border-edge text-muted hover:bg-[var(--hover-tint)] hover:text-ink";
+  return (
+    <>
+    <fieldset className="mt-4 first:mt-0">
+      <legend className="lbl">{t("תצוגה")}</legend>
+      <div className="flex gap-2">
+        {THEMES.map((x) => (
+          <button key={x.value} type="button" aria-pressed={prefs.theme === x.value} className={`${seg} ${prefs.theme === x.value ? on : off}`} onClick={() => update({ theme: x.value })}>
+            {t(x.label)}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset className="mt-4 first:mt-0">
+      <legend className="lbl">{t("גודל טקסט")}: {t(SIZE_LABELS[prefs.size])}</legend>
+      <div className="flex items-center gap-2">
+        <button type="button" className="btn size-11 px-0 text-sm" aria-label={t("הקטנת טקסט")} disabled={prefs.size === 0} onClick={() => update({ size: (prefs.size - 1) as Prefs["size"] })}>A−</button>
+        <div className="flex flex-1 justify-center gap-1.5" aria-hidden>
+          {SIZE_LABELS.map((_, i) => <span key={i} className={`h-2 w-6 rounded-full ${i <= prefs.size ? "bg-accent" : "bg-line"}`} />)}
+        </div>
+        <button type="button" className="btn size-11 px-0 text-lg" aria-label={t("הגדלת טקסט")} disabled={prefs.size === 4} onClick={() => update({ size: (prefs.size + 1) as Prefs["size"] })}>A+</button>
+      </div>
+    </fieldset>
+
+    {languages && (
+      <fieldset className="mt-4 first:mt-0">
+        <legend className="lbl">{t("שפה")}</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {LANGS.map((l) => (
+            <button key={l.code} type="button" lang={l.code} aria-pressed={prefs.lang === l.code} className={`${seg} ${prefs.lang === l.code ? on : off}`} onClick={() => update({ lang: l.code })}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    )}
+    </>
   );
 }
