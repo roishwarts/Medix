@@ -53,6 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>
             <PublicChrome />
             {children}
+            <VersionBadge />
           </I18nProvider>
         </PrefsProvider>
       </body>
