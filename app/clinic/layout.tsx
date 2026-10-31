@@ -1,4 +1,3 @@
-import { HomeSettingsButton } from "@/components/home-settings";
 import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
@@ -34,7 +33,7 @@ export default async function ClinicLayout({ children }: { children: React.React
       <BrandTheme color={profile.brand_color} />
       <ImpersonationBanner />
       <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><HomeSettingsButton home="/clinic" /><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
     </div>
   );
 }

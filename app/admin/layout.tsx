@@ -1,4 +1,3 @@
-import { HomeSettingsButton } from "@/components/home-settings";
 import { BackButton } from "@/components/back-button";
 import { requireAdmin } from "@/lib/admin";
 import { getT } from "@/lib/i18n/server";
@@ -17,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-dvh pb-24 md:pb-0">
       <AppHeader items={ITEMS} home="/admin" brand={t("ניהול המערכת")} logout={<LogoutButton />} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><HomeSettingsButton home="/admin" /><BackButton home="/admin" roots={ITEMS.map((i) => i.href)} />{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/admin" roots={ITEMS.map((i) => i.href)} />{children}</div>
     </div>
   );
 }
