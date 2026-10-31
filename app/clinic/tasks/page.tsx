@@ -9,10 +9,11 @@ import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
 
-const ORDER: ActionKind[] = ["review", "overdue", "clinic", "upcoming"];
+const ORDER: ActionKind[] = ["rejected", "review", "overdue", "clinic", "upcoming"];
 
 const TABS: [ActionKind | "all", string][] = [
   ["all", "הכול"],
+  ["rejected", "הוחזר לתיקון"],
   ["review", "ממתין לבדיקה"],
   ["overdue", "באיחור"],
   ["clinic", "משימות לצוות"],
@@ -97,9 +98,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                   <span className="min-w-0 break-words font-medium">{i.patientName}</span>
                   <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
                     {i.task.title}
-                    {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
+                    {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
                   </span>
-                  <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-muted"}`}>
+                  <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
                     {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
                   </span>
                 </Link>
