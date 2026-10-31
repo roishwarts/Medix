@@ -21,6 +21,8 @@ import { PendingInvites } from "./pending-invites";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
+import { VisitNote } from "./visit-note";
+import { ReferralsCard } from "./referrals-card";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +55,8 @@ export default async function PatientPage({
     loadJourney(id),
     getClinicOptions(),
   ]);
-  void profile;
   if (!journey) notFound();
+  const isDoctor = profile.role === "doctor";
   const { summary } = journey;
   const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
     key === "all" || (key === "overdue" ? t.overdue : t.state === key);
@@ -67,7 +69,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -97,7 +99,17 @@ export default async function PatientPage({
           return [t.id, data?.signedUrl] as const;
         }),
     ),
+    // RLS already limits this to doctors; skipped outright for staff so the page doesn't wait on it.
+    isDoctor
+      ? supabase.from("visit_notes").select("journey_task_id, note").eq("patient_id", journey.patient_id)
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("referrals")
+      .select("id, recipient, reason, created_at")
+      .eq("patient_id", journey.patient_id)
+      .order("created_at", { ascending: false }),
   ]);
+  const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -228,6 +240,7 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
+              {t.kind === "appointment" && isDoctor && <VisitNote taskId={t.id} initialNote={notesByTask.get(t.id) ?? ""} />}
             </div>
           ))}
         </div>
@@ -266,6 +279,14 @@ export default async function PatientPage({
           />
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
+        </section>
+        <section aria-label={tr("הפניות")}>
+          <h2 className="eyebrow mb-2">{tr("הפניות")}</h2>
+          <ReferralsCard
+            patientId={journey.patient_id}
+            canCreate={isDoctor}
+            items={(referralRows ?? []).map((r) => ({ id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at }))}
+          />
         </section>
       </aside>
       </div>
