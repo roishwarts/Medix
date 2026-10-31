@@ -4,7 +4,7 @@
 
 alter table clinics add column if not exists logo_path text;
 
-create function save_clinic_logo(p_path text) returns void
+create or replace function save_clinic_logo(p_path text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_staff() then raise exception 'not allowed'; end if;
@@ -14,7 +14,7 @@ end $$;
 revoke execute on function save_clinic_logo(text) from public, anon;
 
 -- Storage path convention: "<clinic_id>/logo".
-create function clinic_logo_access(path text) returns boolean
+create or replace function clinic_logo_access(path text) returns boolean
 language plpgsql stable security definer set search_path = public as $$
 declare
   first_part text := split_part(path, '/', 1);

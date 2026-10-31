@@ -7,7 +7,7 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
-create function save_clinic_brand_color(p_color text) returns void
+create or replace function save_clinic_brand_color(p_color text) returns void
 language plpgsql security definer set search_path = public as $$
 declare
   v_color text := nullif(trim(p_color), '');

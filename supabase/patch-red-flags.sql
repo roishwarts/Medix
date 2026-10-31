@@ -46,7 +46,7 @@ begin
 end $$;
 
 -- Mirrors save_template_patient_info: doctor and staff may both edit this.
-create function save_template_red_flags(p_template uuid, p_red_flags text) returns void
+create or replace function save_template_red_flags(p_template uuid, p_red_flags text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_staff() then raise exception 'not allowed'; end if;
