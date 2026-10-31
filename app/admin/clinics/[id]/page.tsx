@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
+import { BrandTheme } from "@/components/brand-theme";
 import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
@@ -10,6 +11,9 @@ import { ClinicOptions } from "./clinic-options";
 import { ClinicAddress } from "./clinic-address";
 
 export const dynamic = "force-dynamic";
+
+const logoSrc = (path: string) =>
+  /^https:\/\//.test(path) ? path : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/clinic-logos/${path}`;
 
 export default async function ClinicPage({ params }: { params: Promise<{ id: string }> }) {
   const t = await getT();
@@ -39,6 +43,12 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   const note = "mt-3 text-sm text-muted";
   return (
     <main>
+      {/* The clinic's own design, so the admin sees its card the way the clinic's people see their system. */}
+      <BrandTheme color={clinic.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null} />
+      {clinic.logo_path && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoSrc(clinic.logo_path)} alt={clinic.name} className="brand-logo mb-4 h-12 w-auto max-w-full object-contain sm:h-14" />
+      )}
       <h1 className="display break-words text-3xl sm:text-4xl">{clinic.name}</h1>
       <p className="mt-1 text-muted">
         {t("נוצרה {date}", { date: israelParts(clinic.created_at).date.split("-").reverse().join(".") })} · {t("{n} מטופלים", { n: patientCount ?? 0 })}
