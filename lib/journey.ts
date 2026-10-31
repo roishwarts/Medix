@@ -158,18 +158,19 @@ export function summarize(rows: TaskRow[], surgeryDate: string, today = getToday
 }
 
 // Where a patient is on the way, worked out from the journey itself.
-export type Stage = "decided" | "preparing" | "ready" | "recovering" | "finished";
-export const STAGES: Stage[] = ["decided", "preparing", "ready", "recovering", "finished"];
+export type Stage = "decided" | "preparing" | "ready" | "recovering" | "finished" | "cancelled";
+export const STAGES: Stage[] = ["decided", "preparing", "ready", "recovering", "finished", "cancelled"];
 export const STAGE_LABEL: Record<Stage, string> = {
-  decided: "הוחלט", preparing: "בהכנה", ready: "מוכן", recovering: "בהחלמה", finished: "הסתיים",
+  decided: "הוחלט", preparing: "בהכנה", ready: "מוכן", recovering: "בהחלמה", finished: "הסתיים", cancelled: "בוטל",
 };
 export const STAGE_PILL: Record<Stage, string> = {
-  decided: "pill-neutral", preparing: "pill-info", ready: "pill-ok", recovering: "pill-warn", finished: "pill-neutral",
+  decided: "pill-neutral", preparing: "pill-info", ready: "pill-ok", recovering: "pill-warn", finished: "pill-neutral", cancelled: "pill-bad",
 };
-// Active = still on the journey. Finished patients stay in the system but are listed apart.
-export const isActiveStage = (s: Stage) => s !== "finished";
+// Active = still on the journey. Finished and cancelled patients stay in the system but are listed apart.
+export const isActiveStage = (s: Stage) => s !== "finished" && s !== "cancelled";
 
-export function stageOf(summary: JourneySummary): Stage {
+export function stageOf(summary: JourneySummary, cancelled = false): Stage {
+  if (cancelled) return "cancelled";
   if (summary.daysToSurgery < 0) {
     return summary.tasks.every((t) => t.state === "done") ? "finished" : "recovering";
   }
