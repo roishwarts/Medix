@@ -52,7 +52,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
-  const [allJourneys, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
+  const [allJourneysRaw, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -65,6 +65,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     supabase.from("templates").select("id", { count: "exact", head: true }),
   ]);
   const templateCount = templatesRes.count ?? 0;
+  // A cancelled surgery no longer needs the clinic's attention; it stays on the patient's own card.
+  const allJourneys = allJourneysRaw.filter((j) => !j.cancelled_at);
   const t0 = today();
   const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));

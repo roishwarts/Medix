@@ -13,16 +13,18 @@ export type JourneyInfo = {
   procedure: string | null;
   patient_info: string | null;
   red_flags: string | null;
+  cancelled_at: string | null;
   patient: { id: string; full_name: string; phone: string | null };
 };
 
 export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-// patient_info (patch-patient-content.sql) and red_flags (patch-red-flags.sql) may not exist yet on an
-// older database, so each is dropped from the select in turn until one succeeds.
-const journeySelect = (withPatientInfo: boolean, withRedFlags: boolean) =>
-  `id, patient_id, surgery_date, template_name, template_id, ${withPatientInfo ? "patient_info, " : ""}${withRedFlags ? "red_flags, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
+// patient_info (patch-patient-content.sql), red_flags (patch-red-flags.sql) and cancelled_at
+// (patch-outcomes.sql) may not exist yet on an older database, so each is dropped from the select
+// in turn, newest first, until one succeeds.
+const journeySelect = (tier: number) =>
+  `id, patient_id, surgery_date, template_name, template_id, ${tier >= 3 ? "cancelled_at, " : ""}${tier >= 2 ? "red_flags, " : ""}${tier >= 1 ? "patient_info, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
 
 type JourneyRow = {
   id: string;
@@ -32,6 +34,7 @@ type JourneyRow = {
   template_id: string | null;
   patient_info?: string | null;
   red_flags?: string | null;
+  cancelled_at?: string | null;
   patients: JourneyInfo["patient"] | JourneyInfo["patient"][] | null;
   templates: { procedure: string | null } | { procedure: string | null }[] | null;
   journey_tasks: TaskRow[] | null;
@@ -48,6 +51,7 @@ function toJourney(j: JourneyRow): PatientJourney {
     procedure: (Array.isArray(j.templates) ? j.templates[0] : j.templates)?.procedure ?? null,
     patient_info: j.patient_info ?? null,
     red_flags: j.red_flags ?? null,
+    cancelled_at: j.cancelled_at ?? null,
     patient,
     summary: summarize(j.journey_tasks ?? [], j.surgery_date),
   };
@@ -55,9 +59,10 @@ function toJourney(j: JourneyRow): PatientJourney {
 
 // Runs the journeys query, dropping the newest optional columns in turn if the database doesn't have them yet.
 async function runJourneysQuery(apply: (select: string) => PromiseLike<{ data: unknown; error: unknown }>) {
-  let { data, error } = await apply(journeySelect(true, true));
-  if (error) ({ data, error } = await apply(journeySelect(true, false)));
-  if (error) ({ data } = await apply(journeySelect(false, false)));
+  let { data, error } = await apply(journeySelect(3));
+  if (error) ({ data, error } = await apply(journeySelect(2)));
+  if (error) ({ data, error } = await apply(journeySelect(1)));
+  if (error) ({ data } = await apply(journeySelect(0)));
   return data;
 }
 
