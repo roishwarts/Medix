@@ -66,12 +66,34 @@ async function runJourneysQuery(apply: (select: string) => PromiseLike<{ data: u
   return data;
 }
 
+const PAGE = 1000;
+
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-// Journeys and their tasks come back in a single request.
+// Journeys and their tasks come back in a single request, in one page for the common case.
 export async function loadJourneys(): Promise<PatientJourney[]> {
   const supabase = await createClient();
-  const data = await runJourneysQuery((select) => supabase.from("journeys").select(select).order("surgery_date"));
-  return ((data ?? []) as unknown as JourneyRow[]).map(toJourney);
+  const page = (select: string, from: number, to: number) =>
+    supabase.from("journeys").select(select).order("surgery_date").range(from, to);
+
+  let rows: JourneyRow[] = [];
+  let select = journeySelect(0);
+  for (const tier of [3, 2, 1, 0]) {
+    select = journeySelect(tier);
+    const { data, error } = await page(select, 0, PAGE - 1);
+    if (!error) { rows = (data ?? []) as unknown as JourneyRow[]; break; }
+  }
+
+  // A clinic with more than 1000 active journeys would otherwise be silently cut off here —
+  // Supabase caps a single request at 1000 rows without erroring, so keep paging while a page
+  // comes back full.
+  while (rows.length > 0 && rows.length % PAGE === 0) {
+    const { data: more } = await page(select, rows.length, rows.length + PAGE - 1);
+    if (!more || more.length === 0) break;
+    rows = rows.concat(more as unknown as JourneyRow[]);
+    if (more.length < PAGE) break;
+  }
+
+  return rows.map(toJourney);
 }
 
 export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {

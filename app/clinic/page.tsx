@@ -10,6 +10,7 @@ import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { requireProfile } from "@/lib/auth";
@@ -52,7 +53,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
-  const [allJourneysRaw, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
+  const [allJourneysRaw, resetRes, eventsRes, placements, options, templatesRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -60,7 +61,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("patients").select("id, hospital"),
+    // Paged: Supabase caps a single request at 1000 rows, and a long-running clinic can exceed that.
+    fetchAllRows<{ id: string; hospital: string | null }>((from, to) =>
+      supabase.from("patients").select("id, hospital").range(from, to),
+    ),
     getClinicOptions(),
     supabase.from("templates").select("id", { count: "exact", head: true }),
   ]);
@@ -68,7 +72,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // A cancelled surgery no longer needs the clinic's attention; it stays on the patient's own card.
   const allJourneys = allJourneysRaw.filter((j) => !j.cancelled_at);
   const t0 = today();
-  const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
+  const hospitalOf = new Map(placements.map((p) => [p.id, p.hospital]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
   // The hospital and time-frame filter narrow everything on this page.
   const journeys = allJourneys
