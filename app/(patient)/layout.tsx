@@ -1,4 +1,3 @@
-import { HomeSettingsButton } from "@/components/home-settings";
 import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
@@ -41,7 +40,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
           )}
         </p>
       )}
-      <HomeSettingsButton home="/journey" /><BackButton home="/journey" roots={items.map((i) => i.href)} />
+      <BackButton home="/journey" roots={items.map((i) => i.href)} />
       {children}
       </div>
     </div>
