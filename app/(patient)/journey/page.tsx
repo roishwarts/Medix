@@ -1,3 +1,4 @@
+import { HomeSettingsButton } from "@/components/home-settings";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { loadJourneys } from "@/lib/queries";
@@ -51,7 +52,10 @@ export default async function JourneyPage() {
     <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
       <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-2">
         <p className="mb-1 text-muted">{t("שלום {name}", { name: profile.full_name })}</p>
-        <h1 className="display text-3xl">{heading}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="display text-3xl">{heading}</h1>
+          <HomeSettingsButton home="/journey" />
+        </div>
         <p className="mt-1 text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
         {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
 

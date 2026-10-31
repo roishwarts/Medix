@@ -1,3 +1,4 @@
+import { HomeSettingsButton } from "@/components/home-settings";
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
@@ -49,10 +50,13 @@ export default async function AdminHome() {
           </div>
           <h1 className="display mt-1 text-4xl">{t("מרפאות")}</h1>
         </div>
-        <Link href="/admin/clinics/new" className="btn btn-primary">
-          <Icon name="plus" size={14} />
-          {t("מרפאה חדשה")}
-        </Link>
+        <div className="flex items-center gap-2">
+          <HomeSettingsButton home="/admin" />
+          <Link href="/admin/clinics/new" className="btn btn-primary">
+            <Icon name="plus" size={14} />
+            {t("מרפאה חדשה")}
+          </Link>
+        </div>
       </div>
 
       {count === 0 ? (
