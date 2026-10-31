@@ -4,6 +4,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EditorTask } from "@/components/editor/types";
 import { TemplateForm } from "@/components/template-form";
+import { Icon } from "@/components/ui";
 import { deleteTemplate, saveTemplate } from "../actions";
 
 export async function generateMetadata() {
@@ -30,11 +31,17 @@ export default async function TemplatePage({
   let description = "";
   let tasks: EditorTask[] = [];
   let friction: { title: string; rejected: number; total: number }[] = [];
+  let usedBy = 0;
 
   if (sourceId) {
     const supabase = await createClient();
-    const { data: tpl } = await supabase.from("templates").select("name, procedure, description").eq("id", sourceId).maybeSingle();
+    const { data: tpl } = await supabase
+      .from("templates")
+      .select("name, procedure, description, journeys(count)")
+      .eq("id", sourceId)
+      .maybeSingle();
     if (!tpl) notFound();
+    if (!isNew) usedBy = (tpl.journeys as { count: number }[] | null)?.[0]?.count ?? 0;
     const { data: rows } = await supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position");
 
     // Not a copy (duplicating starts clean) and not brand new: show where real patients are currently
@@ -83,14 +90,35 @@ export default async function TemplatePage({
 
   return (
     <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
-      <h1 className="display text-3xl sm:text-4xl">{isNew ? (from ? t("שכפול תבנית") : t("תבנית חדשה")) : t("עריכת תבנית")}</h1>
+      <p className="eyebrow">{t("פרוטוקולים")}</p>
+      <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? t("שכפול תבנית") : t("תבנית חדשה")) : t("עריכת תבנית")}</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         {t("הגדירו את שלבי הפרוטוקול: מי אחראי על כל משימה, מתי היא מתבצעת ביחס ליום הניתוח ומה צריך להסתיים לפניה.")}
       </p>
 
+      {isNew && from && (
+        <p className="mt-3 flex items-start gap-1.5 text-sm text-muted">
+          <span className="mt-0.5 shrink-0"><Icon name="file" /></span>
+          <span>{t("זה עותק עצמאי. שינויים כאן לא ישפיעו על התבנית המקורית או על מטופלים שכבר התחילו בה.")}</span>
+        </p>
+      )}
+
+      {!isNew && (
+        <p className="mt-3 flex items-start gap-1.5 text-sm text-muted" role="note">
+          <span className="mt-0.5 shrink-0"><Icon name="lock" /></span>
+          <span>
+            {usedBy === 1
+              ? t("התבנית הזו בשימוש אצל מטופל אחד כרגע. עריכה תשפיע על מטופלים חדשים בלבד — מי שכבר התחיל במסלול לא ישתנה.")
+              : usedBy > 1
+                ? t("התבנית הזו בשימוש אצל {n} מטופלים כרגע. עריכה תשפיע על מטופלים חדשים בלבד — מי שכבר התחיל במסלול לא ישתנה.", { n: usedBy })
+                : t("עריכת תבנית משפיעה על מטופלים חדשים בלבד. מי שכבר התחיל במסלול לא ישתנה.")}
+          </span>
+        </p>
+      )}
+
       {friction.length > 0 && (
         <div className="mt-6 rounded-2xl bg-bad-soft p-4">
-          <p className="font-medium text-bad">{t("נקודות חיכוך בתבנית הזו")}</p>
+          <h2 className="flex items-center gap-1.5 font-medium text-bad"><Icon name="alert" size={16} />{t("נקודות חיכוך בתבנית הזו")}</h2>
           <p className="mt-1 text-sm text-bad">
             {t("משימות שכרגע מוחזרות לתיקון אצל יותר ממטופל אחד — ייתכן שההנחיה לא ברורה מספיק.")}
           </p>

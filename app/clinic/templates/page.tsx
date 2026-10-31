@@ -65,15 +65,18 @@ export default async function TemplatesPage() {
             return (
               <li key={tpl.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0">
-                  <Link
-                    href={`/clinic/templates/${tpl.id}`}
-                    className="inline-block min-h-6 break-words font-medium hover:underline"
-                  >
-                    {tpl.name}
-                  </Link>
-                  <p className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/clinic/templates/${tpl.id}`}
+                      className="inline-block min-h-6 break-words font-medium hover:underline"
+                    >
+                      {tpl.name}
+                    </Link>
+                    {tpl.procedure && <span className="pill pill-neutral">{tpl.procedure}</span>}
+                  </div>
+                  <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
                     <span>{tasksLabel(tasks, t)}</span>
-                    <span>{usedLabel(used, t)}</span>
+                    <span className={used > 0 ? "font-medium text-accent" : undefined}>{usedLabel(used, t)}</span>
                     {tpl.updated_at && <span>{t("עודכנה {date}", { date: fmtDate(tpl.updated_at, lang) })}</span>}
                   </p>
                 </div>

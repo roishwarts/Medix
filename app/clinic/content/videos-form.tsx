@@ -46,6 +46,7 @@ export function VideosForm({ clinicId, videos }: { clinicId: string; videos: Vid
   const [title, setTitle] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploaded, setUploaded] = useState(false);
   const [pending, start] = useTransition();
   const phaseId = useId();
   const titleId = useId();
@@ -56,9 +57,24 @@ export function VideosForm({ clinicId, videos }: { clinicId: string; videos: Vid
     start(async () => { await removeClinicVideo(id); });
   }
 
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    setError(null);
+    setUploaded(false);
+    // Catch an oversized file the moment it's picked, not after the clinic has filled in the rest of the form.
+    if (f && f.size > MAX_BYTES) {
+      setFileName(null);
+      setError(t("הקובץ גדול מדי (עד 200MB)"));
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    setFileName(f?.name ?? null);
+  }
+
   function upload(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setUploaded(false);
     const file = fileRef.current?.files?.[0];
     if (!file) return setError(t("יש לבחור קובץ וידאו"));
     if (file.size > MAX_BYTES) return setError(t("הקובץ גדול מדי (עד 200MB)"));
@@ -74,6 +90,7 @@ export function VideosForm({ clinicId, videos }: { clinicId: string; videos: Vid
       setTitle("");
       setFileName(null);
       if (fileRef.current) fileRef.current.value = "";
+      setUploaded(true);
     });
   }
 
@@ -112,17 +129,22 @@ export function VideosForm({ clinicId, videos }: { clinicId: string; videos: Vid
             accept="video/*"
             className="peer sr-only"
             id={fileId}
-            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            disabled={pending}
+            onChange={onFile}
           />
           <label
             htmlFor={fileId}
-            className="btn h-auto w-full cursor-pointer justify-start gap-2 whitespace-normal py-2.5 text-start peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
+            className="btn h-auto w-full cursor-pointer justify-start gap-2 whitespace-normal py-2.5 text-start peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:cursor-not-allowed peer-disabled:opacity-45"
           >
             <span className="shrink-0"><Icon name={fileName ? "file" : "plus"} /></span>
             <span className="min-w-0 break-all" dir="auto">{fileName ?? t("בחירת קובץ וידאו, עד 200MB")}</span>
           </label>
         </div>
-        <button className="btn btn-sm" disabled={pending}>{pending ? t("מעלה…") : t("העלאה")}</button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button className="btn btn-sm" disabled={pending}>{pending ? t("מעלה…") : t("העלאה")}</button>
+          {pending && <span role="status" className="text-sm text-muted">{t("ייתכן שזה יקח זמן, בהתאם לגודל הקובץ ולמהירות האינטרנט. אין לסגור את הדף.")}</span>}
+          {uploaded && <span role="status" className="text-sm text-ok">{t("הועלה")}</span>}
+        </div>
         {error && <p role="alert" className="text-sm text-bad">{error}</p>}
       </form>
     </div>

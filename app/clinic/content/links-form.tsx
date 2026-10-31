@@ -12,6 +12,7 @@ export function LinksForm({ links }: { links: Link[] }) {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
   const [pending, start] = useTransition();
   const labelId = useId();
   const urlId = useId();
@@ -19,10 +20,11 @@ export function LinksForm({ links }: { links: Link[] }) {
   function add(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setAdded(false);
     start(async () => {
       const res = await addClinicLink(label, url);
       if (res.error) setError(res.error);
-      else { setLabel(""); setUrl(""); }
+      else { setLabel(""); setUrl(""); setAdded(true); }
     });
   }
 
@@ -56,17 +58,22 @@ export function LinksForm({ links }: { links: Link[] }) {
       <form onSubmit={add} className="mt-4 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
         <div>
           <label htmlFor={labelId} className="sr-only">{t("שם הקישור")}</label>
-          <input id={labelId} className="field" placeholder={t("שם, למשל: אינסטגרם")} value={label} onChange={(e) => setLabel(e.target.value)} maxLength={60} autoComplete="off" />
+          <input id={labelId} className="field" placeholder={t("שם, למשל: אינסטגרם")} value={label} onChange={(e) => { setLabel(e.target.value); setAdded(false); }} maxLength={60} autoComplete="off" />
         </div>
         <div>
           <label htmlFor={urlId} className="sr-only">{t("כתובת")}</label>
-          <input id={urlId} className="field" placeholder="https://..." dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)} autoComplete="off" />
+          <input id={urlId} className="field" placeholder="https://..." dir="ltr" value={url} onChange={(e) => { setUrl(e.target.value); setAdded(false); }} autoComplete="off" />
         </div>
         <button className="btn btn-sm min-h-11 shrink-0" disabled={pending || !label.trim() || !url.trim()}>
           {pending ? t("מוסיף…") : t("הוספה")}
         </button>
       </form>
-      {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+      {(added || error) && (
+        <div className="mt-2 flex items-center gap-3">
+          {added && <span role="status" className="text-sm text-ok">{t("נוסף")}</span>}
+          {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+        </div>
+      )}
     </div>
   );
 }

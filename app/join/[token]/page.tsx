@@ -43,7 +43,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
         </div>
       ) : (
         <div className="card p-6 text-center sm:p-8">
-          <span className="pill-warn mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full" aria-hidden="true"><Icon name="alert" size={22} /></span>
+          <span className="pill-warn mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full" aria-hidden="true"><Icon name="clock" size={22} /></span>
           <h1 className="display mb-3 text-2xl">{t("הקישור אינו תקף")}</h1>
           <p className="mb-6 text-base leading-relaxed text-muted">{t("הקישור פג תוקף, הוחלף בחדש, או כבר נוצל. בקש/י מהמרפאה קישור חדש.")}</p>
           <Link href="/login" className="btn w-full">{t("כבר יש לך משתמש? כניסה")}</Link>

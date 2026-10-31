@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
 import { getT } from "@/lib/i18n/server";
+import { Icon } from "@/components/ui";
 import { AcceptForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -61,10 +62,15 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!invite) {
     return (
       <Shell>
-        <h1 className="display mb-3 text-2xl sm:text-3xl">{t("ההזמנה אינה תקפה")}</h1>
-        <p className="mb-6 text-muted">{t("הקישור פג תוקף, בוטל, או כבר נוצל. אפשר לבקש מהמטופל/ת או מהמרפאה הזמנה חדשה.")}</p>
-        <p className="mb-6 text-sm text-muted">{t("כבר יש לך חשבון? אפשר להיכנס ישירות.")}</p>
-        <Link href="/login" className="btn btn-primary w-full">{t("למסך הכניסה")}</Link>
+        <div className="text-center">
+          <span className="pill-warn mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full" aria-hidden="true">
+            <Icon name="clock" size={22} />
+          </span>
+          <h1 className="display mb-3 text-2xl sm:text-3xl">{t("ההזמנה אינה תקפה")}</h1>
+          <p className="mb-6 text-base leading-relaxed text-muted">{t("הקישור פג תוקף, בוטל, או כבר נוצל. אפשר לבקש מהמטופל/ת או מהמרפאה הזמנה חדשה.")}</p>
+          <p className="mb-6 text-sm text-muted">{t("כבר יש לך חשבון? אפשר להיכנס ישירות.")}</p>
+          <Link href="/login" className="btn btn-primary w-full">{t("למסך הכניסה")}</Link>
+        </div>
       </Shell>
     );
   }

@@ -15,7 +15,7 @@ export function LoginForm() {
       <div>
         <label htmlFor="username" className="lbl">{t("שם משתמש")}</label>
         <input id="username" name="username" value={user} onChange={(e) => setUser(e.target.value)} className="field" dir="ltr" autoComplete="username"
-          autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="text" enterKeyHint="next"
+          autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="text" enterKeyHint="next" autoFocus
           aria-invalid={err ? true : undefined} aria-describedby={err ? "login-error" : undefined} required />
       </div>
       <div>

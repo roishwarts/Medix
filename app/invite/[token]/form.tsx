@@ -18,7 +18,7 @@ export function AcceptForm({ token, defaultName }: { token: string; defaultName:
       <div>
         <label htmlFor="full_name" className="lbl">{t("השם שלך")}</label>
         <input
-          id="full_name" name="full_name" className="field" autoComplete="name" required maxLength={80}
+          id="full_name" name="full_name" className="field" autoComplete="name" required maxLength={80} autoFocus
           value={name} onChange={(e) => setName(e.target.value)} aria-describedby={state?.error ? errId : undefined}
         />
       </div>

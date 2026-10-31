@@ -35,6 +35,7 @@ export function ResetForm({ token }: { token: string }) {
             type={show ? "text" : "password"}
             className="field pr-20"
             dir="ltr"
+            autoFocus
             autoComplete="new-password"
             autoCapitalize="none"
             autoCorrect="off"

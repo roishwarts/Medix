@@ -56,7 +56,7 @@ export function JoinForm({ token }: { token: string }) {
       <div>
         <label htmlFor="username" className="lbl text-base">{t("שם משתמש לבחירתך")}</label>
         <input
-          id="username" name="username" ref={userRef} className="field !min-h-12 text-base" dir="ltr"
+          id="username" name="username" ref={userRef} className="field !min-h-12 text-base" dir="ltr" autoFocus
           value={username} onChange={(e) => { setUsername(e.target.value); setLocal(null); setSeenError(state); }}
           autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" enterKeyHint="next"
           aria-invalid={!!userErr} aria-describedby={userErr ? "username-hint username-err" : "username-hint"} required
