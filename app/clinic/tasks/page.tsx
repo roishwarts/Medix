@@ -45,7 +45,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       <header>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-          <div className="flex flex-1 justify-center max-sm:basis-full">
+          <div className="flex flex-1 justify-end max-sm:basis-full">
             <TasksFilter
               value={active}
               options={TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }))}
