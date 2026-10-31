@@ -1,3 +1,4 @@
+import { HomeSettingsButton } from "@/components/home-settings";
 import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
@@ -26,7 +27,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
     <div className="min-h-dvh pb-24 md:pb-16">
       <BrandTheme color={profile.brand_color} />
       <ImpersonationBanner />
-      <AppHeader items={items} brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      <AppHeader items={items} home="/journey" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">
       {profile.role === "caregiver" && (
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
@@ -40,7 +41,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
           )}
         </p>
       )}
-      <BackButton home="/journey" roots={items.map((i) => i.href)} />
+      <HomeSettingsButton home="/journey" /><BackButton home="/journey" roots={items.map((i) => i.href)} />
       {children}
       </div>
     </div>
