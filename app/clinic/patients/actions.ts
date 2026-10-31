@@ -280,6 +280,26 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
     if (optErr) return { error: t("שמירת בית החולים והחברה נכשלה. ודאו שהורצה התוספת supabase/patch-options.sql.") };
   }
 
+  // ID, HMO and private-insurance details. Shown on the patient's own card only. Saved on their own
+  // so the rest still works before supabase/patch-medical-info.sql has been run.
+  if (formData.has("national_id") || formData.has("hmo") || formData.has("insurance_company") || formData.has("insurance_policy_number") || formData.has("insurance_phone")) {
+    const national_id = String(formData.get("national_id") ?? "").trim();
+    const hmo = String(formData.get("hmo") ?? "").trim();
+    const insurance_company = String(formData.get("insurance_company") ?? "").trim();
+    const insurance_policy_number = String(formData.get("insurance_policy_number") ?? "").trim();
+    const insurance_phone = String(formData.get("insurance_phone") ?? "").trim();
+    if (national_id && !/^\d{5,9}$/.test(national_id)) return { error: t("תעודת הזהות לא תקינה") };
+    if (hmo && !(["clalit", "maccabi", "meuhedet", "leumit", "other"] as const).includes(hmo as "clalit")) return { error: t("קופת חולים לא תקינה") };
+    const { error: medErr } = await supabase
+      .from("patients")
+      .update({
+        national_id: national_id || null, hmo: hmo || null, insurance_company: insurance_company || null,
+        insurance_policy_number: insurance_policy_number || null, insurance_phone: insurance_phone || null,
+      })
+      .eq("id", patientId);
+    if (medErr) return { error: t("שמירת פרטי הביטוח נכשלה. ודאו שהורצה התוספת supabase/patch-medical-info.sql.") };
+  }
+
   // Status (manual override) and language of the messages. Saved on their own, so the rest still works before
   // supabase/patch-lang-stage.sql has been run.
   if (formData.has("stage") || formData.has("lang")) {

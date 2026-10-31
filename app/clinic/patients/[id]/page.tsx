@@ -71,7 +71,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -80,6 +80,8 @@ export default async function PatientPage({
     supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle(),
     // Separate query so the page still works before the hospital/company patch is applied.
     supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle(),
+    // Separate query so the page still works before patch-medical-info.sql is applied.
+    supabase.from("patients").select("national_id, hmo, insurance_company, insurance_policy_number, insurance_phone").eq("id", journey.patient_id).maybeSingle(),
     supabase
       .from("caregiver_invites")
       .select("id, invitee_name, relation, can_act, expires_at")
@@ -262,7 +264,9 @@ export default async function PatientPage({
         <section aria-label={tr("פרטי המטופל")} className="relative">
           {/* The title sits above the box, so the box starts level with the summary card. */}
           <h2 className="eyebrow absolute bottom-full mb-1">{tr("פרטי המטופל")}</h2>
-          <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies}
+          <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""}
+            nationalId={medicalInfo?.national_id ?? ""} hmo={medicalInfo?.hmo ?? ""} insuranceCompany={medicalInfo?.insurance_company ?? ""} insurancePolicyNumber={medicalInfo?.insurance_policy_number ?? ""} insurancePhone={medicalInfo?.insurance_phone ?? ""}
+            hospitals={options.hospitals} companies={options.companies}
             autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
