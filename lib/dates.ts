@@ -7,7 +7,8 @@ export function today(): string {
 }
 
 function toUtc(d: string): number {
-  const [y, m, day] = d.split("-").map(Number);
+  // A full timestamp ("2026-10-31T10:12:00+00:00") is accepted too: only its date part is used.
+  const [y, m, day] = d.slice(0, 10).split("-").map(Number);
   return Date.UTC(y, m - 1, day);
 }
 

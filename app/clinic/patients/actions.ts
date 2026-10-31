@@ -12,6 +12,7 @@ import { createAccountLink, getOrigin } from "@/lib/account-links";
 import { patientLang } from "@/lib/patient-extras";
 import { STAGES, type Stage } from "@/lib/journey";
 import type { Lang } from "@/lib/prefs";
+import { CANCEL_REASONS, type CancelReason } from "@/lib/cancel-reasons";
 import { hashToken } from "@/lib/invite";
 import { caregiverMessage, joinMessage, resetMessage } from "@/lib/messages";
 
@@ -346,8 +347,6 @@ export async function setPatientStage(patientId: string, stage: Stage | null): P
   return {};
 }
 
-export const CANCEL_REASONS = ["patient_request", "medical", "insurance", "clinic_schedule", "other"] as const;
-export type CancelReason = (typeof CANCEL_REASONS)[number];
 
 export async function cancelJourney(journeyId: string, reason: CancelReason) {
   const t = await getT();
