@@ -74,6 +74,7 @@ export const en: Record<string, string> = {
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "A care team is available at every step, and you can share the journey with a family member who will accompany you.",
   "Google Calendar: האירוע הקרוב": "Google Calendar: the next event",
   "כל האירועים (קובץ יומן)": "All events (calendar file)",
+  "{clinic}: כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.": "{clinic}: all your preparation steps, documents and appointments in one place.",
 };
 export const ru: Record<string, string> = {
   "משהו השתבש": "Что-то пошло не так",
@@ -150,6 +151,7 @@ export const ru: Record<string, string> = {
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "На каждом этапе вам доступна команда, и вы можете поделиться маршрутом с членом семьи, который будет рядом.",
   "Google Calendar: האירוע הקרוב": "Google Календарь: ближайшее событие",
   "כל האירועים (קובץ יומן)": "Все события (файл календаря)",
+  "{clinic}: כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.": "{clinic}: все этапы подготовки, документы и приёмы в одном месте.",
 };
 export const ar: Record<string, string> = {
   "משהו השתבש": "حدث خطأ ما",
@@ -226,4 +228,5 @@ export const ar: Record<string, string> = {
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "يتوفر لك فريق معالج في كل خطوة، ويمكنك مشاركة المسار مع أحد أفراد العائلة ليرافقك.",
   "Google Calendar: האירוע הקרוב": "تقويم Google: الحدث القادم",
   "כל האירועים (קובץ יומן)": "كل الأحداث (ملف تقويم)",
+  "{clinic}: כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.": "{clinic}: جميع خطوات التحضير والمستندات والمواعيد في مكان واحد.",
 };

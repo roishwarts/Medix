@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Rubik } from "next/font/google";
+import { Assistant, Rubik } from "next/font/google";
 import "./globals.css";
 import { getPlatformAdmin } from "@/lib/admin";
+import { getPublicBrand } from "@/lib/brand-public";
 import { getT } from "@/lib/i18n/server";
 import { getLang, getPrefs } from "@/lib/prefs-server";
 import { dictionaryFor } from "@/lib/i18n";
@@ -10,6 +11,13 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { PrefsProvider } from "@/components/prefs-provider";
 import { PublicChrome } from "@/components/public-chrome";
 import { VersionBadge } from "@/components/version-badge";
+
+const assistant = Assistant({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-assistant",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin", "cyrillic", "arabic"],
@@ -30,11 +38,12 @@ const origin =
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  const TITLE = t("הכנה לניתוח");
-  const DESCRIPTION = t("כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.");
+  const brand = await getPublicBrand();
+  const TITLE = brand?.name ?? t("הכנה לניתוח");
+  const DESCRIPTION = brand ? t("{clinic}: כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.", { clinic: brand.name }) : t("כל שלבי ההכנה, המסמכים והתורים שלך במקום אחד.");
   return {
   metadataBase: new URL(origin),
-  title: t("כניסה"),
+  title: brand ? `${t("כניסה")} · ${brand.name}` : t("כניסה"),
   description: DESCRIPTION,
   robots: { index: false, follow: false },
   openGraph: { type: "website", locale: "he_IL", title: TITLE, description: DESCRIPTION },
@@ -48,7 +57,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [prefs, lang, admin] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin()]);
   return (
-    <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={rubik.variable} suppressHydrationWarning>
+    <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={`${assistant.variable} ${rubik.variable}`} suppressHydrationWarning>
       <body>
         <PrefsProvider initial={{ ...prefs, lang }}>
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>
