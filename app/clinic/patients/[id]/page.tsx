@@ -133,7 +133,7 @@ export default async function PatientPage({
   const urls = new Map<string, string>();
   for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
 
-  const autoStage = stageOf(summary);
+  const autoStage = stageOf(summary, !!cancelRow?.cancelled_at);
 
   return (
     <main>
