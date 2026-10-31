@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import { getPlatformAdmin } from "@/lib/admin";
+import { getImpersonation } from "@/lib/impersonation";
 import { getPublicBrand } from "@/lib/brand-public";
 import { getT } from "@/lib/i18n/server";
 import { getLang, getPrefs } from "@/lib/prefs-server";
@@ -48,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#4b6584" }, { media: "(prefers-color-scheme: dark)", color: "#131417" }] };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [prefs, lang, admin] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin()]);
+  const [prefs, lang, admin, viewingAs] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin(), getImpersonation()]);
   return (
     <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={rubik.variable} suppressHydrationWarning>
       <body>
@@ -56,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>
             <PublicChrome />
             {children}
-            {admin && <VersionBadge />}
+            {(admin || viewingAs) && <VersionBadge />}
           </I18nProvider>
         </PrefsProvider>
       </body>

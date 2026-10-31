@@ -62,7 +62,7 @@ export function VersionBadge() {
       <div
         role="status"
         aria-live="polite"
-        className="fixed inset-x-3 bottom-20 z-50 md:bottom-3 flex items-center justify-between gap-3 rounded-2xl border border-accent-line bg-surface px-4 py-2.5 text-sm shadow-lg sm:inset-x-auto sm:start-3"
+        className="fixed inset-x-3 bottom-20 z-50 md:bottom-3 flex items-center justify-between gap-3 rounded-2xl border border-accent-line bg-surface px-4 py-2.5 text-sm shadow-lg sm:inset-x-auto sm:right-3 sm:left-auto"
       >
         <span>
           {t("גרסה חדשה פורסמה")}{countdown !== null && countdown > 0 ? ` · ${t("מרענן בעוד {n}", { n: countdown })}` : ""}
@@ -94,13 +94,14 @@ export function VersionBadge() {
       onClick={() => location.reload()}
       title={t("רענון")}
       aria-label={t("גרסה נוכחית: {v}. לחיצה לרענון", { v: CURRENT_VERSION })}
-      className="fixed bottom-20 start-2 z-40 md:bottom-2 flex items-center gap-1 rounded-full bg-ink/5 px-2 py-1 text-xs text-muted opacity-60 transition hover:opacity-100 hover:bg-ink/10"
+      className="fixed bottom-20 right-2 z-40 md:bottom-2 flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted shadow-sm transition hover:text-ink"
     >
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
         <path d="M21 12a9 9 0 1 1-3-6.7" />
         <path d="M21 3v6h-6" />
       </svg>
-      <span dir="ltr" className="num">{CURRENT_VERSION}</span>
+      <span>{t("רענון")}</span>
+      <span dir="ltr" className="num font-medium text-ink">{CURRENT_VERSION}</span>
     </button>
   );
 }
