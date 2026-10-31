@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
@@ -57,7 +57,12 @@ export default async function PatientPage({
     loadJourney(id),
     getClinicOptions(),
   ]);
-  if (!journey) notFound();
+  if (!journey) {
+    // Some links (the referral pages) carry the patient's id instead of the journey's: send them to the right card.
+    const { data: byPatient } = await supabase.from("journeys").select("id").eq("patient_id", id).maybeSingle();
+    if (byPatient?.id) redirect(`/clinic/patients/${byPatient.id}`);
+    notFound();
+  }
   const isDoctor = profile.role === "doctor";
   const { summary } = journey;
   const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
