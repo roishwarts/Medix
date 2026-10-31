@@ -59,6 +59,16 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   if (!PHONE_OK.test(phone)) return { error: t("יש להזין מספר טלפון תקין (לשליחה בוואטסאפ)") };
   if (email && !EMAIL_OK.test(email)) return { error: t("כתובת המייל לא תקינה") };
 
+  const hospital = String(formData.get("hospital") ?? "").trim();
+  const company = String(formData.get("company") ?? "").trim();
+  // Validate before creating anything, so a stale option (removed from the list after the page loaded)
+  // is reported instead of being silently dropped.
+  if (hospital || company) {
+    const options = await getClinicOptions();
+    if (hospital && !options.hospitals.includes(hospital)) return { error: t("בית החולים שנבחר לא ברשימה") };
+    if (company && !options.companies.includes(company)) return { error: t("החברה שנבחרה לא ברשימה") };
+  }
+
   const supabase = await createClient();
   const { data: patient, error: patErr } = await supabase
     .from("patients")
@@ -71,17 +81,8 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   // Separate update, so creating a patient still works before supabase/patch-lang-stage.sql has been run.
   if (lang !== "he") await supabase.from("patients").update({ lang }).eq("id", patient.id);
 
-  const hospital = String(formData.get("hospital") ?? "").trim();
-  const company = String(formData.get("company") ?? "").trim();
   if (hospital || company) {
-    const options = await getClinicOptions();
-    await supabase
-      .from("patients")
-      .update({
-        hospital: options.hospitals.includes(hospital) ? hospital : null,
-        company: options.companies.includes(company) ? company : null,
-      })
-      .eq("id", patient.id);
+    await supabase.from("patients").update({ hospital: hospital || null, company: company || null }).eq("id", patient.id);
   }
 
   const { data: journeyId, error: jErr } = await supabase.rpc("start_journey", {

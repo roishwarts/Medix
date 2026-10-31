@@ -236,6 +236,7 @@ export default async function PatientPage({
       <section>
         <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
         <ActivityList items={history} showPatient={false} />
+        {(historyRows ?? []).length >= 20 && <p className="mt-2 text-xs text-muted">{tr("מוצגות 20 הפעולות האחרונות בלבד.")}</p>}
       </section>
       </div>
 

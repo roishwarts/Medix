@@ -21,7 +21,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
 
   function submit(fd: FormData) {
     const next: Record<string, string> = {};
-    for (const k of ["full_name", "phone", "email", "template_id", "surgery_date", "hospital", "company"]) next[k] = String(fd.get(k) ?? "");
+    for (const k of ["full_name", "phone", "email", "template_id", "surgery_date", "hospital", "company", "lang"]) next[k] = String(fd.get(k) ?? "");
     setKept(next);
     setAttempt((n) => n + 1);
     action(fd);
@@ -81,7 +81,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
       </div>
       <div className="max-w-xs">
         <label htmlFor="lang" className="lbl">{t("שפת ההודעות והאפליקציה")}</label>
-        <select id="lang" name="lang" className="field" defaultValue={v("lang") || "he"}>
+        <select key={`l${attempt}`} id="lang" name="lang" className="field" defaultValue={v("lang") || "he"}>
           {LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
         </select>
         <p className="mt-1.5 text-xs text-muted">{t("ההודעות בוואטסאפ ובמייל נשלחות בשפה הזו.")}</p>

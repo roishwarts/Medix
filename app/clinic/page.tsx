@@ -91,7 +91,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const progressN = upcoming.length - readyN - lateN;
 
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
-  const ATTENTION_RANK: Partial<Record<ActionItem["kind"], number>> = { rejected: 0, review: 1, overdue: 2 };
+  // Same priority order as the KPI row above (rejected, overdue, review) and the full tasks
+  // list: a late task is more urgent than one merely waiting on review, so at real volume the
+  // 6-item preview below should never let a pile of "waiting for review" items push actually
+  // overdue work out of sight.
+  const ATTENTION_RANK: Partial<Record<ActionItem["kind"], number>> = { rejected: 0, overdue: 1, review: 2 };
   const attention = items
     .filter((i) => i.kind === "review" || i.kind === "overdue" || i.kind === "rejected")
     .sort((a, b) => (a.kind === b.kind ? (a.task.dueDate < b.task.dueDate ? -1 : 1) : ATTENTION_RANK[a.kind]! - ATTENTION_RANK[b.kind]!))
