@@ -93,6 +93,29 @@ export async function saveClinicContact(
   return {};
 }
 
+export async function saveClinicLogo(path: string): Promise<{ error?: string }> {
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_clinic_logo", { p_path: path });
+  if (error) return { error: "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-clinic-logo.sql." };
+  revalidatePath("/clinic/content");
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return {};
+}
+
+export async function removeClinicLogo(): Promise<{ error?: string }> {
+  const profile = await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  await supabase.storage.from("clinic-logos").remove([`${profile.clinic_id}/logo`]);
+  const { error } = await supabase.rpc("save_clinic_logo", { p_path: "" });
+  if (error) return { error: "ההסרה נכשלה." };
+  revalidatePath("/clinic/content");
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return {};
+}
+
 export async function removeClinicVideo(id: string): Promise<{ error?: string }> {
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();

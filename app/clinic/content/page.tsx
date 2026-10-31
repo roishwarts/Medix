@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClinicLinks, getClinicVideos } from "@/lib/clinic-content";
 import { ContactForm } from "./contact-form";
+import { LogoForm } from "./logo-form";
 import { GeneralInfoForm } from "./general-info-form";
 import { RedFlagsForm } from "./red-flags-form";
 import { LinksForm } from "./links-form";
@@ -37,6 +38,7 @@ export default async function ClinicContentPage() {
       </p>
 
       <div className="mt-6 space-y-5">
+        <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} />
         <ContactForm
           initial={{
             contact_name: profile.contact_name,

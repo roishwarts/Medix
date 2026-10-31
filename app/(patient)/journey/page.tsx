@@ -58,7 +58,10 @@ export default async function JourneyPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <a href="/api/calendar/ics" className="btn btn-sm">הוספה ליומן</a>
           {profile.role === "patient" && (
-            <Link href="/family" className="btn btn-sm">שיתוף עם בן משפחה</Link>
+            <>
+              <Link href="/family" className="btn btn-sm">שיתוף עם בן משפחה</Link>
+              <Link href="/onboarding" className="btn btn-quiet btn-sm">איך זה עובד</Link>
+            </>
           )}
         </div>
 
