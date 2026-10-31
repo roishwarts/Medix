@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavIcon, type NavIconName } from "@/components/nav-icons";
 import { NavLink } from "@/components/nav-link";
 import { AccessMenu, AccessControls } from "@/components/access-menu";
+import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
 import { useT } from "@/components/i18n-provider";
 
 export type NavItem = { href: string; label: string; icon: NavIconName; exact?: boolean; badge?: React.ReactNode; more?: boolean };
@@ -13,7 +14,7 @@ export type NavItem = { href: string; label: string; icon: NavIconName; exact?: 
 // The top bar of every signed-in area: tabs on wide screens. On phones the navigation is a bar at the bottom
 // of the screen, with a settings button that opens a sheet (more pages, accessibility, sign out).
 export function AppHeader({
-  items, brand, logo, logout, languages = true, greeting,
+  items, brand, logo, logout, languages = true, greeting, home,
 }: {
   items: NavItem[]; brand: string; logo?: string | null; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
 }) {
@@ -23,6 +24,12 @@ export function AppHeader({
   const sheet = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setOpen(false); }, [path]);
+  // The settings button on the main page asks for the sheet to open.
+  useEffect(() => {
+    const openIt = () => setOpen(true);
+    window.addEventListener(OPEN_SETTINGS_EVENT, openIt);
+    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, openIt);
+  }, []);
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -34,7 +41,10 @@ export function AppHeader({
   }, [open]);
 
   const active = (i: NavItem) => (i.exact ? path === i.href : path === i.href || path.startsWith(i.href + "/"));
-  const bar = items.filter((i) => !i.more);
+  // The main page sits in the middle of the bottom bar.
+  const rest = items.filter((i) => !i.more && i.href !== home);
+  const main = items.find((i) => i.href === home && !i.more);
+  const bar = main ? [...rest.slice(0, Math.floor((rest.length + 1) / 2)), main, ...rest.slice(Math.floor((rest.length + 1) / 2))] : rest;
   const more = items.filter((i) => i.more);
 
   return (
@@ -65,12 +75,6 @@ export function AppHeader({
               </Link>
             </li>
           ))}
-          <li className="min-w-0 flex-1">
-            <button type="button" className={`bar-item w-full ${open ? "bar-item-on" : ""}`} aria-expanded={open} aria-haspopup="dialog" aria-controls="settings-sheet" onClick={() => setOpen((v) => !v)}>
-              <NavIcon name="settings" />
-              <span className="max-w-full truncate">{t("הגדרות")}</span>
-            </button>
-          </li>
         </ul>
       </nav>
 

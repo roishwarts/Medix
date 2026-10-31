@@ -1,3 +1,4 @@
+import { HomeSettingsButton } from "@/components/home-settings";
 import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
@@ -23,7 +24,7 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic", label: t("ראשי"), icon: "home", exact: true },
     { href: "/clinic/tasks", label: t("משימות"), icon: "tasks" },
     { href: "/clinic/patients", label: t("מטופלים"), icon: "patients" },
-    { href: "/clinic/calendar", label: t("יומן"), icon: "calendar", more: true },
+    { href: "/clinic/calendar", label: t("יומן"), icon: "calendar" },
     { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
     ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
     { href: "/clinic/content", label: t("תוכן למטופלים"), icon: "content", more: true },
@@ -32,8 +33,8 @@ export default async function ClinicLayout({ children }: { children: React.React
     <div className="min-h-dvh pb-24 md:pb-0">
       <BrandTheme color={profile.brand_color} />
       <ImpersonationBanner />
-      <AppHeader items={items} brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
+      <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><HomeSettingsButton home="/clinic" /><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
     </div>
   );
 }
