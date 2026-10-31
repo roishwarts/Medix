@@ -25,15 +25,22 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic/patients", label: t("מטופלים"), icon: "patients" },
     { href: "/clinic/calendar", label: t("יומן"), icon: "calendar" },
     { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
+    { href: "/clinic/insights", label: t("תובנות ניהול"), icon: "insights", more: true },
     ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
+    ...(profile.role === "doctor" ? [{ href: "/clinic/team", label: t("הצוות שלי"), icon: "users" as const, more: true }] : []),
     { href: "/clinic/content", label: t("תוכן למטופלים"), icon: "content", more: true },
   ];
   return (
     <div className="min-h-dvh pb-24 md:pb-0">
       <BrandTheme color={profile.brand_color} />
-      <ImpersonationBanner />
-      <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
+      <div className="print:hidden">
+        <ImpersonationBanner />
+        <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      </div>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
+        <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
+        {children}
+      </div>
     </div>
   );
 }

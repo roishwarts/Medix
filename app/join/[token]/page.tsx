@@ -1,3 +1,4 @@
+import { PublicBrand } from "@/components/public-brand";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
 import Link from "next/link";
@@ -34,6 +35,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6 sm:py-14">
+      <PublicBrand logo />
       {info ? (
         <div className="card p-6 sm:p-8">
           {info.clinic && <p className="eyebrow mb-3">{info.clinic}</p>}

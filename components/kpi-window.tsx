@@ -22,7 +22,7 @@ export function KpiWindow({ label, value, href, param, days, tone = "none" }: {
       <p className="text-sm text-muted">{label}</p>
       <Link href={href} className={`display num mt-1 block text-4xl ${color[tone]}`}>{value}</Link>
       <select
-        aria-label={label} value={days} className="field !min-h-9 mt-2 w-full min-w-0 !px-2 py-1 !text-xs sm:!text-sm"
+        aria-label={t("טווח הימים עבור {label}", { label })} value={days} className="field !min-h-9 mt-2 w-full min-w-0 !px-2 py-1 !text-xs sm:!text-sm"
         onChange={(e) => {
           const p = new URLSearchParams(search.toString());
           p.set(param, e.target.value);

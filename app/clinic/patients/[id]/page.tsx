@@ -21,6 +21,10 @@ import { PendingInvites } from "./pending-invites";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
+import { VisitNote } from "./visit-note";
+import { ReferralsCard } from "./referrals-card";
+import { CancelJourney } from "./cancel-journey";
+import type { CancelReason } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -53,8 +57,8 @@ export default async function PatientPage({
     loadJourney(id),
     getClinicOptions(),
   ]);
-  void profile;
   if (!journey) notFound();
+  const isDoctor = profile.role === "doctor";
   const { summary } = journey;
   const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
     key === "all" || (key === "overdue" ? t.overdue : t.state === key);
@@ -67,7 +71,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -76,6 +80,8 @@ export default async function PatientPage({
     supabase.from("patients").select("user_id, email").eq("id", journey.patient_id).maybeSingle(),
     // Separate query so the page still works before the hospital/company patch is applied.
     supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle(),
+    // Separate query so the page still works before patch-medical-info.sql is applied.
+    supabase.from("patients").select("national_id, hmo, insurance_company, insurance_policy_number, insurance_phone").eq("id", journey.patient_id).maybeSingle(),
     supabase
       .from("caregiver_invites")
       .select("id, invitee_name, relation, can_act, expires_at")
@@ -97,7 +103,19 @@ export default async function PatientPage({
           return [t.id, data?.signedUrl] as const;
         }),
     ),
+    // RLS already limits this to doctors; skipped outright for staff so the page doesn't wait on it.
+    isDoctor
+      ? supabase.from("visit_notes").select("journey_task_id, note").eq("patient_id", journey.patient_id)
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("referrals")
+      .select("id, recipient, reason, created_at")
+      .eq("patient_id", journey.patient_id)
+      .order("created_at", { ascending: false }),
   ]);
+  const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
+  // Separate query so the page still works before patch-outcomes.sql is applied.
+  const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -143,6 +161,7 @@ export default async function PatientPage({
           </div>
         )}
       </section>
+      <CancelJourney journeyId={journey.id} lang={lang} cancelledAt={cancelRow?.cancelled_at ?? null} cancelledReason={(cancelRow?.cancelled_reason ?? null) as CancelReason | null} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
           {tr("כל המשימות")}
@@ -228,6 +247,7 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
+              {t.kind === "appointment" && isDoctor && <VisitNote taskId={t.id} initialNote={notesByTask.get(t.id) ?? ""} />}
             </div>
           ))}
         </div>
@@ -236,6 +256,7 @@ export default async function PatientPage({
       <section>
         <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
         <ActivityList items={history} showPatient={false} />
+        {(historyRows ?? []).length >= 20 && <p className="mt-2 text-xs text-muted">{tr("מוצגות 20 הפעולות האחרונות בלבד.")}</p>}
       </section>
       </div>
 
@@ -243,7 +264,9 @@ export default async function PatientPage({
         <section aria-label={tr("פרטי המטופל")} className="relative">
           {/* The title sits above the box, so the box starts level with the summary card. */}
           <h2 className="eyebrow absolute bottom-full mb-1">{tr("פרטי המטופל")}</h2>
-          <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""} hospitals={options.hospitals} companies={options.companies}
+          <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""}
+            nationalId={medicalInfo?.national_id ?? ""} hmo={medicalInfo?.hmo ?? ""} insuranceCompany={medicalInfo?.insurance_company ?? ""} insurancePolicyNumber={medicalInfo?.insurance_policy_number ?? ""} insurancePhone={medicalInfo?.insurance_phone ?? ""}
+            hospitals={options.hospitals} companies={options.companies}
             autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
@@ -265,6 +288,14 @@ export default async function PatientPage({
           />
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
+        </section>
+        <section aria-label={tr("הפניות")}>
+          <h2 className="eyebrow mb-2">{tr("הפניות")}</h2>
+          <ReferralsCard
+            patientId={journey.patient_id}
+            canCreate={isDoctor}
+            items={(referralRows ?? []).map((r) => ({ id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at }))}
+          />
         </section>
       </aside>
       </div>

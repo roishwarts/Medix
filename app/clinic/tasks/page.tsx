@@ -21,13 +21,15 @@ const HEADING_TONE: Record<ActionKind, string> = {
   upcoming: "text-ink",
 };
 
+// Reuse the same labels as the section headings below (ACTION_LABEL) instead of writing them out
+// again here, so the filter dropdown and the heading it jumps to always say the exact same thing.
 const TABS: [ActionKind | "all", string][] = [
   ["all", "הכול"],
-  ["rejected", "הוחזר לתיקון"],
-  ["review", "ממתין לבדיקה"],
-  ["overdue", "באיחור"],
-  ["clinic", "משימות לצוות"],
-  ["upcoming", "משימות למטופלים"],
+  ["rejected", ACTION_LABEL.rejected],
+  ["review", ACTION_LABEL.review],
+  ["overdue", ACTION_LABEL.overdue],
+  ["clinic", ACTION_LABEL.clinic],
+  ["upcoming", ACTION_LABEL.upcoming],
 ];
 
 export default async function TasksPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -78,7 +80,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         </div>
       ) : (
         active !== "all" && items.every((i) => i.kind !== active) && (
-          <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
+          <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין משימות בסטטוס הזה.")}</p>
         )
       )}
 

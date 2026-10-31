@@ -72,7 +72,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     brand_color?: string | null;
   } | null;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const logoUrl = clinic?.logo_path && supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null;
+  const logoUrl = clinic?.logo_path ? (/^https:\/\//.test(clinic.logo_path) ? clinic.logo_path : supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null) : null;
   const brandColor = clinic?.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null;
   return {
     id: data.id,

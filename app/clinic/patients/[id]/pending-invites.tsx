@@ -1,12 +1,13 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { revokeInviteByStaff } from "../actions";
 
 export function PendingInvites({ items }: { items: { id: string; name: string; relation: string; canAct: boolean; expires: string }[] }) {
   const t = useT();
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   if (items.length === 0) return null;
   return (
     <div className="mt-3">
@@ -18,10 +19,24 @@ export function PendingInvites({ items }: { items: { id: string; name: string; r
               <p className="font-medium">{i.name ? `${i.name} · ${i.relation}` : i.relation}</p>
               <p className="text-sm text-muted">{i.canAct ? t("עם הרשאת פעולה") : t("צפייה בלבד")} · {t("תקפה עד {date}", { date: i.expires })}</p>
             </div>
-            <button className="btn btn-sm min-h-11 shrink-0 sm:min-h-9" aria-label={t("ביטול ההזמנה ל{name}", { name: i.name || i.relation })} disabled={pending} onClick={() => start(async () => { await revokeInviteByStaff(i.id); })}>{t("ביטול")}</button>
+            <button
+              className="btn btn-sm min-h-11 shrink-0 sm:min-h-9"
+              aria-label={t("ביטול ההזמנה ל{name}", { name: i.name || i.relation })}
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  setError(null);
+                  const res = await revokeInviteByStaff(i.id);
+                  if (res?.error) setError(res.error);
+                })
+              }
+            >
+              {t("ביטול")}
+            </button>
           </li>
         ))}
       </ul>
+      {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
     </div>
   );
 }

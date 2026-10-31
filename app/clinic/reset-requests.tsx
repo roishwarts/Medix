@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { ShareLink } from "@/components/share-link";
 import { createResetLinkFromRequest, type LinkResult } from "./patients/actions";
 
@@ -14,10 +14,26 @@ export function ResetRequests({ items }: { items: ResetRequestItem[] }) {
   // A request leaves the server's list as soon as its link exists, so keep the row on screen
   // until the page is left; otherwise the send buttons would vanish before they can be used.
   const [kept, setKept] = useState<Record<string, ResetRequestItem>>({});
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  // Tracked per request id (not a single shared flag) so a morning backlog of several requests
+  // can be worked through one click after another without each row waiting on the previous one.
+  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
   const rows = [...items, ...Object.values(kept).filter((k) => !items.some((i) => i.id === k.id))];
   if (rows.length === 0) return null;
+
+  async function handleCreate(r: ResetRequestItem) {
+    setBusyIds((s) => new Set(s).add(r.id));
+    try {
+      const out = await createResetLinkFromRequest(r.id);
+      setResults((m) => ({ ...m, [r.id]: out }));
+      if (out.link) setKept((m) => ({ ...m, [r.id]: r }));
+    } finally {
+      setBusyIds((s) => {
+        const next = new Set(s);
+        next.delete(r.id);
+        return next;
+      });
+    }
+  }
 
   return (
     <section aria-labelledby="h-resets">
@@ -37,17 +53,19 @@ export function ResetRequests({ items }: { items: ResetRequestItem[] }) {
                 {!res?.link && (
                   <button
                     className="btn btn-sm min-h-11"
-                    disabled={pending}
-                    onClick={() => { setBusyId(r.id); start(async () => { const out = await createResetLinkFromRequest(r.id); setResults((m) => ({ ...m, [r.id]: out })); if (out.link) setKept((m) => ({ ...m, [r.id]: r })); setBusyId(null); }); }}
+                    disabled={busyIds.has(r.id)}
+                    onClick={() => handleCreate(r)}
                   >
-                    {pending && busyId === r.id ? t("יוצר…") : t("יצירת קישור לאיפוס")}
+                    {busyIds.has(r.id) ? t("יוצר…") : t("יצירת קישור לאיפוס")}
                   </button>
                 )}
               </div>
-              {res?.error && <p role="alert" className="text-sm text-bad">{res.error}</p>}
-              {res?.link && res.message && (
-                <ShareLink link={res.link} message={res.message} phone={res.phone} email={res.email} emailSubject={t("איפוס סיסמה")} />
-              )}
+              <div aria-live="polite">
+                {res?.error && <p role="alert" className="text-sm text-bad">{res.error}</p>}
+                {res?.link && res.message && (
+                  <ShareLink link={res.link} message={res.message} phone={res.phone} email={res.email} emailSubject={t("איפוס סיסמה")} />
+                )}
+              </div>
             </div>
           );
         })}

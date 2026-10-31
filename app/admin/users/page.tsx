@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
 import { Icon } from "@/components/ui";
 import { ViewAsRow } from "./view-as-row";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,12 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const sort: Sort = sp.sort === "recent" || sp.sort === "newest" ? sp.sort : "name";
   const { db } = await requireAdmin();
 
-  const [{ data: profiles }, { data: clinics }, { data: admins }] = await Promise.all([
-    db.from("profiles").select("id, clinic_id, role, full_name, disabled, created_at"),
+  // profiles is every user account across every clinic on the platform — the most likely table
+  // here to eventually exceed Supabase's 1000-row-per-request cap, so it's paged defensively.
+  const [profiles, { data: clinics }, { data: admins }] = await Promise.all([
+    fetchAllRows<{ id: string; clinic_id: string | null; role: string; full_name: string; disabled: boolean; created_at: string | null }>((from, to) =>
+      db.from("profiles").select("id, clinic_id, role, full_name, disabled, created_at").range(from, to),
+    ),
     db.from("clinics").select("id, name"),
     db.from("platform_admins").select("user_id"),
   ]);
@@ -63,12 +68,12 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   const clinicName = new Map((clinics ?? []).map((c) => [c.id as string, c.name as string]));
   type Row = { id: string; name: string; role: RoleKey; clinicId: string | null; clinic: string; username: string; disabled: boolean; last: string | null; created: string | null };
-  const rows: Row[] = (profiles ?? []).map((p) => ({
+  const rows: Row[] = profiles.map((p) => ({
     id: p.id,
     name: p.full_name,
     role: p.role as RoleKey,
     clinicId: p.clinic_id ?? null,
-    clinic: clinicName.get(p.clinic_id) ?? "—",
+    clinic: (p.clinic_id ? clinicName.get(p.clinic_id) : undefined) ?? "—",
     username: auth.get(p.id)?.email.split("@")[0] ?? "",
     disabled: !!p.disabled,
     last: auth.get(p.id)?.last ?? null,

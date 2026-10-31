@@ -1,3 +1,4 @@
+import { PublicBrand } from "@/components/public-brand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -23,6 +24,7 @@ type Invite = {
 function Shell({ clinic, children }: { clinic?: string; children: React.ReactNode }) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6 sm:py-12">
+      <PublicBrand logo />
       {clinic && <p className="mb-4 text-center text-sm font-medium text-muted">{clinic}</p>}
       <div className="card p-6 sm:p-8">{children}</div>
     </main>

@@ -76,7 +76,11 @@ export default async function TemplatesPage() {
                   </div>
                   <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
                     <span>{tasksLabel(tasks, t)}</span>
-                    <span className={used > 0 ? "font-medium text-accent" : undefined}>{usedLabel(used, t)}</span>
+                    {used > 0 ? (
+                      <Link href={`/clinic/patients?template=${tpl.id}`} className="font-medium text-accent hover:underline">{usedLabel(used, t)}</Link>
+                    ) : (
+                      <span>{usedLabel(used, t)}</span>
+                    )}
                     {tpl.updated_at && <span>{t("עודכנה {date}", { date: fmtDate(tpl.updated_at, lang) })}</span>}
                   </p>
                 </div>

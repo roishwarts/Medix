@@ -78,6 +78,7 @@ export async function saveClinicContact(
   phone: string,
   emergencyPhone: string,
   officeHours: string,
+  address: string,
 ): Promise<{ error?: string }> {
   const t = await getT();
   await requireProfile(["staff", "doctor"]);
@@ -90,6 +91,10 @@ export async function saveClinicContact(
     p_office_hours: officeHours,
   });
   if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-contact-info.sql.") };
+  // Separate RPC/patch (patch-clinic-address-self.sql): don't fail the whole save if only this
+  // one hasn't been installed yet — the rest of the card already saved successfully above.
+  const { error: addrError } = await supabase.rpc("save_clinic_address", { p_address: address });
+  if (addrError) return { error: t("שאר הפרטים נשמרו, אבל הכתובת לא. ודאו שהורצה התוספת supabase/patch-clinic-address-self.sql.") };
   revalidatePath("/clinic/content");
   revalidatePath("/journey");
   return {};

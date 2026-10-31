@@ -4,16 +4,21 @@ import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
 import { Icon } from "@/components/ui";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
   const t = await getT();
   const { db } = await requireAdmin();
-  const [{ data: clinics, error: clinicsError }, { data: people }, { data: patients }] = await Promise.all([
+  // profiles and patients are platform-wide (every clinic), so they're the ones most likely to grow
+  // past Supabase's 1000-row-per-request cap as more clinics join — paged defensively.
+  const [{ data: clinics, error: clinicsError }, people, patients] = await Promise.all([
     db.from("clinics").select("id, name, created_at").order("created_at", { ascending: false }),
-    db.from("profiles").select("clinic_id, role, full_name, disabled").in("role", ["doctor", "staff"]),
-    db.from("patients").select("clinic_id"),
+    fetchAllRows<{ clinic_id: string; role: "doctor" | "staff"; full_name: string; disabled: boolean }>((from, to) =>
+      db.from("profiles").select("clinic_id, role, full_name, disabled").in("role", ["doctor", "staff"]).range(from, to),
+    ),
+    fetchAllRows<{ clinic_id: string }>((from, to) => db.from("patients").select("clinic_id").range(from, to)),
   ]);
 
   if (clinicsError) {
@@ -29,9 +34,9 @@ export default async function AdminHome() {
 
   const count = (clinics ?? []).length;
   const rows = (clinics ?? []).map((c) => {
-    const staff = (people ?? []).filter((p) => p.clinic_id === c.id);
+    const staff = people.filter((p) => p.clinic_id === c.id);
     const doctors = staff.filter((p) => p.role === "doctor");
-    return { clinic: c, staff, doctors, patientCount: (patients ?? []).filter((p) => p.clinic_id === c.id).length };
+    return { clinic: c, staff, doctors, patientCount: patients.filter((p) => p.clinic_id === c.id).length };
   });
   const noDoctorCount = rows.filter((r) => r.doctors.length === 0).length;
 
