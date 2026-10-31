@@ -11,6 +11,7 @@ import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
+import { requireProfile } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +43,8 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; kd?: string; rd?: string }> }) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [allJourneys, resetRes, eventsRes, { data: placements }, options] = await Promise.all([
+  const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
+  const [allJourneys, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -53,7 +54,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       .limit(5),
     supabase.from("patients").select("id, hospital"),
     getClinicOptions(),
+    supabase.from("templates").select("id", { count: "exact", head: true }),
   ]);
+  const templateCount = templatesRes.count ?? 0;
   const t0 = today();
   const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
@@ -106,6 +109,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
         </div>
       </header>
+
+      {templateCount === 0 ? (
+        <div className="card space-y-3 border-accent-line bg-accent-soft p-5">
+          <p className="font-medium">{t("בואו נתחיל: עוד אין תבנית פרוטוקול במרפאה")}</p>
+          <p className="text-sm text-muted">
+            {profile.role === "doctor"
+              ? t("תבנית מגדירה את שלבי ההכנה לניתוח — איזה מסמכים צריך, מתי, וממי. אחרי שתיצרו אחת, אפשר להוסיף מטופלים.")
+              : t("בקשו מהרופא להגדיר תבנית פרוטוקול ראשונה. ברגע שתהיה תבנית, אפשר יהיה להוסיף מטופלים.")}
+          </p>
+          {profile.role === "doctor" && (
+            <Link href="/clinic/templates/new" className="btn btn-primary btn-sm">{t("יצירת תבנית ראשונה")}</Link>
+          )}
+        </div>
+      ) : allJourneys.length === 0 && (
+        <div className="card space-y-3 border-accent-line bg-accent-soft p-5">
+          <p className="font-medium">{t("צעד הבא: הוספת המטופל הראשון")}</p>
+          <p className="text-sm text-muted">{t("יש לכם תבנית מוכנה — עכשיו אפשר להתחיל מסלול למטופל הראשון שלכם.")}</p>
+          <Link href="/clinic/patients/new" className="btn btn-primary btn-sm">{t("הוספת מטופל")}</Link>
+        </div>
+      )}
 
       {resetRequests > 0 && (
         <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">

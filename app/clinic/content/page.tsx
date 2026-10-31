@@ -38,7 +38,7 @@ export default async function ClinicContentPage() {
       </p>
 
       <div className="mt-6 space-y-5">
-        <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} />
+        <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} />
         <ContactForm
           initial={{
             contact_name: profile.contact_name,

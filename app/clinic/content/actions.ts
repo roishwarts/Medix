@@ -116,6 +116,18 @@ export async function removeClinicLogo(): Promise<{ error?: string }> {
   return {};
 }
 
+export async function saveClinicBrandColor(color: string): Promise<{ error?: string }> {
+  await requireProfile(["staff", "doctor"]);
+  if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) return { error: "צבע לא תקין" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_clinic_brand_color", { p_color: color });
+  if (error) return { error: "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-brand-color.sql." };
+  revalidatePath("/clinic/content");
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return {};
+}
+
 export async function removeClinicVideo(id: string): Promise<{ error?: string }> {
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();

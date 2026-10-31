@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
+import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ActivityBadge } from "./activity-badge";
 
@@ -29,6 +30,7 @@ export default async function ClinicLayout({ children }: { children: React.React
   ];
   return (
     <div className="min-h-dvh pb-24 md:pb-0">
+      <BrandTheme color={profile.brand_color} />
       <ImpersonationBanner />
       <AppHeader items={items} brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8"><BackButton home="/clinic" roots={items.map((i) => i.href)} />{children}</div>
