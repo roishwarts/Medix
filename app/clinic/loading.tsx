@@ -1,9 +1,11 @@
 // Shown the moment the dashboard opens, mirroring its layout (KPI tiles, then the two-column
 // surgeries/attention + readiness/updates sections) so the page doesn't jump around once data lands.
+import { Tr } from "@/components/i18n-provider";
+
 export default function Loading() {
   return (
     <div className="animate-pulse space-y-8" aria-busy="true" role="status">
-      <span className="sr-only">טוען</span>
+      <span className="sr-only"><Tr k="טוען" /></span>
       <div className="flex items-center justify-between gap-3">
         <div className="h-9 w-40 rounded-xl bg-paper" />
         <div className="h-9 w-28 rounded-xl bg-paper" />
