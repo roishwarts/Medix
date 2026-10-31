@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
-import { formatDateLong } from "@/lib/dates";
-import { cancelJourney, uncancelJourney, CANCEL_REASONS, type CancelReason } from "../actions";
+import { formatDateLong, israelParts } from "@/lib/dates";
+import { cancelJourney, uncancelJourney } from "../actions";
+import { CANCEL_REASONS, type CancelReason } from "@/lib/cancel-reasons";
 
 const REASON_LABEL: Record<CancelReason, string> = {
   patient_request: "בקשת המטופל",
@@ -37,7 +38,7 @@ export function CancelJourney({
       <div className="card border-s-4 border-s-bad bg-bad/5 px-4 py-3">
         <p className="font-medium text-bad">{t("הניתוח בוטל")}</p>
         <p className="mt-0.5 text-sm text-muted">
-          {t("סיבה: {reason} · {date}", { reason: t(REASON_LABEL[cancelledReason ?? "other"]), date: formatDateLong(cancelledAt, lang) })}
+          {t("סיבה: {reason} · {date}", { reason: t(REASON_LABEL[cancelledReason ?? "other"]), date: formatDateLong(israelParts(cancelledAt).date, lang) })}
         </p>
         <button
           type="button"

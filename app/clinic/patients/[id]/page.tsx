@@ -24,7 +24,7 @@ import { getClinicOptions } from "@/lib/clinic-options";
 import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
 import { CancelJourney } from "./cancel-journey";
-import type { CancelReason } from "../actions";
+import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
 

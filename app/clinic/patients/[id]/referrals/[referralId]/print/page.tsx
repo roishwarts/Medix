@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import { formatDateLong } from "@/lib/dates";
+import { formatDateLong, israelParts } from "@/lib/dates";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "./print-button";
@@ -35,14 +35,14 @@ export default async function ReferralPrintPage({ params }: { params: Promise<{ 
       <div className="card space-y-6 p-8 print:border-0 print:p-0 print:shadow-none">
         <header className="flex items-start justify-between gap-4 border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            {profile.logo_url && <img src={profile.logo_url} alt="" className="h-14 w-auto object-contain" />}
-            <div>
-              <p className="text-lg font-semibold">{profile.clinic_name}</p>
+            {profile.logo_url && <img src={profile.logo_url} alt={profile.clinic_name} className="h-12 w-auto max-w-[14rem] object-contain" />}
+            <div className="min-w-0">
+              {!profile.logo_url && <p className="text-lg font-semibold">{profile.clinic_name}</p>}
               {profile.clinic_address && <p className="text-sm text-muted">{profile.clinic_address}</p>}
               {profile.contact_phone && <p className="text-sm text-muted" dir="ltr">{profile.contact_phone}</p>}
             </div>
           </div>
-          <p className="shrink-0 text-sm text-muted">{formatDateLong(referral.created_at, lang)}</p>
+          <p className="shrink-0 text-sm text-muted">{formatDateLong(israelParts(referral.created_at).date, lang)}</p>
         </header>
 
         <div>
