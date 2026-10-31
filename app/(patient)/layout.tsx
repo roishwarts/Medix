@@ -24,7 +24,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
   ];
   return (
     <div className="min-h-dvh pb-24 md:pb-16">
-      <BrandTheme color={profile.brand_color} />
+      <BrandTheme brand={{ color: profile.brand_color, dark: profile.brand_dark, gold: profile.brand_gold }} />
       <ImpersonationBanner />
       <AppHeader items={items} home="/journey" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">

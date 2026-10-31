@@ -60,7 +60,7 @@ export function AppHeader({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt={brand} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain px-1 md:h-9 md:max-w-[15rem]" />
             ) : (
-              <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
+              <span className="tb-muted min-w-0 truncate px-1 text-sm">{brand}</span>
             )}
             <span className="hidden md:block"><AccessMenu languages={languages} /></span>
             <span className="hidden md:block">{logout}</span>

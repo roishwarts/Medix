@@ -61,13 +61,15 @@ export default async function JourneyPage() {
   return (
     <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
       <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-2">
-        <p className="mb-1 text-muted">{t("שלום {name}", { name: profile.full_name })}</p>
+        <div className="hero">
+        <p className="hero-muted mb-1">{t("שלום {name}", { name: profile.full_name })}</p>
         <div className="flex items-start justify-between gap-3">
           <h1 className="display text-3xl">{heading}</h1>
           <HomeSettingsButton home="/journey" />
         </div>
-        <p className="mt-1 text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
-        {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
+        <p className="hero-accent mt-1 font-medium">{formatDateLong(journey.surgery_date, lang)}</p>
+        {surgeryPassed && <p className="hero-muted mt-3">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
+        </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <AddToCalendar next={nextCalendarEvent} />
