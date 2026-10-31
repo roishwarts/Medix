@@ -325,3 +325,27 @@ export async function setPatientStage(patientId: string, stage: Stage | null): P
   revalidatePath("/clinic", "layout");
   return {};
 }
+
+export const CANCEL_REASONS = ["patient_request", "medical", "insurance", "clinic_schedule", "other"] as const;
+export type CancelReason = (typeof CANCEL_REASONS)[number];
+
+export async function cancelJourney(journeyId: string, reason: CancelReason) {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  if (!CANCEL_REASONS.includes(reason)) return { error: t("סיבה לא תקינה") };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_journey", { p_journey: journeyId, p_reason: reason });
+  if (error) return { error: t("שמירת הביטול נכשלה. ודאו שהורצה התוספת supabase/patch-outcomes.sql.") };
+  revalidatePath("/clinic", "layout");
+  return {};
+}
+
+export async function uncancelJourney(journeyId: string) {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("uncancel_journey", { p_journey: journeyId });
+  if (error) return { error: t("השמירה נכשלה") };
+  revalidatePath("/clinic", "layout");
+  return {};
+}

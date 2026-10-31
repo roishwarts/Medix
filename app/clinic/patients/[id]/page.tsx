@@ -23,6 +23,8 @@ import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
+import { CancelJourney } from "./cancel-journey";
+import type { CancelReason } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +112,8 @@ export default async function PatientPage({
       .order("created_at", { ascending: false }),
   ]);
   const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
+  // Separate query so the page still works before patch-outcomes.sql is applied.
+  const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -155,6 +159,7 @@ export default async function PatientPage({
           </div>
         )}
       </section>
+      <CancelJourney journeyId={journey.id} lang={lang} cancelledAt={cancelRow?.cancelled_at ?? null} cancelledReason={(cancelRow?.cancelled_reason ?? null) as CancelReason | null} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
           {tr("כל המשימות")}
