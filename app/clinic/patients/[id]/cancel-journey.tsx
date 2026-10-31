@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { formatDateLong } from "@/lib/dates";
 import { cancelJourney, uncancelJourney, CANCEL_REASONS, type CancelReason } from "../actions";
@@ -25,6 +26,7 @@ export function CancelJourney({
   cancelledReason: CancelReason | null;
 }) {
   const t = useT();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<CancelReason>("patient_request");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function CancelJourney({
           type="button"
           className="mt-2 text-sm font-medium text-accent hover:underline"
           disabled={pending}
-          onClick={() => start(async () => { await uncancelJourney(journeyId); })}
+          onClick={() => start(async () => { await uncancelJourney(journeyId); router.refresh(); })}
         >
           {t("ביטול הסימון (זה טעות)")}
         </button>
@@ -76,7 +78,7 @@ export function CancelJourney({
             start(async () => {
               const res = await cancelJourney(journeyId, reason);
               if (res.error) setError(res.error);
-              else setOpen(false);
+              else { setOpen(false); router.refresh(); }
             });
           }}
         >
