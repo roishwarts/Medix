@@ -11,6 +11,11 @@ export type Profile = {
   clinic_name: string;
   mfa_required: boolean;
   clinic_address: string | null;
+  contact_name: string | null;
+  contact_role: string | null;
+  contact_phone: string | null;
+  emergency_phone: string | null;
+  office_hours: string | null;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
@@ -42,7 +47,16 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     .eq("id", userId)
     .maybeSingle();
   if (!data || data.disabled) return null;
-  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string; mfa_required?: boolean; address?: string | null } | null;
+  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as {
+    name: string;
+    mfa_required?: boolean;
+    address?: string | null;
+    contact_name?: string | null;
+    contact_role?: string | null;
+    contact_phone?: string | null;
+    emergency_phone?: string | null;
+    office_hours?: string | null;
+  } | null;
   return {
     id: data.id,
     clinic_id: data.clinic_id,
@@ -51,6 +65,11 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     clinic_name: clinic?.name ?? "",
     mfa_required: !!clinic?.mfa_required,
     clinic_address: clinic?.address ?? null,
+    contact_name: clinic?.contact_name ?? null,
+    contact_role: clinic?.contact_role ?? null,
+    contact_phone: clinic?.contact_phone ?? null,
+    emergency_phone: clinic?.emergency_phone ?? null,
+    office_hours: clinic?.office_hours ?? null,
   };
 });
 

@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClinicLinks, getClinicVideos } from "@/lib/clinic-content";
+import { ContactForm } from "./contact-form";
 import { GeneralInfoForm } from "./general-info-form";
 import { LinksForm } from "./links-form";
 import { VideosForm } from "./videos-form";
@@ -28,6 +29,15 @@ export default async function ClinicContentPage() {
       </p>
 
       <div className="mt-6 space-y-5">
+        <ContactForm
+          initial={{
+            contact_name: profile.contact_name,
+            contact_role: profile.contact_role,
+            contact_phone: profile.contact_phone,
+            emergency_phone: profile.emergency_phone,
+            office_hours: profile.office_hours,
+          }}
+        />
         <GeneralInfoForm templates={templates ?? []} />
         <LinksForm links={links} />
         <VideosForm clinicId={profile.clinic_id} videos={videos} />

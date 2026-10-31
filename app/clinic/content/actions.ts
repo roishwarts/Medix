@@ -61,6 +61,28 @@ export async function addClinicVideo(title: string, phase: "before" | "after", s
   return {};
 }
 
+export async function saveClinicContact(
+  name: string,
+  role: string,
+  phone: string,
+  emergencyPhone: string,
+  officeHours: string,
+): Promise<{ error?: string }> {
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_clinic_contact_info", {
+    p_contact_name: name,
+    p_contact_role: role,
+    p_contact_phone: phone,
+    p_emergency_phone: emergencyPhone,
+    p_office_hours: officeHours,
+  });
+  if (error) return { error: "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-contact-info.sql." };
+  revalidatePath("/clinic/content");
+  revalidatePath("/journey");
+  return {};
+}
+
 export async function removeClinicVideo(id: string): Promise<{ error?: string }> {
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();
