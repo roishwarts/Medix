@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import { formatDate } from "@/lib/dates";
+import { formatDate, israelParts } from "@/lib/dates";
 
 type Referral = { id: string; recipient: string; reason: string; createdAt: string };
 
@@ -21,7 +21,7 @@ export async function ReferralsCard({ patientId, canCreate, items }: { patientId
           >
             <p className="font-medium">{r.recipient}</p>
             <p className="mt-0.5 truncate text-muted">{r.reason}</p>
-            <p className="mt-0.5 text-xs text-muted">{formatDate(r.createdAt, lang)}</p>
+            <p className="mt-0.5 text-xs text-muted">{formatDate(israelParts(r.createdAt).date, lang)}</p>
           </Link>
         ))
       )}
