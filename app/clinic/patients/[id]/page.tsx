@@ -179,12 +179,24 @@ export default async function PatientPage({
               {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (
                 <div className="mt-3 space-y-1 text-sm">
                   {t.evidence_name && (
-                    <p className="flex items-center gap-2 break-words">
-                      <Icon name="file" />
-                      {urls.get(t.id) ? (
-                        <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center break-all underline underline-offset-4 sm:min-h-0">{t.evidence_name}</a>
-                      ) : t.evidence_name}
-                    </p>
+                    <div>
+                      {urls.get(t.id) && /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(t.evidence_name) && (
+                        <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="mb-1.5 block w-fit">
+                          <img
+                            src={urls.get(t.id)}
+                            alt={tr("תמונה שהועלתה: {name}", { name: t.evidence_name })}
+                            loading="lazy"
+                            className="max-h-48 w-auto rounded-xl border border-line object-contain"
+                          />
+                        </a>
+                      )}
+                      <p className="flex items-center gap-2 break-words">
+                        <Icon name="file" />
+                        {urls.get(t.id) ? (
+                          <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center break-all underline underline-offset-4 sm:min-h-0">{t.evidence_name}</a>
+                        ) : t.evidence_name}
+                      </p>
+                    </div>
                   )}
                   {t.submitted_by && cgByUser.get(t.submitted_by) && (
                     <p className="text-muted">

@@ -11,6 +11,7 @@ import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
+import { requireProfile } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +43,8 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; kd?: string; rd?: string }> }) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [allJourneys, resetRes, eventsRes, { data: placements }, options] = await Promise.all([
+  const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
+  const [allJourneys, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -53,7 +54,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       .limit(5),
     supabase.from("patients").select("id, hospital"),
     getClinicOptions(),
+    supabase.from("templates").select("id", { count: "exact", head: true }),
   ]);
+  const templateCount = templatesRes.count ?? 0;
   const t0 = today();
   const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
@@ -65,6 +68,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const items: ActionItem[] = journeys.flatMap((j) => actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0));
   const reviewCount = items.filter((i) => i.kind === "review").length;
   const overdueCount = items.filter((i) => i.kind === "overdue").length;
+  const rejectedCount = items.filter((i) => i.kind === "rejected").length;
 
   const surgeryDays = parseDays(sp.kd) ?? DEFAULT_SURGERY_DAYS;
   const readyDays = parseDays(sp.rd) ?? DEFAULT_READY_DAYS;
@@ -79,10 +83,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const progressN = upcoming.length - readyN - lateN;
 
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
+  const ATTENTION_RANK: Partial<Record<ActionItem["kind"], number>> = { rejected: 0, review: 1, overdue: 2 };
   const attention = items
-    .filter((i) => i.kind === "review" || i.kind === "overdue")
-    .sort((a, b) => (a.kind === b.kind ? (a.task.dueDate < b.task.dueDate ? -1 : 1) : a.kind === "review" ? -1 : 1))
+    .filter((i) => i.kind === "review" || i.kind === "overdue" || i.kind === "rejected")
+    .sort((a, b) => (a.kind === b.kind ? (a.task.dueDate < b.task.dueDate ? -1 : 1) : ATTENTION_RANK[a.kind]! - ATTENTION_RANK[b.kind]!))
     .slice(0, 6);
+  const notReadyThisWeek = thisWeek.filter((j) => j.summary.readiness < 100);
 
   const updates = toItems(((eventsRes.data ?? []) as ActivityRow[]).slice(0, 5), {
     t,
@@ -98,8 +104,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <main className="space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h1 className="display text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
-        <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
+        <div className="flex items-center gap-3">
+          <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
+          <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
+        </div>
       </header>
+
+      {templateCount === 0 ? (
+        <div className="card space-y-3 border-accent-line bg-accent-soft p-5">
+          <p className="font-medium">{t("בואו נתחיל: עוד אין תבנית פרוטוקול במרפאה")}</p>
+          <p className="text-sm text-muted">
+            {profile.role === "doctor"
+              ? t("תבנית מגדירה את שלבי ההכנה לניתוח — איזה מסמכים צריך, מתי, וממי. אחרי שתיצרו אחת, אפשר להוסיף מטופלים.")
+              : t("בקשו מהרופא להגדיר תבנית פרוטוקול ראשונה. ברגע שתהיה תבנית, אפשר יהיה להוסיף מטופלים.")}
+          </p>
+          {profile.role === "doctor" && (
+            <Link href="/clinic/templates/new" className="btn btn-primary btn-sm">{t("יצירת תבנית ראשונה")}</Link>
+          )}
+        </div>
+      ) : allJourneys.length === 0 && (
+        <div className="card space-y-3 border-accent-line bg-accent-soft p-5">
+          <p className="font-medium">{t("צעד הבא: הוספת המטופל הראשון")}</p>
+          <p className="text-sm text-muted">{t("יש לכם תבנית מוכנה — עכשיו אפשר להתחיל מסלול למטופל הראשון שלכם.")}</p>
+          <Link href="/clinic/patients/new" className="btn btn-primary btn-sm">{t("הוספת מטופל")}</Link>
+        </div>
+      )}
 
       {resetRequests > 0 && (
         <Link href="/clinic/tasks" className="card flex min-h-14 items-center justify-between gap-3 border-warn/30 bg-warn-soft px-4 py-3">
@@ -110,7 +139,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </Link>
       )}
 
-      <section aria-label={t("מדדים עיקריים")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label={t("מדדים עיקריים")} className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} />
         <Kpi href="/clinic/tasks?status=review" label={t("משימות ממתינות לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} />
         <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
@@ -124,6 +154,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="min-w-0 space-y-8 lg:col-span-3">
           <section aria-labelledby="h-week">
             <SectionTitle id="h-week" count={thisWeek.length} href="/clinic/calendar" linkLabel={t("ליומן")}>{t("ניתוחים השבוע")}</SectionTitle>
+            {notReadyThisWeek.length > 0 && (
+              <Link href="/clinic/patients" className="card mb-3 flex min-h-12 items-center justify-between gap-3 border-bad/30 bg-bad-soft px-4 py-2.5">
+                <span className="font-medium text-bad">
+                  {t("{n} מתוך {total} הניתוחים השבוע עדיין לא מוכנים", { n: notReadyThisWeek.length, total: thisWeek.length })}
+                </span>
+                <span className="shrink-0 text-sm text-bad">{t("לצפייה")}</span>
+              </Link>
+            )}
             {thisWeek.length === 0 ? (
               <p className="card px-4 py-8 text-center text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
             ) : (
@@ -143,7 +181,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </section>
 
           <section aria-labelledby="h-attention">
-            <SectionTitle id="h-attention" count={reviewCount + overdueCount} href="/clinic/tasks" linkLabel={t("לכל המשימות")}>{t("דורש טיפול")}</SectionTitle>
+            <SectionTitle id="h-attention" count={reviewCount + overdueCount + rejectedCount} href="/clinic/tasks" linkLabel={t("לכל המשימות")}>{t("דורש טיפול")}</SectionTitle>
             {attention.length === 0 ? (
               <p className="card px-4 py-8 text-center text-muted">{t("אין משימות שממתינות לטיפול. הכול מעודכן.")}</p>
             ) : (
@@ -151,12 +189,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 {attention.map((i) => (
                   <Link key={i.task.id} href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row">
                     <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                    <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" ? "font-medium text-bad" : "text-warn"}`}>
-                      {i.kind === "review" ? t("ממתין לבדיקה") : t("באיחור · {when}", { when: relativeDays(i.task.dueDate, t0, lang) })}
+                    <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-warn"}`}>
+                      {i.kind === "rejected" ? t("הוחזר לתיקון") : i.kind === "review" ? t("ממתין לבדיקה") : t("באיחור · {when}", { when: relativeDays(i.task.dueDate, t0, lang) })}
                     </span>
                     <span className="col-span-2 min-w-0 break-words text-sm text-muted">
                       {i.task.title}
-                      {i.kind === "overdue" && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
+                      {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
                     </span>
                   </Link>
                 ))}
