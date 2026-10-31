@@ -180,50 +180,59 @@ export default async function JourneyPage() {
           </div>
         )}
 
-        {/* GENERAL INFO */}
-        {journey.patient_info && (
-          <div className="card mt-4 p-4">
-            <p className="text-sm font-medium text-muted">{t("מידע כללי לניתוח")}</p>
-            <p className="mt-1 whitespace-pre-wrap break-words">{journey.patient_info}</p>
-          </div>
-        )}
-
-        {/* INSTRUCTIONAL VIDEOS */}
+        {/* MORE INFO: general info, videos and links are reference material, not today's action — tucked behind a disclosure so the page doesn't read as a wall of cards. */}
         {(() => {
-          const relevant = videos.filter((v) => (surgeryPassed ? v.phase === "after" : true));
-          if (relevant.length === 0) return null;
+          const relevantVideos = videos.filter((v) => (surgeryPassed ? v.phase === "after" : true) && videoUrls[v.id]);
+          if (!journey.patient_info && relevantVideos.length === 0 && links.length === 0) return null;
           return (
-            <div className="card mt-4 p-4">
-              <p className="text-sm font-medium text-muted">{t("סרטוני הדרכה")}</p>
-              <ul className="mt-2 space-y-3">
-                {relevant.map((v) =>
-                  videoUrls[v.id] ? (
-                    <li key={v.id}>
-                      <p className="mb-1 break-words text-sm font-medium">{v.title}</p>
-                      <video controls preload="none" className="w-full rounded-xl" src={videoUrls[v.id]} />
-                    </li>
-                  ) : null,
+            <details className="card group mt-4">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium [&::-webkit-details-marker]:hidden">
+                <span>{t("מידע נוסף ועזרים")}</span>
+                <span className="text-sm text-accent">
+                  <span className="group-open:hidden">{t("הצגה")}</span>
+                  <span className="hidden group-open:inline">{t("הסתרה")}</span>
+                </span>
+              </summary>
+              <div className="space-y-4 border-t border-line px-4 pb-4 pt-4">
+                {journey.patient_info && (
+                  <div>
+                    <p className="text-sm font-medium text-muted">{t("מידע כללי לניתוח")}</p>
+                    <p className="mt-1 whitespace-pre-wrap break-words">{journey.patient_info}</p>
+                  </div>
                 )}
-              </ul>
-            </div>
+
+                {relevantVideos.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted">{t("סרטוני הדרכה")}</p>
+                    <ul className="mt-2 space-y-3">
+                      {relevantVideos.map((v) => (
+                        <li key={v.id}>
+                          <p className="mb-1 break-words text-sm font-medium">{v.title}</p>
+                          <video controls preload="none" className="w-full rounded-xl" src={videoUrls[v.id]} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {links.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted">{t("קישורים שימושיים")}</p>
+                    <ul className="mt-2 space-y-1">
+                      {links.map((l) => (
+                        <li key={l.id}>
+                          <a href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1.5 font-medium text-accent hover:underline">
+                            {l.label} <Icon name="arrow" size={12} />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </details>
           );
         })()}
-
-        {/* LINKS */}
-        {links.length > 0 && (
-          <div className="card mt-4 p-4">
-            <p className="text-sm font-medium text-muted">{t("קישורים שימושיים")}</p>
-            <ul className="mt-2 space-y-1">
-              {links.map((l) => (
-                <li key={l.id}>
-                  <a href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1.5 font-medium text-accent hover:underline">
-                    {l.label} <Icon name="arrow" size={12} />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       {/* TIMELINE */}

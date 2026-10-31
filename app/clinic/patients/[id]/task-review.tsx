@@ -49,10 +49,10 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
       {rejecting ? (
         <div className="space-y-2">
           <label className="lbl" htmlFor={`n-${taskId}`}>{t("מה צריך לתקן?")}</label>
-          <textarea id={`n-${taskId}`} className="field" placeholder={t("למשל: התמונה לא ברורה, נא לצלם שוב")} value={note} onChange={(e) => setNote(e.target.value)} autoFocus />
+          <textarea id={`n-${taskId}`} className="field" required placeholder={t("למשל: התמונה לא ברורה, נא לצלם שוב")} value={note} onChange={(e) => setNote(e.target.value)} autoFocus />
           <div className="flex gap-2">
-            <button className="btn btn-danger btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none" disabled={pending} onClick={() => run("reject")}>{t("החזרה לתיקון")}</button>
-            <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" onClick={() => setRejecting(false)}>{t("ביטול")}</button>
+            <button className="btn btn-danger btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none" disabled={pending || !note.trim()} onClick={() => run("reject")}>{pending ? t("שומר…") : t("החזרה לתיקון")}</button>
+            <button className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => { setRejecting(false); setNote(""); setError(null); }}>{t("ביטול")}</button>
           </div>
         </div>
       ) : (

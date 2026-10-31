@@ -16,3 +16,8 @@ export function whatsAppUrl(phone: string | null | undefined, text: string): str
 export function mailtoUrl(email: string | null | undefined, subject: string, body: string): string {
   return `mailto:${email ?? ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
+
+// Fallback for someone without WhatsApp: opens the phone's own SMS app with the message ready to send.
+export function smsUrl(phone: string | null | undefined, text: string): string {
+  return `sms:${phone ?? ""}?body=${encodeURIComponent(text)}`;
+}

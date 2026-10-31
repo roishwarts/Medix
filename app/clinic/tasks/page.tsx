@@ -10,7 +10,16 @@ import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
 
-const ORDER: ActionKind[] = ["rejected", "review", "overdue", "clinic", "upcoming"];
+const ORDER: ActionKind[] = ["rejected", "overdue", "review", "clinic", "upcoming"];
+// Colors the section heading so the urgent kinds (needing rework or already late) jump out
+// from the routine ones (waiting on review or just scheduled) when scanning the "all" view.
+const HEADING_TONE: Record<ActionKind, string> = {
+  rejected: "text-bad",
+  overdue: "text-bad",
+  review: "text-warn",
+  clinic: "text-ink",
+  upcoming: "text-ink",
+};
 
 const TABS: [ActionKind | "all", string][] = [
   ["all", "הכול"],
@@ -62,8 +71,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           when: israelParts(r.requested_at).date.split("-").reverse().join("."),
         }))}
       />
-      {active !== "all" && items.every((i) => i.kind !== active) && (
-        <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
+      {active === "all" && items.length === 0 ? (
+        <div role="status" className="card mt-6 px-4 py-12 text-center">
+          <p className="text-lg font-medium">{t("הכול מעודכן")}</p>
+          <p className="mt-1 text-muted">{t("אין כרגע משימות שממתינות לטיפול הצוות.")}</p>
+        </div>
+      ) : (
+        active !== "all" && items.every((i) => i.kind !== active) && (
+          <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
+        )
       )}
 
       <div className="grid gap-x-8 gap-y-8 lg:grid-cols-2 lg:items-start">
@@ -75,7 +91,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         return (
           <section key={kind} className={active === "all" ? "min-w-0" : "min-w-0 lg:col-span-2 lg:mx-auto lg:w-full lg:max-w-3xl"} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
-              <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
+              <h2 id={`h-${kind}`} className={`mb-3 flex items-baseline gap-2 text-lg font-medium ${HEADING_TONE[kind]}`}>
                 {t(ACTION_LABEL[kind])} <span className="num text-sm text-muted">{list.length}</span>
               </h2>
             )}

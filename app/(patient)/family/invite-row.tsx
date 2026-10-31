@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useT } from "@/components/i18n-provider";
+import { Icon } from "@/components/ui";
 import { revokeInvite } from "./actions";
 
 export function InviteRow({ id, name, relation, canAct, expires }: { id: string; name: string; relation: string; canAct: boolean; expires: string }) {
@@ -22,7 +23,12 @@ export function InviteRow({ id, name, relation, canAct, expires }: { id: string;
     <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
       <div className="min-w-0 flex-1 basis-48">
         <p className="break-words font-medium">{name ? `${name} · ${relation}` : relation}</p>
-        <p className="text-sm text-muted">{canAct ? t("עם הרשאת פעולה") : t("צפייה בלבד")} · {t("תקפה עד {date}", { date: expires })}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span className={`pill ${canAct ? "pill-info" : "pill-neutral"}`}>
+            <Icon name={canAct ? "check" : "lock"} size={11} /> {canAct ? t("עם הרשאת פעולה") : t("צפייה בלבד")}
+          </span>
+          <span className="inline-flex items-center gap-1"><Icon name="clock" size={13} /> {t("תקפה עד {date}", { date: expires })}</span>
+        </p>
         {error && <p role="alert" className="mt-1 text-sm text-bad">{error}</p>}
       </div>
       {confirming ? (

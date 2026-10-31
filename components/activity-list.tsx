@@ -15,7 +15,7 @@ export function ActivityList({ items, showPatient = true, markSeen = false }: { 
     if (markSeen) void markActivitySeen();
   }, [markSeen]);
 
-  if (items.length === 0) return <p className="card px-4 py-10 text-center text-muted">{t("אין עדכונים להצגה.")}</p>;
+  if (items.length === 0) return <p role="status" className="card px-4 py-10 text-center text-muted">{t("אין עדכונים להצגה.")}</p>;
 
   return (
     <ul className="card divide-y divide-line">

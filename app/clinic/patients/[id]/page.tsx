@@ -58,7 +58,14 @@ export default async function PatientPage({
   const { summary } = journey;
   const matches = (t: (typeof summary.tasks)[number], key: FilterKey) =>
     key === "all" || (key === "overdue" ? t.overdue : t.state === key);
-  const visibleTasks = summary.tasks.filter((t) => matches(t, active));
+  // In the unfiltered view, tasks that need the clinic's attention now surface above the rest
+  // (which stay in surgery-date order); within a single-status filter the order is unchanged.
+  const actionRank = (t: (typeof summary.tasks)[number]) => (t.overdue ? 0 : t.state === "rejected" ? 0 : t.state === "review" ? 1 : 2);
+  const needsAttention = summary.tasks.filter((t) => t.overdue || t.state === "rejected" || t.state === "review").length;
+  const visibleTasks =
+    active === "all"
+      ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
+      : summary.tasks.filter((t) => matches(t, active));
 
   const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: openInvites }, { data: historyRows }, urlEntries] = await Promise.all([
     supabase
@@ -137,11 +144,15 @@ export default async function PatientPage({
         )}
       </section>
       <section>
-        <h2 className="eyebrow mb-1">{tr("כל המשימות")}</h2>
+        <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
+          {tr("כל המשימות")}
+          {needsAttention > 0 && <span className="pill pill-bad">{tr("{n} דורשות תשומת לב", { n: needsAttention })}</span>}
+        </h2>
         <nav aria-label={tr("סינון משימות לפי סטטוס")} className="chip-row">
           {FILTERS.map(([key, label]) => {
             const count = summary.tasks.filter((t) => matches(t, key)).length;
             const on = key === active;
+            const isAttentionFilter = (key === "review" || key === "rejected" || key === "overdue") && count > 0;
             return (
               <Link
                 key={key}
@@ -150,12 +161,13 @@ export default async function PatientPage({
                 aria-current={on ? "page" : undefined}
                 className="chip min-h-11"
               >
-                {tr(label)} <span className="num text-xs">{count}</span>
+                {tr(label)}{" "}
+                <span className={`num text-xs ${isAttentionFilter ? (key === "review" ? "text-warn font-semibold" : "text-bad font-semibold") : ""}`}>{count}</span>
               </Link>
             );
           })}
         </nav>
-        {visibleTasks.length === 0 && <p className="card px-4 py-8 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
+        {visibleTasks.length === 0 && <p className="card mt-3 px-4 py-12 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
         <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
           {visibleTasks.map((t) => (
             <div key={t.id} className={`px-4 py-4 ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>

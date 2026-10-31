@@ -29,6 +29,7 @@ const DOT: Record<CalTone, string> = {
 };
 
 const tasksLabel = (n: number, t: T) => (n === 1 ? t("משימה אחת") : t("{n} משימות", { n }));
+const eventsLabel = (n: number, t: T) => (n === 1 ? t("אירוע אחד") : t("{n} אירועים", { n }));
 
 export function parseCalParams(sp: { view?: string; d?: string }) {
   const view: CalView = sp.view === "week" || sp.view === "agenda" ? sp.view : "month";
@@ -37,28 +38,30 @@ export function parseCalParams(sp: { view?: string; d?: string }) {
 }
 
 function Chip({ e, compact }: { e: CalEvent; compact?: boolean }) {
+  const isSurgery = e.kind === "surgery";
   return (
-    <span className={`block truncate rounded-md px-1.5 py-0.5 text-xs leading-snug ${CHIP[e.tone]}`}>
+    <span className={`block truncate rounded-md px-1.5 py-0.5 text-xs leading-snug ${CHIP[e.tone]} ${isSurgery ? "font-semibold" : ""}`}>
       {e.time && <span className="num me-1 font-medium">{e.time}</span>}
-      {compact && e.patient && e.kind !== "surgery" ? `${e.patient} · ` : ""}
+      {compact && e.patient && !isSurgery ? `${e.patient} · ` : ""}
       {e.title}
     </span>
   );
 }
 
 function EventRow({ e, showPatient, t }: { e: CalEvent; showPatient?: boolean; t: T }) {
+  const isSurgery = e.kind === "surgery";
   return (
     <Link href={e.href} className="link-row flex items-start gap-3 px-4 py-3">
-      <span className="num w-12 shrink-0 pt-0.5 text-sm text-muted">{e.time ?? (e.kind === "surgery" ? t("ניתוח") : "")}</span>
+      <span className="num w-12 shrink-0 pt-0.5 text-sm text-muted">{e.time ?? (isSurgery ? t("ניתוח") : "")}</span>
       <span className="min-w-0 flex-1">
-        <span className="block font-medium leading-snug">{e.title}</span>
+        <span className={`block leading-snug ${isSurgery ? "font-semibold" : "font-medium"}`}>{e.title}</span>
         <span className="block text-sm text-muted">
-          {showPatient && e.patient && e.kind !== "surgery" ? `${e.patient}` : ""}
-          {showPatient && e.patient && e.kind !== "surgery" && e.sub ? " · " : ""}
+          {showPatient && e.patient && !isSurgery ? `${e.patient}` : ""}
+          {showPatient && e.patient && !isSurgery && e.sub ? " · " : ""}
           {e.sub}
         </span>
       </span>
-      <span className={`mt-1.5 size-2.5 shrink-0 rounded-full ${DOT[e.tone]}`} />
+      <span className={`mt-1.5 size-2.5 shrink-0 rounded-full ${DOT[e.tone]} ${isSurgery ? "ring-2 ring-offset-1 ring-accent/40" : ""}`} />
     </Link>
   );
 }
@@ -150,7 +153,7 @@ export function Calendar({
       {view === "agenda" && <Agenda map={map} from={d} showPatient={showPatient} t0={t0} lang={lang} t={t} />}
 
       {view !== "agenda" && (
-        <section className="mt-6">
+        <section className="mt-6" aria-live="polite">
           <h3 className="eyebrow mb-2">
             {dayLabel(d, lang)} · {relativeDays(d, t0, lang)}
           </h3>
@@ -192,8 +195,12 @@ function MonthGrid({
           const shown = list.filter((e) => e.kind !== "deadline").slice(0, 2);
           const deadlines = list.filter((e) => e.kind === "deadline");
           const hidden = list.length - shown.length;
+          const hasSurgery = list.some((e) => e.kind === "surgery");
+          const dayAriaLabel = list.length
+            ? `${dayLabel(day, lang)}${hasSurgery ? `, ${t("יום ניתוח")}` : ""}, ${eventsLabel(list.length, t)}`
+            : dayLabel(day, lang);
           return (
-            <Link key={day} href={href({ d: day })} aria-label={dayLabel(day, lang)} aria-current={day === t0 ? "date" : undefined}
+            <Link key={day} href={href({ d: day })} aria-label={dayAriaLabel} aria-current={day === t0 ? "date" : undefined}
               className={`block -outline-offset-2 min-h-16 p-1 sm:min-h-28 sm:p-1.5 ${inMonth ? "bg-surface" : "bg-paper"} ${day === d ? "outline outline-2 -outline-offset-2 outline-accent" : ""} hover:bg-accent-soft`}>
               <span className={`num mb-1 grid size-6 place-items-center rounded-full text-xs ${day === t0 ? "bg-accent text-white" : inMonth ? "" : "text-line-strong"}`}>
                 {+day.slice(8)}
@@ -223,7 +230,7 @@ function MonthGrid({
 
 function Agenda({ map, from, showPatient, t0, lang, t }: { map: Map<string, CalEvent[]>; from: string; showPatient?: boolean; t0: string; lang: Lang; t: T }) {
   const days = Array.from({ length: 60 }, (_, i) => addDays(from, i)).filter((day) => map.has(day));
-  if (days.length === 0) return <p className="card mt-5 px-4 py-8 text-center text-muted">{t("אין אירועים בחודשיים הקרובים.")}</p>;
+  if (days.length === 0) return <p role="status" className="card mt-5 px-4 py-8 text-center text-muted">{t("אין אירועים בחודשיים הקרובים.")}</p>;
   return (
     <div className="mt-5 space-y-5">
       {days.map((day) => (

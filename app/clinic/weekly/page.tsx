@@ -53,19 +53,20 @@ export default async function WeeklySummaryPage() {
           )}
         </p>
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div>
+          <Link href="/clinic/tasks?status=rejected" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
             <p className={`num display text-3xl ${stat(rejected.length)}`}>{rejected.length}</p>
             <p className="text-sm text-muted">{t("הוחזר לתיקון")}</p>
-          </div>
-          <div>
+          </Link>
+          <Link href="/clinic/tasks?status=overdue" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
             <p className={`num display text-3xl ${stat(overdue.length)}`}>{overdue.length}</p>
             <p className="text-sm text-muted">{t("באיחור")}</p>
-          </div>
-          <div>
+          </Link>
+          <Link href="/clinic/tasks?status=review" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
             <p className="num display text-3xl text-warn">{review.length}</p>
             <p className="text-sm text-muted">{t("ממתין לבדיקה")}</p>
-          </div>
+          </Link>
         </div>
+        <p className="text-xs text-muted">{t("בכל המטופלים הפעילים, לא רק מי שמנותח השבוע")}</p>
       </section>
 
       <section aria-labelledby="h-surgeries">

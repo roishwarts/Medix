@@ -51,6 +51,11 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
 
   const sel = "field !min-h-9 w-auto max-w-[12rem] py-1 text-sm max-sm:max-w-none max-sm:flex-1";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
+  const hasFilters = !!q.trim() || !!hospital || days !== null || stage !== "active";
+  const clear = () => {
+    setQ(""); setHospital(""); setDays(null); setCustom(false); setStage("active");
+    window.history.replaceState(null, "", window.location.pathname);
+  };
 
   return (
     <>
@@ -88,6 +93,9 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
         <select aria-label={t("סטטוס המטופל")} className={sel} value={stage} onChange={(e) => { const s = e.target.value as StageFilter; setStage(s); sync({ stage: s }); }}>
           {stageOptions.map(([key, label]) => <option key={key} value={key}>{label} ({count(key)})</option>)}
         </select>
+        {hasFilters && (
+          <button type="button" onClick={clear} className="btn btn-quiet btn-sm !min-h-9">{t("ניקוי סינון")}</button>
+        )}
       </div>
         <div className="order-2 ms-auto md:order-3 md:ms-0">{action}</div>
       </div>

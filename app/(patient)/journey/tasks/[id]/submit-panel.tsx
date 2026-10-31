@@ -57,6 +57,17 @@ export function SubmitPanel({
     setFileName(null);
   }
 
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file && file.size > MAX_BYTES) {
+      setError(t("הקובץ גדול מדי (עד 10MB)"));
+      clearFile();
+      return;
+    }
+    setError(null);
+    setFileName(file?.name ?? null);
+  }
+
   const heading = resubmit ? t("שליחה מחדש") : requiresEvidence ? t("העלאת מסמך") : t("סיום המשימה");
   const submitLabel = pending
     ? t("שולח…")
@@ -90,7 +101,7 @@ export function SubmitPanel({
               className="peer sr-only"
               id="file"
               aria-describedby="file-hint"
-              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+              onChange={onFileChange}
             />
             <label
               htmlFor="file"
@@ -100,9 +111,12 @@ export function SubmitPanel({
               <span className="min-w-0 break-all" dir="auto">{fileName ?? t("בחירת קובץ או צילום")}</span>
             </label>
             {fileName && (
-              <button type="button" className="btn btn-quiet -mx-3 mt-1" onClick={clearFile}>
-                {t("הסרת הקובץ")}
-              </button>
+              <>
+                <p className="sr-only" role="status" aria-live="polite">{t("הקובץ {name} נבחר", { name: fileName })}</p>
+                <button type="button" className="btn btn-quiet -mx-3 mt-1" onClick={clearFile}>
+                  {t("הסרת הקובץ")}
+                </button>
+              </>
             )}
             <p id="file-hint" className="mt-1.5 text-sm text-muted">
               {t("תמונה או PDF, עד {size}. בטלפון אפשר לצלם ישירות.", { size: "10MB" })}

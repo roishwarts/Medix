@@ -38,7 +38,10 @@ export default async function PatientCalendarPage({ searchParams }: { searchPara
     .sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")))[0];
   return (
     <main>
-      <h1 className="display text-3xl">{t("היומן שלך")}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="display text-3xl">{t("היומן שלך")}</h1>
+        <a href="/api/calendar/ics" className="btn btn-sm">{t("הוספה ליומן")}</a>
+      </div>
       <p className="mb-5 mt-1 text-muted">
         {next ? (
           <>

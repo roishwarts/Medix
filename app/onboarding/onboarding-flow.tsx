@@ -53,14 +53,26 @@ export function OnboardingFlow() {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary mt-6 w-full"
-        disabled={pending}
-        onClick={() => (last ? finish() : setStep((s) => s + 1))}
-      >
-        {pending ? t("רק רגע…") : last ? t("בואו נתחיל") : t("הבא")}
-      </button>
+      <div className="mt-6 flex gap-3">
+        {step > 0 && (
+          <button
+            type="button"
+            className="btn btn-quiet"
+            disabled={pending}
+            onClick={() => setStep((s) => s - 1)}
+          >
+            {t("הקודם")}
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn btn-primary w-full"
+          disabled={pending}
+          onClick={() => (last ? finish() : setStep((s) => s + 1))}
+        >
+          {pending ? t("רק רגע…") : last ? t("בואו נתחיל") : t("הבא")}
+        </button>
+      </div>
     </div>
   );
 }
