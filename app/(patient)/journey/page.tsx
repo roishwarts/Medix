@@ -1,3 +1,5 @@
+import { AddToCalendar } from "@/components/add-to-calendar";
+import type { CalendarEvent } from "@/lib/calendar-links";
 import { HomeSettingsButton } from "@/components/home-settings";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
@@ -46,6 +48,14 @@ export default async function JourneyPage() {
   const folded = leading >= 3 ? preop.slice(0, leading) : [];
   const visiblePreop = preop.slice(folded.length);
 
+  // The next thing to add to a calendar: the surgery day or the nearest appointment, whichever comes first.
+  const nextPlace = nextAppt ? resolvePlace(nextAppt.location, profile.clinic_address) : null;
+  const apptEvent: CalendarEvent | null = nextAppt
+    ? { title: nextAppt.title, date: nextAppt.eventDate, time: nextAppt.eventTime, location: nextPlace?.address || nextPlace?.place || null, details: nextAppt.description }
+    : null;
+  const surgeryEvent: CalendarEvent | null = surgeryPassed ? null : { title: journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"), date: journey.surgery_date };
+  const nextCalendarEvent = apptEvent && surgeryEvent ? (apptEvent.date <= surgeryEvent.date ? apptEvent : surgeryEvent) : apptEvent ?? surgeryEvent;
+
   const heading = surgeryPassed ? t("הניתוח הושלם") : summary.daysToSurgery === 0 ? t("הניתוח היום") : t("הניתוח {when}", { when: relativeDays(journey.surgery_date, t0, lang).toLowerCase() });
 
   return (
@@ -60,7 +70,7 @@ export default async function JourneyPage() {
         {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <a href="/api/calendar/ics" className="btn btn-sm">{t("הוספה ליומן")}</a>
+          <AddToCalendar next={nextCalendarEvent} />
           {profile.role === "patient" && (
             <>
               <Link href="/family" className="btn btn-sm">{t("שיתוף עם בן משפחה")}</Link>

@@ -1,4 +1,4 @@
-// Screens added on dev-2: care team, red flags, branding, onboarding, weekly summary, error pages.
+// Screens added on dev-2.
 export const en: Record<string, string> = {
   "משהו השתבש": "Something went wrong",
   "ננסה שוב, או חזרו לדף הראשי אם זה חוזר.": "Try again, or go back to the main page if it keeps happening.",
@@ -72,6 +72,8 @@ export const en: Record<string, string> = {
   "כל משימה מגיעה בזמן הנכון. מעלים מסמך, מסמנים שבוצע — והצוות יעדכן אתכם ברגע שהוא אישר.": "Every task arrives at the right time. Upload a document or mark it done — and the team will update you as soon as it is approved.",
   "לא לבד בתהליך": "You are not alone in the process",
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "A care team is available at every step, and you can share the journey with a family member who will accompany you.",
+  "Google Calendar: האירוע הקרוב": "Google Calendar: the next event",
+  "כל האירועים (קובץ יומן)": "All events (calendar file)",
 };
 export const ru: Record<string, string> = {
   "משהו השתבש": "Что-то пошло не так",
@@ -146,6 +148,8 @@ export const ru: Record<string, string> = {
   "כל משימה מגיעה בזמן הנכון. מעלים מסמך, מסמנים שבוצע — והצוות יעדכן אתכם ברגע שהוא אישר.": "Каждая задача приходит вовремя. Загрузите документ или отметьте выполнение — и команда сообщит вам, как только одобрит.",
   "לא לבד בתהליך": "Вы не одни в этом процессе",
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "На каждом этапе вам доступна команда, и вы можете поделиться маршрутом с членом семьи, который будет рядом.",
+  "Google Calendar: האירוע הקרוב": "Google Календарь: ближайшее событие",
+  "כל האירועים (קובץ יומן)": "Все события (файл календаря)",
 };
 export const ar: Record<string, string> = {
   "משהו השתבש": "حدث خطأ ما",
@@ -220,4 +224,6 @@ export const ar: Record<string, string> = {
   "כל משימה מגיעה בזמן הנכון. מעלים מסמך, מסמנים שבוצע — והצוות יעדכן אתכם ברגע שהוא אישר.": "تصلك كل مهمة في الوقت المناسب. ارفع مستندًا أو علّم أنها تمت — وسيخبرك الفريق فور الموافقة.",
   "לא לבד בתהליך": "لست وحدك في هذه العملية",
   "יש לכם צוות מטפל זמין בכל שלב, ואפשר לשתף את המסלול עם בן משפחה שילווה אתכם.": "يتوفر لك فريق معالج في كل خطوة، ويمكنك مشاركة المسار مع أحد أفراد العائلة ليرافقك.",
+  "Google Calendar: האירוע הקרוב": "تقويم Google: الحدث القادم",
+  "כל האירועים (קובץ יומן)": "كل الأحداث (ملف تقويم)",
 };

@@ -20,6 +20,15 @@ function dateTimeStamp(dateIso: string, time: string): string {
   return `${dateStamp(dateIso)}T${time.replace(":", "")}00`;
 }
 
+// One hour after the start, so the event shows as a block in the calendar.
+function endStamp(dateIso: string, time: string): string {
+  const [y, m, d] = dateIso.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const end = new Date(Date.UTC(y, m - 1, d, hh + 1, mm));
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${end.getUTCFullYear()}${p(end.getUTCMonth() + 1)}${p(end.getUTCDate())}T${p(end.getUTCHours())}${p(end.getUTCMinutes())}00`;
+}
+
 function foldLine(line: string): string {
   // RFC 5545 §3.1: lines over 75 octets are folded with CRLF + a leading space.
   if (line.length <= 75) return line;
@@ -42,14 +51,14 @@ export async function GET() {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Medix//Patient Calendar//HE",
+    "PRODID:-//Patient Calendar//HE",
     "CALSCALE:GREGORIAN",
   ];
 
   // Surgery day: all-day event.
   lines.push(
     "BEGIN:VEVENT",
-    `UID:surgery-${journey.id}@medix`,
+    `UID:surgery-${journey.id}@calendar`,
     `DTSTAMP:${now}`,
     `DTSTART;VALUE=DATE:${dateStamp(journey.surgery_date)}`,
     `SUMMARY:${esc(journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"))}`,
@@ -60,13 +69,15 @@ export async function GET() {
   for (const task of journey.summary.tasks) {
     if (task.kind !== "appointment") continue;
     const place = resolvePlace(task.location, profile.clinic_address);
-    lines.push("BEGIN:VEVENT", `UID:task-${task.id}@medix`, `DTSTAMP:${now}`);
+    lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`);
+    // Floating local time (no time zone): the same clock time on any phone, with no time-zone definition needed.
     if (task.eventTime) {
-      lines.push(`DTSTART;TZID=Asia/Jerusalem:${dateTimeStamp(task.eventDate, task.eventTime)}`);
+      lines.push(`DTSTART:${dateTimeStamp(task.eventDate, task.eventTime)}`, `DTEND:${endStamp(task.eventDate, task.eventTime)}`);
     } else {
       lines.push(`DTSTART;VALUE=DATE:${dateStamp(task.eventDate)}`);
     }
     lines.push(`SUMMARY:${esc(task.title)}`);
+    if (task.description) lines.push(`DESCRIPTION:${esc(task.description)}`);
     if (place.address) lines.push(`LOCATION:${esc(place.address)}`);
     else if (place.place) lines.push(`LOCATION:${esc(place.place)}`);
     lines.push("END:VEVENT");
@@ -78,7 +89,8 @@ export async function GET() {
   return new Response(body, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="medix.ics"',
+      // inline: on iPhone and Mac the calendar opens straight away with the events, instead of saving a file.
+      "Content-Disposition": 'inline; filename="calendar.ics"',
       "Cache-Control": "no-store",
     },
   });
