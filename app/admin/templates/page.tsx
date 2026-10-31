@@ -7,11 +7,16 @@ export const dynamic = "force-dynamic";
 export default async function BaseTemplatesPage() {
   const t = await getT();
   const { db } = await requireAdmin();
-  const { data: templates } = await db
-    .from("templates")
-    .select("id, name, procedure, template_tasks(count)")
-    .eq("is_base", true)
-    .order("name");
+  const [{ data: templates }, { data: copies }] = await Promise.all([
+    db.from("templates").select("id, name, procedure, template_tasks(count)").eq("is_base", true).order("name"),
+    // Counted separately (self-referencing FK can't be embedded cleanly) and tallied in JS below.
+    db.from("templates").select("source_template_id").not("source_template_id", "is", null),
+  ]);
+  const usedBy = new Map<string, number>();
+  for (const row of copies ?? []) {
+    const id = row.source_template_id as string;
+    usedBy.set(id, (usedBy.get(id) ?? 0) + 1);
+  }
 
   return (
     <main>
@@ -43,6 +48,8 @@ export default async function BaseTemplatesPage() {
             {(templates ?? []).map((tpl) => {
               const tasks = (tpl.template_tasks as { count: number }[])?.[0]?.count ?? 0;
               const tasksLabel = tasks === 1 ? t("משימה אחת") : t("{n} משימות", { n: tasks });
+              const used = usedBy.get(tpl.id) ?? 0;
+              const usedLabel = used === 1 ? t("בשימוש אצל מרפאה אחת") : t("בשימוש אצל {n} מרפאות", { n: used });
               return (
                 <li key={tpl.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <div className="min-w-0 flex-1">
@@ -58,6 +65,8 @@ export default async function BaseTemplatesPage() {
                       ) : (
                         <span className="num">{tasksLabel}</span>
                       )}
+                      {" · "}
+                      <span className={used === 0 ? "" : "num"}>{used === 0 ? t("עדיין לא בשימוש") : usedLabel}</span>
                       {tpl.procedure ? ` · ${tpl.procedure}` : ""}
                     </p>
                   </div>

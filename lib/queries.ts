@@ -9,6 +9,7 @@ export type JourneyInfo = {
   patient_id: string;
   surgery_date: string;
   template_name: string;
+  template_id: string | null;
   procedure: string | null;
   patient_info: string | null;
   red_flags: string | null;
@@ -21,13 +22,14 @@ export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 // patient_info (patch-patient-content.sql) and red_flags (patch-red-flags.sql) may not exist yet on an
 // older database, so each is dropped from the select in turn until one succeeds.
 const journeySelect = (withPatientInfo: boolean, withRedFlags: boolean) =>
-  `id, patient_id, surgery_date, template_name, ${withPatientInfo ? "patient_info, " : ""}${withRedFlags ? "red_flags, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
+  `id, patient_id, surgery_date, template_name, template_id, ${withPatientInfo ? "patient_info, " : ""}${withRedFlags ? "red_flags, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
 
 type JourneyRow = {
   id: string;
   patient_id: string;
   surgery_date: string;
   template_name: string;
+  template_id: string | null;
   patient_info?: string | null;
   red_flags?: string | null;
   patients: JourneyInfo["patient"] | JourneyInfo["patient"][] | null;
@@ -42,6 +44,7 @@ function toJourney(j: JourneyRow): PatientJourney {
     patient_id: j.patient_id,
     surgery_date: j.surgery_date,
     template_name: j.template_name,
+    template_id: j.template_id,
     procedure: (Array.isArray(j.templates) ? j.templates[0] : j.templates)?.procedure ?? null,
     patient_info: j.patient_info ?? null,
     red_flags: j.red_flags ?? null,
