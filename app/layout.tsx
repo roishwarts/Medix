@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Assistant, Rubik } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import { getPlatformAdmin } from "@/lib/admin";
 import { getPublicBrand } from "@/lib/brand-public";
@@ -11,13 +11,6 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { PrefsProvider } from "@/components/prefs-provider";
 import { PublicChrome } from "@/components/public-chrome";
 import { VersionBadge } from "@/components/version-badge";
-
-const assistant = Assistant({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-assistant",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin", "cyrillic", "arabic"],
@@ -57,7 +50,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [prefs, lang, admin] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin()]);
   return (
-    <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={`${assistant.variable} ${rubik.variable}`} suppressHydrationWarning>
+    <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={rubik.variable} suppressHydrationWarning>
       <body>
         <PrefsProvider initial={{ ...prefs, lang }}>
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>

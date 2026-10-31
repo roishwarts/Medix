@@ -20,8 +20,8 @@
   --color-warn-soft: #fdf1de;
   --color-bad: #b02f26;
   --color-bad-soft: #fbe8e6;
-  --font-sans: var(--font-assistant), var(--font-rubik), system-ui, sans-serif;
-  --font-display: var(--font-assistant), var(--font-rubik), system-ui, sans-serif;
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
+  --font-display: var(--font-rubik), system-ui, sans-serif;
 }
 
 /* Taps register at once on phones (no double-tap-to-zoom wait). */
