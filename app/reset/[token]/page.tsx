@@ -1,3 +1,4 @@
+import { PublicBrand } from "@/components/public-brand";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
   }
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
+      <PublicBrand logo />
       <div className="card p-6 sm:p-8">
         {valid ? (
           <>

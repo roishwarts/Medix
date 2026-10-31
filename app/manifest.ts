@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
+import { getPublicBrand } from "@/lib/brand-public";
 
 // What a phone shows when the app is added to the home screen.
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const brand = await getPublicBrand();
   return {
-    name: "הכנה לניתוח",
-    short_name: "הכנה לניתוח",
+    name: brand?.name ?? "הכנה לניתוח",
+    short_name: brand?.name ?? "הכנה לניתוח",
     description: "כל שלבי ההכנה, המסמכים והתורים במקום אחד.",
     start_url: "/",
     display: "standalone",

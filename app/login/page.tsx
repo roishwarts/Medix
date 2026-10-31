@@ -1,3 +1,4 @@
+import { PublicBrand } from "@/components/public-brand";
 import Link from "next/link";
 import { Icon } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
@@ -8,6 +9,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const t = await getT();
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
+      <PublicBrand logo />
       <div className="card p-6 sm:p-8">
         <h1 className="display mb-6 text-3xl">{t("כניסה")}</h1>
         {error === "profile" && (

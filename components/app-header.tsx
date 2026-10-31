@@ -56,8 +56,12 @@ export function AppHeader({
             {items.map((i) => <NavLink key={i.href} href={i.href} exact={i.exact}>{i.label}{i.badge}</NavLink>)}
           </nav>
           <div className="flex min-h-11 min-w-0 flex-1 items-center gap-1 md:ms-0 md:flex-none">
-            {logo && <span className="grid size-6 shrink-0 place-items-center rounded-md bg-white p-0.5"><img src={logo} alt="" className="max-h-full max-w-full object-contain" /></span>}
-            <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt={brand} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain px-1 md:h-9 md:max-w-[15rem]" />
+            ) : (
+              <span className="min-w-0 truncate px-1 text-sm text-muted">{brand}</span>
+            )}
             <span className="hidden md:block"><AccessMenu languages={languages} /></span>
             <span className="hidden md:block">{logout}</span>
           </div>
@@ -84,7 +88,6 @@ export function AppHeader({
           <div ref={sheet} id="settings-sheet" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-[var(--color-page)] shadow-2xl">
             <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
-                {logo && <span className="grid size-8 shrink-0 place-items-center rounded-md bg-white p-0.5"><img src={logo} alt="" className="max-h-full max-w-full object-contain" /></span>}
                 <div className="min-w-0">
                   {greeting && <p className="display truncate text-lg">{greeting}</p>}
                   <p className="truncate text-sm text-muted">{brand}</p>
