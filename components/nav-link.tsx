@@ -63,7 +63,7 @@ export function NavLink({ href, exact, children }: { href: string; exact?: boole
       prefetch
       onClick={() => setTapped(href)}
       aria-current={active ? "page" : undefined}
-      className={`my-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-[15px] sm:px-3.5 transition-colors ${active ? "glass-on font-medium text-ink" : "text-muted hover:bg-black/5 hover:text-ink"}`}
+      className={`tab my-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-[15px] sm:px-3.5 transition-colors ${active ? "tab-on" : ""}`}
     >
       {children}
     </Link>

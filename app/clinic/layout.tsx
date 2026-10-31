@@ -32,7 +32,7 @@ export default async function ClinicLayout({ children }: { children: React.React
   ];
   return (
     <div className="min-h-dvh pb-24 md:pb-0">
-      <BrandTheme color={profile.brand_color} />
+      <BrandTheme brand={{ color: profile.brand_color, dark: profile.brand_dark, gold: profile.brand_gold }} />
       <div className="print:hidden">
         <ImpersonationBanner />
         <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />

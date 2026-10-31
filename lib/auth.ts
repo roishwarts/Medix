@@ -1,3 +1,4 @@
+import { hexOrNull } from "./brand";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -18,6 +19,8 @@ export type Profile = {
   office_hours: string | null;
   logo_url: string | null;
   brand_color: string | null;
+  brand_dark: string | null;
+  brand_gold: string | null;
   onboarded_at: string | null;
 };
 
@@ -70,6 +73,8 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     office_hours?: string | null;
     logo_path?: string | null;
     brand_color?: string | null;
+    brand_dark?: string | null;
+    brand_gold?: string | null;
   } | null;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const logoUrl = clinic?.logo_path ? (/^https:\/\//.test(clinic.logo_path) ? clinic.logo_path : supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null) : null;
@@ -89,6 +94,8 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     office_hours: clinic?.office_hours ?? null,
     logo_url: logoUrl,
     brand_color: brandColor,
+    brand_dark: hexOrNull(clinic?.brand_dark),
+    brand_gold: hexOrNull(clinic?.brand_gold),
     onboarded_at: (data as { onboarded_at?: string | null }).onboarded_at ?? null,
   };
 });

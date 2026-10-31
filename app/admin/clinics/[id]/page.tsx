@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
 import { israelParts } from "@/lib/dates";
+import { brandOf } from "@/lib/brand";
 import { BrandTheme } from "@/components/brand-theme";
 import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
@@ -44,7 +45,7 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
   return (
     <main>
       {/* The clinic's own design, so the admin sees its card the way the clinic's people see their system. */}
-      <BrandTheme color={clinic.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null} />
+      <BrandTheme brand={brandOf(clinic)} />
       {clinic.logo_path && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={logoSrc(clinic.logo_path)} alt={clinic.name} className="brand-logo mb-4 h-12 w-auto max-w-full object-contain sm:h-14" />
