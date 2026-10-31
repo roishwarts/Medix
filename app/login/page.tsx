@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         )}
         <LoginForm />
       </div>
-      <Link href="/forgot" className="mx-auto mt-4 inline-flex min-h-11 items-center px-3 text-sm text-muted underline underline-offset-4 hover:text-ink">
+      <Link href="/forgot" className="public-link mx-auto mt-4 inline-flex min-h-11 items-center px-3 text-sm text-muted underline underline-offset-4 hover:text-ink">
         {t("שכחתי סיסמה")}
       </Link>
     </main>

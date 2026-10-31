@@ -165,15 +165,42 @@ p { text-wrap: pretty; }
     position: sticky;
     top: 0;
     z-index: 20;
-    border-bottom: 1px solid var(--color-line);
+    border-bottom: var(--tb-bw, 1px) solid var(--tb-line, var(--color-line));
+    color: var(--tb-fg, inherit);
   }
+  .topbar .btn-quiet { color: var(--tb-muted, var(--color-muted)); }
+  .topbar .btn-quiet:hover { color: var(--tb-fg, var(--color-ink)); background: var(--tb-hover, var(--hover-tint)); }
+  .tb-muted { color: var(--tb-muted, var(--color-muted)); }
+  /* Top-bar tabs: a clinic with a deep brand color gets a dark bar with a highlighted selected tab. */
+  .tab { color: var(--tb-muted, var(--color-muted)); }
+  .tab:hover { background: var(--tb-hover, rgb(0 0 0 / 0.05)); color: var(--tb-fg, var(--color-ink)); }
+  .tab-on {
+    background: var(--tab-on-bg, linear-gradient(180deg, var(--on-a), var(--on-b)));
+    border: 1px solid var(--tab-on-border, var(--edge));
+    box-shadow: var(--tab-on-shadow, var(--glass-shadow));
+    color: var(--tab-on-fg, var(--color-ink));
+    font-weight: 600;
+  }
+  .tab-on:hover { background: var(--tab-on-bg, linear-gradient(180deg, var(--on-a), var(--on-b))); color: var(--tab-on-fg, var(--color-ink)); }
+  /* The hero on the patient's first screen. */
+  .hero {
+    background: var(--hero-bg, transparent);
+    color: var(--hero-fg, inherit);
+    border-radius: 1.5rem;
+    padding: var(--hero-pad, 0);
+    box-shadow: var(--hero-shadow, none);
+  }
+  .hero h1 { color: var(--hero-fg, inherit); }
+  .hero .hero-muted { color: var(--hero-muted, var(--color-muted)); }
+  .hero .hero-accent { color: var(--hero-accent, inherit); }
+  .hero .btn-quiet { color: var(--hero-muted, var(--color-muted)); }
   /* The blur lives on a layer behind the bar: a blur on the bar itself would trap the menu panels that open inside it. */
   .topbar::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: var(--topbar-bg);
+    background: var(--tb-bg, var(--topbar-bg));
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     backdrop-filter: saturate(180%) blur(12px);
   }
@@ -185,8 +212,8 @@ p { text-wrap: pretty; }
   }
   /* Phone navigation bar (bottom of the screen) */
   .bottom-bar {
-    border-top: 1px solid var(--color-line);
-    background: var(--topbar-bg);
+    border-top: var(--tb-bw, 1px) solid var(--tb-line, var(--color-line));
+    background: var(--bar-bg, var(--topbar-bg));
     -webkit-backdrop-filter: saturate(180%) blur(12px);
     backdrop-filter: saturate(180%) blur(12px);
     padding-bottom: env(safe-area-inset-bottom);
@@ -194,9 +221,9 @@ p { text-wrap: pretty; }
   .bar-item {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     min-height: 3.5rem; padding: 0.4rem 0.25rem; font-size: 0.6875rem; line-height: 1.1;
-    color: var(--color-muted); background: none; border: 0;
+    color: var(--tb-muted, var(--color-muted)); background: none; border: 0;
   }
-  .bar-item-on { color: var(--color-accent); font-weight: 600; }
+  .bar-item-on { color: var(--bar-on, var(--color-accent)); font-weight: 600; }
   .btn {
     max-width: 100%;
     white-space: normal;
@@ -225,12 +252,12 @@ p { text-wrap: pretty; }
   .btn:active:not(:disabled) { transform: scale(0.97); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .btn-primary {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 82%, white), var(--color-accent));
-    border-color: color-mix(in srgb, var(--color-accent) 80%, black);
-    color: #fff;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2), 0 8px 18px -8px color-mix(in srgb, var(--color-accent) 70%, transparent);
+    background: linear-gradient(180deg, var(--btn-p-a, color-mix(in srgb, var(--color-accent) 82%, white)), var(--btn-p-b, var(--color-accent)));
+    border-color: var(--btn-p-border, color-mix(in srgb, var(--color-accent) 80%, black));
+    color: var(--btn-p-fg, #fff);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2), 0 8px 18px -8px color-mix(in srgb, var(--btn-p-b, var(--color-accent)) 70%, transparent);
   }
-  .btn-primary:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 72%, white), color-mix(in srgb, var(--color-accent) 92%, white)); border-color: color-mix(in srgb, var(--color-accent) 80%, black); }
+  .btn-primary:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--btn-p-a, var(--color-accent)) 88%, white), var(--btn-p-a, color-mix(in srgb, var(--color-accent) 92%, white))); border-color: var(--btn-p-border, color-mix(in srgb, var(--color-accent) 80%, black)); }
   .btn-danger { border-color: rgb(192 54 44 / 0.45); color: var(--color-bad); }
   .btn-danger:hover { background: var(--color-bad-soft); }
   .btn-sm { min-height: 36px; padding: 0 1rem; font-size: 0.9rem; }

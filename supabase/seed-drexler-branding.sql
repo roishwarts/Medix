@@ -57,3 +57,11 @@ select p.full_name, c.name as clinic, c.logo_path is not null as has_logo
 from profiles p join clinics c on c.id = p.clinic_id
 where p.role in ('doctor', 'staff')
 order by c.name, p.full_name;
+
+-- Step 3 (needs supabase/patch-brand-theme.sql): the website's palette. Deep navy for the bars and the hero,
+-- gold for buttons and the selected tab, and the logo's teal as the accent for links and highlights.
+update clinics set
+  brand_color = '#1e7a8f',
+  brand_dark = '#171e29',
+  brand_gold = '#f7a801'
+where name = 'מרפאת פרופסור דרקסלר';
