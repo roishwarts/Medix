@@ -10,6 +10,7 @@ import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { diffDays, formatDate, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/supabase/paginate";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { requireProfile } from "@/lib/auth";
@@ -52,7 +53,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
-  const [allJourneys, resetRes, eventsRes, { data: placements }, options, templatesRes] = await Promise.all([
+  const [allJourneysRaw, resetRes, eventsRes, placements, options, templatesRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -60,13 +61,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("patients").select("id, hospital"),
+    // Paged: Supabase caps a single request at 1000 rows, and a long-running clinic can exceed that.
+    fetchAllRows<{ id: string; hospital: string | null }>((from, to) =>
+      supabase.from("patients").select("id, hospital").range(from, to),
+    ),
     getClinicOptions(),
     supabase.from("templates").select("id", { count: "exact", head: true }),
   ]);
   const templateCount = templatesRes.count ?? 0;
+  // A cancelled surgery no longer needs the clinic's attention; it stays on the patient's own card.
+  const allJourneys = allJourneysRaw.filter((j) => !j.cancelled_at);
   const t0 = today();
-  const hospitalOf = new Map((placements ?? []).map((p) => [p.id as string, p.hospital as string | null]));
+  const hospitalOf = new Map(placements.map((p) => [p.id, p.hospital]));
   const hospitals = [...new Set([...options.hospitals, ...[...hospitalOf.values()].filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
   // The hospital and time-frame filter narrow everything on this page.
   const journeys = allJourneys
@@ -91,7 +97,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const progressN = upcoming.length - readyN - lateN;
 
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
-  const ATTENTION_RANK: Partial<Record<ActionItem["kind"], number>> = { rejected: 0, review: 1, overdue: 2 };
+  // Same priority order as the KPI row above (rejected, overdue, review) and the full tasks
+  // list: a late task is more urgent than one merely waiting on review, so at real volume the
+  // 6-item preview below should never let a pile of "waiting for review" items push actually
+  // overdue work out of sight.
+  const ATTENTION_RANK: Partial<Record<ActionItem["kind"], number>> = { rejected: 0, overdue: 1, review: 2 };
   const attention = items
     .filter((i) => i.kind === "review" || i.kind === "overdue" || i.kind === "rejected")
     .sort((a, b) => (a.kind === b.kind ? (a.task.dueDate < b.task.dueDate ? -1 : 1) : ATTENTION_RANK[a.kind]! - ATTENTION_RANK[b.kind]!))

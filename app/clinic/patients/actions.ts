@@ -59,6 +59,16 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   if (!PHONE_OK.test(phone)) return { error: t("יש להזין מספר טלפון תקין (לשליחה בוואטסאפ)") };
   if (email && !EMAIL_OK.test(email)) return { error: t("כתובת המייל לא תקינה") };
 
+  const hospital = String(formData.get("hospital") ?? "").trim();
+  const company = String(formData.get("company") ?? "").trim();
+  // Validate before creating anything, so a stale option (removed from the list after the page loaded)
+  // is reported instead of being silently dropped.
+  if (hospital || company) {
+    const options = await getClinicOptions();
+    if (hospital && !options.hospitals.includes(hospital)) return { error: t("בית החולים שנבחר לא ברשימה") };
+    if (company && !options.companies.includes(company)) return { error: t("החברה שנבחרה לא ברשימה") };
+  }
+
   const supabase = await createClient();
   const { data: patient, error: patErr } = await supabase
     .from("patients")
@@ -71,17 +81,8 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   // Separate update, so creating a patient still works before supabase/patch-lang-stage.sql has been run.
   if (lang !== "he") await supabase.from("patients").update({ lang }).eq("id", patient.id);
 
-  const hospital = String(formData.get("hospital") ?? "").trim();
-  const company = String(formData.get("company") ?? "").trim();
   if (hospital || company) {
-    const options = await getClinicOptions();
-    await supabase
-      .from("patients")
-      .update({
-        hospital: options.hospitals.includes(hospital) ? hospital : null,
-        company: options.companies.includes(company) ? company : null,
-      })
-      .eq("id", patient.id);
+    await supabase.from("patients").update({ hospital: hospital || null, company: company || null }).eq("id", patient.id);
   }
 
   const { data: journeyId, error: jErr } = await supabase.rpc("start_journey", {
@@ -279,6 +280,26 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
     if (optErr) return { error: t("שמירת בית החולים והחברה נכשלה. ודאו שהורצה התוספת supabase/patch-options.sql.") };
   }
 
+  // ID, HMO and private-insurance details. Shown on the patient's own card only. Saved on their own
+  // so the rest still works before supabase/patch-medical-info.sql has been run.
+  if (formData.has("national_id") || formData.has("hmo") || formData.has("insurance_company") || formData.has("insurance_policy_number") || formData.has("insurance_phone")) {
+    const national_id = String(formData.get("national_id") ?? "").trim();
+    const hmo = String(formData.get("hmo") ?? "").trim();
+    const insurance_company = String(formData.get("insurance_company") ?? "").trim();
+    const insurance_policy_number = String(formData.get("insurance_policy_number") ?? "").trim();
+    const insurance_phone = String(formData.get("insurance_phone") ?? "").trim();
+    if (national_id && !/^\d{5,9}$/.test(national_id)) return { error: t("תעודת הזהות לא תקינה") };
+    if (hmo && !(["clalit", "maccabi", "meuhedet", "leumit", "other"] as const).includes(hmo as "clalit")) return { error: t("קופת חולים לא תקינה") };
+    const { error: medErr } = await supabase
+      .from("patients")
+      .update({
+        national_id: national_id || null, hmo: hmo || null, insurance_company: insurance_company || null,
+        insurance_policy_number: insurance_policy_number || null, insurance_phone: insurance_phone || null,
+      })
+      .eq("id", patientId);
+    if (medErr) return { error: t("שמירת פרטי הביטוח נכשלה. ודאו שהורצה התוספת supabase/patch-medical-info.sql.") };
+  }
+
   // Status (manual override) and language of the messages. Saved on their own, so the rest still works before
   // supabase/patch-lang-stage.sql has been run.
   if (formData.has("stage") || formData.has("lang")) {
@@ -321,6 +342,30 @@ export async function setPatientStage(patientId: string, stage: Stage | null): P
   const supabase = await createClient();
   const { error } = await supabase.from("patients").update({ stage_override: stage }).eq("id", patientId);
   if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };
+  revalidatePath("/clinic", "layout");
+  return {};
+}
+
+export const CANCEL_REASONS = ["patient_request", "medical", "insurance", "clinic_schedule", "other"] as const;
+export type CancelReason = (typeof CANCEL_REASONS)[number];
+
+export async function cancelJourney(journeyId: string, reason: CancelReason) {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  if (!CANCEL_REASONS.includes(reason)) return { error: t("סיבה לא תקינה") };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_journey", { p_journey: journeyId, p_reason: reason });
+  if (error) return { error: t("שמירת הביטול נכשלה. ודאו שהורצה התוספת supabase/patch-outcomes.sql.") };
+  revalidatePath("/clinic", "layout");
+  return {};
+}
+
+export async function uncancelJourney(journeyId: string) {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("uncancel_journey", { p_journey: journeyId });
+  if (error) return { error: t("השמירה נכשלה") };
   revalidatePath("/clinic", "layout");
   return {};
 }

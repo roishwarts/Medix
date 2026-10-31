@@ -10,6 +10,7 @@ type Initial = {
   contact_phone: string | null;
   emergency_phone: string | null;
   office_hours: string | null;
+  address: string | null;
 };
 
 export function ContactForm({ initial }: { initial: Initial }) {
@@ -19,6 +20,7 @@ export function ContactForm({ initial }: { initial: Initial }) {
   const [phone, setPhone] = useState(initial.contact_phone ?? "");
   const [emergency, setEmergency] = useState(initial.emergency_phone ?? "");
   const [hours, setHours] = useState(initial.office_hours ?? "");
+  const [address, setAddress] = useState(initial.address ?? "");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -28,12 +30,13 @@ export function ContactForm({ initial }: { initial: Initial }) {
   const phoneId = useId();
   const emergencyId = useId();
   const hoursId = useId();
+  const addressId = useId();
 
   function save() {
     setError(null);
     setSaved(false);
     start(async () => {
-      const res = await saveClinicContact(name, role, phone, emergency, hours);
+      const res = await saveClinicContact(name, role, phone, emergency, hours, address);
       if (res.error) setError(res.error);
       else setSaved(true);
     });
@@ -66,6 +69,11 @@ export function ContactForm({ initial }: { initial: Initial }) {
         <div className="sm:col-span-2">
           <label htmlFor={hoursId} className="lbl">{t("שעות מענה")}</label>
           <input id={hoursId} className="field" value={hours} onChange={(e) => { setHours(e.target.value); setSaved(false); }} maxLength={120} autoComplete="off" placeholder={t("למשל: א׳-ה׳ 9:00-17:00")} />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor={addressId} className="lbl">{t("כתובת המרפאה")}</label>
+          <input id={addressId} className="field" value={address} onChange={(e) => { setAddress(e.target.value); setSaved(false); }} maxLength={200} autoComplete="off" placeholder={t("למשל: רחוב הרצל 1, תל אביב")} />
+          <p className="mt-1.5 text-sm text-muted">{t("מוצגת למטופל עם קישור ניווט בתורים שנקבעים במרפאה.")}</p>
         </div>
       </div>
 

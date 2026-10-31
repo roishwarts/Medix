@@ -66,6 +66,7 @@ export default async function ClinicContentPage() {
               contact_phone: profile.contact_phone,
               emergency_phone: profile.emergency_phone,
               office_hours: profile.office_hours,
+              address: profile.clinic_address,
             }}
           />
         </div>
