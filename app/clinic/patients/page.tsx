@@ -36,7 +36,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
   const rows: PatientRow[] = all.map((j) => ({
     id: j.id, name: j.patient.full_name, surgeryDate: j.surgery_date, daysToSurgery: j.summary.daysToSurgery,
     readiness: j.summary.readiness, readinessState: j.summary.readinessState,
-    stage: extras.get(j.patient_id)?.stage ?? stageOf(j.summary),
+    stage: extras.get(j.patient_id)?.stage ?? stageOf(j.summary, !!j.cancelled_at),
     hospital: placeOf.get(j.patient_id)?.hospital ?? null, company: placeOf.get(j.patient_id)?.company ?? null,
     step: j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : t("ההכנות הושלמו"),
   }));
