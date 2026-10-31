@@ -11,6 +11,7 @@ import { Icon, ReadinessBar } from "@/components/ui";
 import { NavigateButtons } from "@/components/navigate-buttons";
 import { resolvePlace } from "@/lib/location";
 import { getClinicLinks, getClinicVideos, signClinicVideos } from "@/lib/clinic-content";
+import { whatsAppUrl } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,16 @@ export default async function JourneyPage() {
         <h1 className="display text-3xl">{heading}</h1>
         <p className="mt-1 text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
         {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href="/api/calendar/ics" className="btn btn-sm">הוספה ליומן</a>
+          {profile.role === "patient" && (
+            <>
+              <Link href="/family" className="btn btn-sm">שיתוף עם בן משפחה</Link>
+              <Link href="/onboarding" className="btn btn-quiet btn-sm">איך זה עובד</Link>
+            </>
+          )}
+        </div>
 
         {!surgeryPassed && (
           <div className="mt-5">
@@ -125,6 +136,49 @@ export default async function JourneyPage() {
             </div>
           );
         })()}
+
+        {/* CARE TEAM */}
+        {(profile.contact_name || profile.contact_phone || profile.emergency_phone) && (
+          <div className="card mt-4 p-4">
+            <p className="text-sm font-medium text-muted">הצוות שלי</p>
+            {(profile.contact_name || profile.contact_role) && (
+              <p className="mt-1 break-words font-medium">
+                {profile.contact_name}
+                {profile.contact_name && profile.contact_role && " · "}
+                {profile.contact_role}
+              </p>
+            )}
+            {profile.contact_phone && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn btn-sm">חיוג</a>
+                <a href={whatsAppUrl(profile.contact_phone, `שלום, אני ${profile.full_name}`)} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
+                  WhatsApp
+                </a>
+              </div>
+            )}
+            {profile.office_hours && <p className="mt-2 text-sm text-muted">שעות מענה: {profile.office_hours}</p>}
+            {profile.emergency_phone && (
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-bad-soft px-3 py-2">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-bad">
+                  <Icon name="alert" size={14} /> למקרה חירום
+                </span>
+                <a href={`tel:${profile.emergency_phone.replace(/[^\d+]/g, "")}`} dir="ltr" className="num font-medium text-bad hover:underline">
+                  {profile.emergency_phone}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RED FLAGS */}
+        {journey.red_flags && (
+          <div className="mt-4 rounded-2xl bg-bad-soft p-4">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-bad">
+              <Icon name="alert" size={14} /> מתי להתקשר דחוף
+            </p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-bad">{journey.red_flags}</p>
+          </div>
+        )}
 
         {/* GENERAL INFO */}
         {journey.patient_info && (

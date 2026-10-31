@@ -8,5 +8,6 @@ export default async function Home() {
     if (await getPlatformAdmin()) redirect("/admin");
     redirect("/login?error=profile");
   }
+  if (profile.role === "patient" && !profile.onboarded_at) redirect("/onboarding");
   redirect(profile.role === "patient" || profile.role === "caregiver" ? "/journey" : "/clinic");
 }

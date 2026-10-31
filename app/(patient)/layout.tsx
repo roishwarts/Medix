@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getCaregiverLink, getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
+import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { getT } from "@/lib/i18n/server";
 
@@ -23,8 +24,9 @@ export default async function PatientLayout({ children }: { children: React.Reac
   ];
   return (
     <div className="min-h-dvh pb-24 md:pb-16">
+      <BrandTheme color={profile.brand_color} />
       <ImpersonationBanner />
-      <AppHeader items={items} brand={clinicName} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      <AppHeader items={items} brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">
       {profile.role === "caregiver" && (
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">

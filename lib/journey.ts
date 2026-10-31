@@ -186,7 +186,7 @@ export function nowTask(tasks: Task[]): Task | null {
 
 // ---- clinic action items ("this week")
 
-export type ActionKind = "review" | "overdue" | "clinic" | "upcoming";
+export type ActionKind = "rejected" | "review" | "overdue" | "clinic" | "upcoming";
 export type ActionItem = {
   kind: ActionKind;
   task: Task;
@@ -196,6 +196,7 @@ export type ActionItem = {
 };
 
 export const ACTION_LABEL: Record<ActionKind, string> = {
+  rejected: "הוחזר לתיקון",
   review: "ממתין לבדיקת הצוות",
   overdue: "באיחור",
   clinic: "משימות לצוות ולרופא",
@@ -215,7 +216,10 @@ export function actionItems(
   for (const task of tasks) {
     if (!task.preop || task.state === "done" || task.state === "locked") continue;
     const base = { task, patientId, patientName, surgeryDate };
-    if (task.state === "review") out.push({ ...base, kind: "review" });
+    // Rejected takes priority over overdue: a patient waiting to redo a bounced submission is a more
+    // specific, more useful signal than "this is just late" — even when it also happens to be overdue.
+    if (task.state === "rejected") out.push({ ...base, kind: "rejected" });
+    else if (task.state === "review") out.push({ ...base, kind: "review" });
     else if (task.overdue) out.push({ ...base, kind: "overdue" });
     else if (task.owner !== "patient" && task.dueDate <= horizon) out.push({ ...base, kind: "clinic" });
     else if (task.owner === "patient" && task.dueDate <= horizon) out.push({ ...base, kind: "upcoming" });

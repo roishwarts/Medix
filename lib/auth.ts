@@ -11,6 +11,14 @@ export type Profile = {
   clinic_name: string;
   mfa_required: boolean;
   clinic_address: string | null;
+  contact_name: string | null;
+  contact_role: string | null;
+  contact_phone: string | null;
+  emergency_phone: string | null;
+  office_hours: string | null;
+  logo_url: string | null;
+  brand_color: string | null;
+  onboarded_at: string | null;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
@@ -36,13 +44,36 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const userId = await getAuthUserId();
   if (!userId) return null;
   const supabase = await createClient();
-  const { data } = await supabase
+  // onboarded_at (patch-onboarding.sql) may not exist yet: fall back to a select without it rather
+  // than failing the whole profile fetch, which would sign everyone out of every page.
+  let { data, error } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name, disabled, clinics(*)")
+    .select("id, clinic_id, role, full_name, disabled, onboarded_at, clinics(*)")
     .eq("id", userId)
     .maybeSingle();
+  if (error) {
+    ({ data } = await supabase
+      .from("profiles")
+      .select("id, clinic_id, role, full_name, disabled, clinics(*)")
+      .eq("id", userId)
+      .maybeSingle());
+  }
   if (!data || data.disabled) return null;
-  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as { name: string; mfa_required?: boolean; address?: string | null } | null;
+  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as {
+    name: string;
+    mfa_required?: boolean;
+    address?: string | null;
+    contact_name?: string | null;
+    contact_role?: string | null;
+    contact_phone?: string | null;
+    emergency_phone?: string | null;
+    office_hours?: string | null;
+    logo_path?: string | null;
+    brand_color?: string | null;
+  } | null;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const logoUrl = clinic?.logo_path && supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null;
+  const brandColor = clinic?.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null;
   return {
     id: data.id,
     clinic_id: data.clinic_id,
@@ -51,6 +82,14 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     clinic_name: clinic?.name ?? "",
     mfa_required: !!clinic?.mfa_required,
     clinic_address: clinic?.address ?? null,
+    contact_name: clinic?.contact_name ?? null,
+    contact_role: clinic?.contact_role ?? null,
+    contact_phone: clinic?.contact_phone ?? null,
+    emergency_phone: clinic?.emergency_phone ?? null,
+    office_hours: clinic?.office_hours ?? null,
+    logo_url: logoUrl,
+    brand_color: brandColor,
+    onboarded_at: (data as { onboarded_at?: string | null }).onboarded_at ?? null,
   };
 });
 
@@ -96,3 +135,4 @@ export const getCaregiverLink = cache(async (): Promise<CaregiverLink | null> =>
 
 // The clinic's display name, shown as the title of every signed-in screen.
 export const getClinicName = cache(async (): Promise<string> => (await getProfile())?.clinic_name ?? "");
+export const getClinicLogoUrl = cache(async (): Promise<string | null> => (await getProfile())?.logo_url ?? null);
