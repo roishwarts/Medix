@@ -11,14 +11,17 @@ export type JourneyInfo = {
   template_name: string;
   procedure: string | null;
   patient_info: string | null;
+  red_flags: string | null;
   patient: { id: string; full_name: string; phone: string | null };
 };
 
 export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-const journeySelect = (withInfo: boolean) =>
-  `id, patient_id, surgery_date, template_name, ${withInfo ? "patient_info, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
+// patient_info (patch-patient-content.sql) and red_flags (patch-red-flags.sql) may not exist yet on an
+// older database, so each is dropped from the select in turn until one succeeds.
+const journeySelect = (withPatientInfo: boolean, withRedFlags: boolean) =>
+  `id, patient_id, surgery_date, template_name, ${withPatientInfo ? "patient_info, " : ""}${withRedFlags ? "red_flags, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
 
 type JourneyRow = {
   id: string;
@@ -26,6 +29,7 @@ type JourneyRow = {
   surgery_date: string;
   template_name: string;
   patient_info?: string | null;
+  red_flags?: string | null;
   patients: JourneyInfo["patient"] | JourneyInfo["patient"][] | null;
   templates: { procedure: string | null } | { procedure: string | null }[] | null;
   journey_tasks: TaskRow[] | null;
@@ -40,24 +44,30 @@ function toJourney(j: JourneyRow): PatientJourney {
     template_name: j.template_name,
     procedure: (Array.isArray(j.templates) ? j.templates[0] : j.templates)?.procedure ?? null,
     patient_info: j.patient_info ?? null,
+    red_flags: j.red_flags ?? null,
     patient,
     summary: summarize(j.journey_tasks ?? [], j.surgery_date),
   };
+}
+
+// Runs the journeys query, dropping the newest optional columns in turn if the database doesn't have them yet.
+async function runJourneysQuery(apply: (select: string) => PromiseLike<{ data: unknown; error: unknown }>) {
+  let { data, error } = await apply(journeySelect(true, true));
+  if (error) ({ data, error } = await apply(journeySelect(true, false)));
+  if (error) ({ data } = await apply(journeySelect(false, false)));
+  return data;
 }
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
 // Journeys and their tasks come back in a single request.
 export async function loadJourneys(): Promise<PatientJourney[]> {
   const supabase = await createClient();
-  let { data, error } = await supabase.from("journeys").select(journeySelect(true)).order("surgery_date");
-  // Before supabase/patch-patient-content.sql is applied the patient_info column does not exist: read without it.
-  if (error) ({ data } = await supabase.from("journeys").select(journeySelect(false)).order("surgery_date"));
+  const data = await runJourneysQuery((select) => supabase.from("journeys").select(select).order("surgery_date"));
   return ((data ?? []) as unknown as JourneyRow[]).map(toJourney);
 }
 
 export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {
   const supabase = await createClient();
-  let { data, error } = await supabase.from("journeys").select(journeySelect(true)).eq("id", journeyId).maybeSingle();
-  if (error) ({ data } = await supabase.from("journeys").select(journeySelect(false)).eq("id", journeyId).maybeSingle());
+  const data = await runJourneysQuery((select) => supabase.from("journeys").select(select).eq("id", journeyId).maybeSingle());
   return data ? toJourney(data as unknown as JourneyRow) : null;
 }

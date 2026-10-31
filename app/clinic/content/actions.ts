@@ -15,6 +15,16 @@ export async function saveTemplatePatientInfo(templateId: string, patientInfo: s
   return {};
 }
 
+export async function saveTemplateRedFlags(templateId: string, redFlags: string): Promise<{ error?: string }> {
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_template_red_flags", { p_template: templateId, p_red_flags: redFlags });
+  if (error) return { error: "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-red-flags.sql." };
+  revalidatePath("/clinic/content");
+  revalidatePath("/journey");
+  return {};
+}
+
 export async function addClinicLink(label: string, url: string): Promise<{ error?: string }> {
   const t = await getT();
   const profile = await requireProfile(["staff", "doctor"]);

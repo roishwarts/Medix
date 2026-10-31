@@ -55,6 +55,13 @@ export default async function JourneyPage() {
         <p className="mt-1 text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
         {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
 
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href="/api/calendar/ics" className="btn btn-sm">הוספה ליומן</a>
+          {profile.role === "patient" && (
+            <Link href="/family" className="btn btn-sm">שיתוף עם בן משפחה</Link>
+          )}
+        </div>
+
         {!surgeryPassed && (
           <div className="mt-5">
             <div className="mb-2 flex items-baseline justify-between gap-3">
@@ -157,6 +164,16 @@ export default async function JourneyPage() {
                 </a>
               </div>
             )}
+          </div>
+        )}
+
+        {/* RED FLAGS */}
+        {journey.red_flags && (
+          <div className="mt-4 rounded-2xl bg-bad-soft p-4">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-bad">
+              <Icon name="alert" size={14} /> מתי להתקשר דחוף
+            </p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-bad">{journey.red_flags}</p>
           </div>
         )}
 
