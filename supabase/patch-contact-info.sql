@@ -11,7 +11,7 @@ alter table clinics add column if not exists office_hours text;
 -- Staff and doctor may edit their own clinic's contact card. A dedicated function (rather than
 -- a blanket UPDATE policy on `clinics`) so this can't be used to touch unrelated columns like
 -- mfa_required, which stays admin-only.
-create function save_clinic_contact_info(
+create or replace function save_clinic_contact_info(
   p_contact_name text, p_contact_role text, p_contact_phone text, p_emergency_phone text, p_office_hours text
 ) returns void
 language plpgsql security definer set search_path = public as $$

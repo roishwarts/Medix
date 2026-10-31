@@ -5,6 +5,7 @@ import { loadJourneys } from "@/lib/queries";
 import { ACTION_LABEL, ownerLabel, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
 import { formatDate, israelParts, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { TasksFilter } from "@/components/tasks-filter";
 import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
@@ -44,23 +45,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       <header>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-        <nav aria-label={t("סינון פעולות לפי סטטוס")} className="chip-row !mb-0 flex-1 !flex-wrap justify-center !overflow-visible">
-          {TABS.map(([key, label]) => {
-            const count = key === "all" ? items.length : items.filter((i) => i.kind === key).length;
-            const on = key === active;
-            return (
-              <Link
-                key={key}
-                href={key === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${key}`}
-                scroll={false}
-                aria-current={on ? "page" : undefined}
-                className={`chip min-h-11 ${count === 0 && !on ? "opacity-70" : ""}`}
-              >
-                {t(label)} <span className="num text-xs">{count}</span><span className="sr-only"> {t("פעולות")}</span>
-              </Link>
-            );
-          })}
-        </nav>
+          <div className="flex flex-1 justify-center max-sm:basis-full">
+            <TasksFilter
+              value={active}
+              options={TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }))}
+            />
+          </div>
         </div>
         <p className="mt-2 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
@@ -76,13 +66,14 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         <p role="status" className="card px-4 py-8 text-center text-muted">{t("אין פעולות בסטטוס הזה.")}</p>
       )}
 
+      <div className="grid gap-x-8 gap-y-8 lg:grid-cols-2 lg:items-start">
       {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
         const list = items
           .filter((i) => i.kind === kind)
           .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
         if (list.length === 0) return null;
         return (
-          <section key={kind} className="max-w-3xl" aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
+          <section key={kind} className={active === "all" ? "min-w-0" : "min-w-0 lg:col-span-2 lg:mx-auto lg:w-full lg:max-w-3xl"} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
             {active === "all" && (
               <h2 id={`h-${kind}`} className="mb-3 flex items-baseline gap-2 text-lg font-medium">
                 {t(ACTION_LABEL[kind])} <span className="num text-sm text-muted">{list.length}</span>
@@ -93,15 +84,17 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                 <Link
                   key={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="grid grid-cols-1 items-center min-[420px]:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-2 link-row sm:grid-cols-[9rem_minmax(0,1fr)_auto]"
+                  className="flex flex-col gap-0.5 px-4 py-2.5 link-row"
                 >
-                  <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                  <span className="order-3 min-[420px]:col-span-2 min-w-0 break-words text-muted sm:order-none sm:col-span-1">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 break-words font-medium">{i.patientName}</span>
+                    <span className={`shrink-0 text-xs ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
+                      {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
+                    </span>
+                  </span>
+                  <span className="min-w-0 break-words text-sm text-muted">
                     {i.task.title}
                     {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
-                  </span>
-                  <span className={`text-sm sm:whitespace-nowrap ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
-                    {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
                   </span>
                 </Link>
               ))}
@@ -109,6 +102,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           </section>
         );
       })}
+      </div>
     </main>
   );
 }

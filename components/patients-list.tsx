@@ -49,14 +49,14 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
   const shown = base.filter((r) => inStage(r.stage, stage));
   const count = (f: StageFilter) => base.filter((r) => inStage(r.stage, f)).length;
 
-  const sel = "field !min-h-9 w-auto max-w-[12rem] py-1 text-sm";
+  const sel = "field !min-h-9 w-auto max-w-[12rem] py-1 text-sm max-sm:max-w-none max-sm:flex-1";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <h1 className="display text-4xl">{title}</h1>
-      <div role="search" aria-label={t("סינון מטופלים")} className="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2">
+        <h1 className="display order-1 text-4xl">{title}</h1>
+      <div role="search" aria-label={t("סינון מטופלים")} className="order-3 flex min-w-0 basis-full flex-wrap items-center gap-2 md:order-2 md:flex-1 md:basis-0 md:justify-center">
         <input
           type="search" value={q} onChange={(e) => { setQ(e.target.value); sync({ q: e.target.value }); }}
           aria-label={t("חיפוש שם")} placeholder={t("חיפוש שם")} autoComplete="off" enterKeyHint="search"
@@ -89,7 +89,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
           {stageOptions.map(([key, label]) => <option key={key} value={key}>{label} ({count(key)})</option>)}
         </select>
       </div>
-        <div className="max-sm:w-full max-sm:[&>*]:w-full">{action}</div>
+        <div className="order-2 ms-auto md:order-3 md:ms-0">{action}</div>
       </div>
 
       <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
