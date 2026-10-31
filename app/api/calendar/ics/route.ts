@@ -1,4 +1,5 @@
 import { requireProfile } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import { loadJourneys } from "@/lib/queries";
 import { resolvePlace } from "@/lib/location";
 
@@ -32,6 +33,7 @@ function foldLine(line: string): string {
 }
 
 export async function GET() {
+  const t = await getT();
   const profile = await requireProfile(["patient", "caregiver"]);
   const [journey] = await loadJourneys();
   if (!journey) return new Response("Not found", { status: 404 });
@@ -50,7 +52,7 @@ export async function GET() {
     `UID:surgery-${journey.id}@medix`,
     `DTSTAMP:${now}`,
     `DTSTART;VALUE=DATE:${dateStamp(journey.surgery_date)}`,
-    `SUMMARY:${esc(journey.procedure ? `יום הניתוח – ${journey.procedure}` : "יום הניתוח")}`,
+    `SUMMARY:${esc(journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"))}`,
     "END:VEVENT",
   );
 

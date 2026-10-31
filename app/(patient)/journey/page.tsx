@@ -56,11 +56,11 @@ export default async function JourneyPage() {
         {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <a href="/api/calendar/ics" className="btn btn-sm">הוספה ליומן</a>
+          <a href="/api/calendar/ics" className="btn btn-sm">{t("הוספה ליומן")}</a>
           {profile.role === "patient" && (
             <>
-              <Link href="/family" className="btn btn-sm">שיתוף עם בן משפחה</Link>
-              <Link href="/onboarding" className="btn btn-quiet btn-sm">איך זה עובד</Link>
+              <Link href="/family" className="btn btn-sm">{t("שיתוף עם בן משפחה")}</Link>
+              <Link href="/onboarding" className="btn btn-quiet btn-sm">{t("איך זה עובד")}</Link>
             </>
           )}
         </div>
@@ -140,7 +140,7 @@ export default async function JourneyPage() {
         {/* CARE TEAM */}
         {(profile.contact_name || profile.contact_phone || profile.emergency_phone) && (
           <div className="card mt-4 p-4">
-            <p className="text-sm font-medium text-muted">הצוות שלי</p>
+            <p className="text-sm font-medium text-muted">{t("הצוות שלי")}</p>
             {(profile.contact_name || profile.contact_role) && (
               <p className="mt-1 break-words font-medium">
                 {profile.contact_name}
@@ -150,17 +150,17 @@ export default async function JourneyPage() {
             )}
             {profile.contact_phone && (
               <div className="mt-3 flex flex-wrap gap-2">
-                <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn btn-sm">חיוג</a>
+                <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn btn-sm">{t("חיוג")}</a>
                 <a href={whatsAppUrl(profile.contact_phone, `שלום, אני ${profile.full_name}`)} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
                   WhatsApp
                 </a>
               </div>
             )}
-            {profile.office_hours && <p className="mt-2 text-sm text-muted">שעות מענה: {profile.office_hours}</p>}
+            {profile.office_hours && <p className="mt-2 text-sm text-muted">{t("שעות מענה")}: {profile.office_hours}</p>}
             {profile.emergency_phone && (
               <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-bad-soft px-3 py-2">
                 <span className="flex items-center gap-1.5 text-sm font-medium text-bad">
-                  <Icon name="alert" size={14} /> למקרה חירום
+                  <Icon name="alert" size={14} /> {t("למקרה חירום")}
                 </span>
                 <a href={`tel:${profile.emergency_phone.replace(/[^\d+]/g, "")}`} dir="ltr" className="num font-medium text-bad hover:underline">
                   {profile.emergency_phone}
@@ -174,7 +174,7 @@ export default async function JourneyPage() {
         {journey.red_flags && (
           <div className="mt-4 rounded-2xl bg-bad-soft p-4">
             <p className="flex items-center gap-1.5 text-sm font-medium text-bad">
-              <Icon name="alert" size={14} /> מתי להתקשר דחוף
+              <Icon name="alert" size={14} /> {t("מתי להתקשר דחוף")}
             </p>
             <p className="mt-1 whitespace-pre-wrap break-words text-bad">{journey.red_flags}</p>
           </div>
