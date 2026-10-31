@@ -30,9 +30,7 @@ export default async function WeeklySummaryPage() {
   return (
     <main className="max-w-2xl space-y-8 pb-6">
       <header>
-        <p className="eyebrow">{t("לוח בקרה")}</p>
-        <h1 className="display mt-1 text-4xl">{t("סיכום השבוע")}</h1>
-        <p className="mt-2 text-muted">{t("תמונת מצב ל-7 הימים הקרובים, בלי צורך לעבור על כל מסך בנפרד.")}</p>
+        <h1 className="display text-4xl">{t("סיכום השבוע")}</h1>
       </header>
 
       <section className="card space-y-3 p-5">
