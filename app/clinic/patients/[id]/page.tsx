@@ -115,15 +115,33 @@ export default async function PatientPage({
     isDoctor
       ? supabase.from("visit_notes").select("journey_task_id, note").eq("patient_id", journey.patient_id)
       : Promise.resolve({ data: null }),
+    // Tried with the result-tracking columns first (patch-referral-results.sql); falls back to the
+    // base columns so existing referrals still show before that patch has been applied.
     supabase
       .from("referrals")
-      .select("id, recipient, reason, created_at")
+      .select("id, recipient, reason, created_at, result_status, result_path, result_name")
       .eq("patient_id", journey.patient_id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .then((res) =>
+        res.error
+          ? supabase.from("referrals").select("id, recipient, reason, created_at").eq("patient_id", journey.patient_id).order("created_at", { ascending: false })
+          : res,
+      ),
   ]);
   const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
   // Separate query so the page still works before patch-outcomes.sql is applied.
   const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
+  const referrals = (referralRows ?? []) as {
+    id: string; recipient: string; reason: string; created_at: string;
+    result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null;
+  }[];
+  const resultUrls = new Map<string, string>();
+  await Promise.all(
+    referrals.filter((r) => r.result_path).map(async (r) => {
+      const { data } = await supabase.storage.from("referral-results").createSignedUrl(r.result_path!, 600);
+      if (data?.signedUrl) resultUrls.set(r.id, data.signedUrl);
+    }),
+  );
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -309,7 +327,10 @@ export default async function PatientPage({
           <ReferralsCard
             patientId={journey.patient_id}
             canCreate={isDoctor}
-            items={(referralRows ?? []).map((r) => ({ id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at }))}
+            items={referrals.map((r) => ({
+              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+            }))}
           />
         </section>
       </aside>
