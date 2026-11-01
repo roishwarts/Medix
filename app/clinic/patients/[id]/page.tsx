@@ -25,6 +25,7 @@ import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
 import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
+import { AllDocuments, type DocItem } from "./all-documents";
 import { StartJourney } from "./start-journey";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
@@ -119,7 +120,7 @@ export default async function PatientPage({
     // base columns so existing referrals still show before that patch has been applied.
     supabase
       .from("referrals")
-      .select("id, recipient, reason, created_at, result_status, result_path, result_name")
+      .select("id, recipient, reason, created_at, result_status, result_path, result_name, result_received_at")
       .eq("patient_id", journey.patient_id)
       .order("created_at", { ascending: false })
       .then((res) =>
@@ -133,7 +134,7 @@ export default async function PatientPage({
   const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   const referrals = (referralRows ?? []) as {
     id: string; recipient: string; reason: string; created_at: string;
-    result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null;
+    result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;
   }[];
   const resultUrls = new Map<string, string>();
   await Promise.all(
@@ -153,6 +154,18 @@ export default async function PatientPage({
   const cgByUser = new Map((caregivers ?? []).map((c) => [c.user_id as string, c]));
   const urls = new Map<string, string>();
   for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
+
+  const allDocs: DocItem[] = [
+    ...summary.tasks
+      .filter((tk) => tk.evidence_name)
+      .map((tk): DocItem => ({ id: tk.id, title: tk.title, fileName: tk.evidence_name!, url: urls.get(tk.id), date: tk.submitted_at })),
+    ...referrals
+      .filter((r) => r.result_name)
+      .map((r): DocItem => ({
+        id: r.id, title: tr("תוצאה: {recipient}", { recipient: r.recipient }), fileName: r.result_name!,
+        url: resultUrls.get(r.id), date: r.result_received_at ?? null,
+      })),
+  ];
 
   const autoStage = stageOf(summary, !!cancelRow?.cancelled_at);
 
@@ -284,6 +297,8 @@ export default async function PatientPage({
           ))}
         </div>
       </section>
+
+      <AllDocuments items={allDocs} />
 
       <section>
         <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
