@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 const DEFAULT_SURGERY_DAYS = 7;
 const DEFAULT_READY_DAYS = 14;
 
-function Kpi({ href, label, value, tone, alert }: { href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean }) {
+function Kpi({ href, label, value, tone, alert, noIcon }: { href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean; noIcon?: boolean }) {
   const color = tone === "bad" ? "text-bad" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-ink";
   return (
     <Link
@@ -29,7 +29,7 @@ function Kpi({ href, label, value, tone, alert }: { href: string; label: string;
       className={`card block min-h-28 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
       <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted sm:text-sm">
-        {alert && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
+        {alert && !noIcon && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
         {label}
       </p>
       <p className={`display num mt-1 text-3xl sm:text-4xl ${color}`}>{value}</p>
@@ -160,7 +160,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
         <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
         <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
       </section>
 
