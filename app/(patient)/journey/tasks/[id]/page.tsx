@@ -9,8 +9,10 @@ import { getLang } from "@/lib/prefs-server";
 import { formatDateLong, relativeDays } from "@/lib/dates";
 import { Icon, TaskStatePill } from "@/components/ui";
 import { SubmitPanel } from "./submit-panel";
+import { PromsForm } from "./proms-form";
 import { NavigateButtons } from "@/components/navigate-buttons";
 import { resolvePlace } from "@/lib/location";
+import { instrumentTitle } from "@/lib/proms";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +57,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const mine = task.owner === "patient";
   const canSubmit = mayAct && mine && (task.state === "todo" || task.state === "rejected");
   const isAppt = task.kind === "appointment";
+  const isProms = task.kind === "proms" && !!task.proms_instrument;
   const place = resolvePlace(task.location, profile?.clinic_address);
   const viewOnly = !!profile && profile.role === "caregiver" && !mayAct;
   const selfOwned = profile?.role === "patient" && mine;
@@ -64,7 +67,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
   const required = isAppt
     ? t("הגעה למרפאה")
-    : task.requires_evidence
+    : isProms
+      ? t("מילוי {name}", { name: instrumentTitle(task.proms_instrument!) })
+      : task.requires_evidence
       ? t("העלאת מסמך")
       : task.requires_review
         ? t("אישור הצוות")
@@ -170,7 +175,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {canSubmit && (
+      {canSubmit && isProms && (
+        <aside className="mt-8 lg:col-span-2 lg:mt-0 lg:pt-14" aria-label={t("מילוי השאלון")}>
+          <PromsForm taskId={task.id} instrument={task.proms_instrument!} />
+        </aside>
+      )}
+      {canSubmit && !isProms && (
         <aside className="mt-8 lg:col-span-2 lg:mt-0 lg:pt-14" aria-label={t("שליחת המשימה")}>
           <SubmitPanel
             taskId={task.id}

@@ -16,9 +16,11 @@ export type TaskRow = {
   position: number;
   depends_on: string[];
   status: Status;
-  kind: "task" | "appointment";
+  kind: "task" | "appointment" | "proms";
   location: string | null;
   scheduled_at: string | null;
+  proms_instrument: "eq5d5l" | "oks" | null;
+  proms_timepoint: "baseline" | "month3" | "year1" | null;
   evidence_path: string | null;
   evidence_name: string | null;
   patient_note: string | null;

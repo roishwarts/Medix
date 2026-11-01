@@ -24,6 +24,7 @@ import { getClinicOptions } from "@/lib/clinic-options";
 import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
 import { CancelJourney } from "./cancel-journey";
+import { PromsCard } from "./proms-card";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
@@ -167,6 +168,7 @@ export default async function PatientPage({
         )}
       </section>
       <CancelJourney journeyId={journey.id} lang={lang} cancelledAt={cancelRow?.cancelled_at ?? null} cancelledReason={(cancelRow?.cancelled_reason ?? null) as CancelReason | null} />
+      <PromsCard journeyId={journey.id} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
           {tr("כל המשימות")}

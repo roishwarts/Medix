@@ -1,6 +1,9 @@
 import { createClient } from "./supabase/server";
 import { summarize, type JourneySummary, type TaskRow } from "./journey";
 
+// Used as-is (not tiered) by the journey editor page, so it deliberately excludes proms_instrument/
+// proms_timepoint (patch-proms.sql) — the editor doesn't need to show or round-trip them. The
+// journeys select below adds them back, tiered, for the patient- and clinic-facing reads that do.
 export const TASK_COLUMNS =
   "id, journey_id, title, description, owner, due_offset_days, requires_evidence, requires_review, mandatory, position, depends_on, kind, location, scheduled_at, status, evidence_path, evidence_name, patient_note, review_note, submitted_by, submitted_at, reviewed_at";
 
@@ -20,11 +23,13 @@ export type JourneyInfo = {
 export type PatientJourney = JourneyInfo & { summary: JourneySummary };
 
 // All journeys of the caller's clinic (staff) or the caller's own journey (patient), with readiness.
-// patient_info (patch-patient-content.sql), red_flags (patch-red-flags.sql) and cancelled_at
-// (patch-outcomes.sql) may not exist yet on an older database, so each is dropped from the select
-// in turn, newest first, until one succeeds.
-const journeySelect = (tier: number) =>
-  `id, patient_id, surgery_date, template_name, template_id, ${tier >= 3 ? "cancelled_at, " : ""}${tier >= 2 ? "red_flags, " : ""}${tier >= 1 ? "patient_info, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${TASK_COLUMNS})`;
+// patient_info (patch-patient-content.sql), red_flags (patch-red-flags.sql), cancelled_at
+// (patch-outcomes.sql) and proms_instrument/proms_timepoint (patch-proms.sql) may not exist yet on
+// an older database, so each is dropped from the select in turn, newest first, until one succeeds.
+const journeySelect = (tier: number) => {
+  const taskColumns = tier >= 4 ? `${TASK_COLUMNS}, proms_instrument, proms_timepoint` : TASK_COLUMNS;
+  return `id, patient_id, surgery_date, template_name, template_id, ${tier >= 3 ? "cancelled_at, " : ""}${tier >= 2 ? "red_flags, " : ""}${tier >= 1 ? "patient_info, " : ""}patients(id, full_name, phone), templates(procedure), journey_tasks(${taskColumns})`;
+};
 
 type JourneyRow = {
   id: string;
@@ -59,10 +64,11 @@ function toJourney(j: JourneyRow): PatientJourney {
 
 // Runs the journeys query, dropping the newest optional columns in turn if the database doesn't have them yet.
 async function runJourneysQuery(apply: (select: string) => PromiseLike<{ data: unknown; error: unknown }>) {
-  let { data, error } = await apply(journeySelect(3));
-  if (error) ({ data, error } = await apply(journeySelect(2)));
-  if (error) ({ data, error } = await apply(journeySelect(1)));
-  if (error) ({ data } = await apply(journeySelect(0)));
+  for (const tier of [4, 3, 2, 1]) {
+    const { data, error } = await apply(journeySelect(tier));
+    if (!error) return data;
+  }
+  const { data } = await apply(journeySelect(0));
   return data;
 }
 
@@ -77,7 +83,7 @@ export async function loadJourneys(): Promise<PatientJourney[]> {
 
   let rows: JourneyRow[] = [];
   let select = journeySelect(0);
-  for (const tier of [3, 2, 1, 0]) {
+  for (const tier of [4, 3, 2, 1, 0]) {
     select = journeySelect(tier);
     const { data, error } = await page(select, 0, PAGE - 1);
     if (!error) { rows = (data ?? []) as unknown as JourneyRow[]; break; }
