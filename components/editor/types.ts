@@ -10,7 +10,9 @@ export type EditorTask = {
   requires_review: boolean;
   mandatory: boolean;
   depends_on: string[];
-  kind: "task" | "appointment";
+  // "proms" only ever arrives already set on an existing task (seeded via SQL, not created here);
+  // the editor shows it read-only rather than letting staff pick it for a new/other task.
+  kind: "task" | "appointment" | "proms";
   location: string;
   scheduled_local: string; // journey mode only: "YYYY-MM-DDTHH:mm" in Israel time, or ""
   status?: Status; // journey mode only

@@ -33,3 +33,13 @@ export async function submitTask(taskId: string, input: { path?: string; name?: 
   revalidatePath("/journey", "layout");
   return {};
 }
+
+export async function submitProms(taskId: string, answers: Record<string, number>) {
+  await requireProfile(["patient", "caregiver"]);
+  const supabase = await createClient();
+  const t = await getT();
+  const { error } = await supabase.rpc("submit_proms", { p_task_id: taskId, p_answers: answers });
+  if (error) return { error: t("שליחת השאלון נכשלה. ודאו שהורצה התוספת supabase/patch-proms.sql.") };
+  revalidatePath("/journey", "layout");
+  return {};
+}

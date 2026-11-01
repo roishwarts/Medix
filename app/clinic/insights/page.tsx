@@ -15,7 +15,7 @@ const REASON_LABEL: Record<string, string> = {
 };
 const REASON_ORDER = Object.keys(REASON_LABEL);
 
-type Row = { surgery_date: string; created_at: string; cancelled_at: string | null; cancelled_reason: string | null; prep_completed_at: string | null };
+type Row = { id: string; surgery_date: string; created_at: string; cancelled_at: string | null; cancelled_reason: string | null; prep_completed_at: string | null };
 
 export default async function InsightsPage() {
   const [t, lang] = await Promise.all([getT(), getLang()]);
@@ -26,7 +26,7 @@ export default async function InsightsPage() {
   const windowEnd = addMonths(today(), 1);
   const { data, error } = await supabase
     .from("journeys")
-    .select("surgery_date, created_at, cancelled_at, cancelled_reason, prep_completed_at")
+    .select("id, surgery_date, created_at, cancelled_at, cancelled_reason, prep_completed_at")
     .gte("surgery_date", monthStart)
     .lt("surgery_date", windowEnd);
 
@@ -69,6 +69,30 @@ export default async function InsightsPage() {
   const prepRows = active.filter((r) => r.prep_completed_at);
   const prepDays = prepRows.map((r) => diffDays(r.prep_completed_at!.slice(0, 10), r.created_at.slice(0, 10)));
   const avgPrep = prepDays.length ? Math.round(prepDays.reduce((a, b) => a + b, 0) / prepDays.length) : null;
+
+  // Separate, tolerant query (patch-proms.sql) — the rest of the dashboard still works without it.
+  const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
+  let oksBaseline: number | null = null, oksMonth3: number | null = null, oksImprovement: number | null = null, oksPaired = 0;
+  if (active.length > 0) {
+    const { data: oks } = await supabase
+      .from("proms_responses")
+      .select("journey_id, timepoint, score")
+      .eq("instrument", "oks")
+      .in("journey_id", active.map((r) => r.id));
+    if (oks) {
+      const byJourney = new Map<string, Partial<Record<"baseline" | "month3", number>>>();
+      for (const r of oks as { journey_id: string; timepoint: string; score: number | null }[]) {
+        if (r.score === null || (r.timepoint !== "baseline" && r.timepoint !== "month3")) continue;
+        byJourney.set(r.journey_id, { ...byJourney.get(r.journey_id), [r.timepoint]: r.score });
+      }
+      const all = [...byJourney.values()];
+      oksBaseline = avg(all.map((v) => v.baseline).filter((n): n is number => n !== undefined));
+      oksMonth3 = avg(all.map((v) => v.month3).filter((n): n is number => n !== undefined));
+      const paired = all.filter((v) => v.baseline !== undefined && v.month3 !== undefined) as { baseline: number; month3: number }[];
+      oksPaired = paired.length;
+      oksImprovement = avg(paired.map((v) => v.month3 - v.baseline));
+    }
+  }
 
   return (
     <main className="max-w-3xl space-y-8 pb-6">
@@ -137,6 +161,28 @@ export default async function InsightsPage() {
           <p className="mt-1 text-xs text-muted">{t("מתחילת המסלול ועד שהמוכנות הגיעה ל-100% · מבוסס על {n} מטופלים", { n: prepDays.length })}</p>
         </div>
       </section>
+      {(oksBaseline !== null || oksMonth3 !== null) && (
+        <section aria-labelledby="h-oks">
+          <h2 id="h-oks" className="mb-3 text-lg font-medium">{t("מדד הברך (Oxford Knee Score)")}</h2>
+          <div className="card grid grid-cols-3 gap-3 p-5 text-center">
+            <div>
+              <p className="num display text-3xl">{oksBaseline ?? "—"}</p>
+              <p className="text-sm text-muted">{t("ממוצע לפני הניתוח")}</p>
+            </div>
+            <div>
+              <p className="num display text-3xl">{oksMonth3 ?? "—"}</p>
+              <p className="text-sm text-muted">{t("ממוצע 3 חודשים אחרי")}</p>
+            </div>
+            <div>
+              <p className={`num display text-3xl ${oksImprovement !== null && oksImprovement > 0 ? "text-ok" : ""}`}>
+                {oksImprovement !== null ? (oksImprovement > 0 ? `+${oksImprovement}` : oksImprovement) : "—"}
+              </p>
+              <p className="text-sm text-muted">{t("שיפור ממוצע")}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-muted">{t("מתוך {n} מטופלים עם שתי מדידות (0–48, ככל שגבוה יותר כך טוב יותר)", { n: oksPaired })}</p>
+        </section>
+      )}
     </main>
   );
 }

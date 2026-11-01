@@ -21,9 +21,12 @@ import { PendingInvites } from "./pending-invites";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
-import { VisitNote } from "./visit-note";
+import { MeetingSummaries, type SummaryItem, type ApptOption } from "./meeting-summaries";
 import { ReferralsCard } from "./referrals-card";
-import { CancelJourney } from "./cancel-journey";
+import { CancelledBanner, CancelTrigger } from "./cancel-journey";
+import { PromsCard } from "./proms-card";
+import { AllDocuments, type DocItem } from "./all-documents";
+import { StartJourney } from "./start-journey";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
@@ -52,10 +55,11 @@ export default async function PatientPage({
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
   // Everything that does not depend on the journey is fetched together with it.
-  const [profile, journey, options] = await Promise.all([
+  const [profile, journey, options, { data: templates }] = await Promise.all([
     requireProfile(["staff", "doctor"]),
     loadJourney(id),
     getClinicOptions(),
+    supabase.from("templates").select("id, name").order("name"),
   ]);
   if (!journey) {
     // Some links (the referral pages) carry the patient's id instead of the journey's: send them to the right card.
@@ -76,7 +80,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -108,19 +112,50 @@ export default async function PatientPage({
           return [t.id, data?.signedUrl] as const;
         }),
     ),
-    // RLS already limits this to doctors; skipped outright for staff so the page doesn't wait on it.
-    isDoctor
-      ? supabase.from("visit_notes").select("journey_task_id, note").eq("patient_id", journey.patient_id)
-      : Promise.resolve({ data: null }),
+    // Meeting summaries: now visible to all staff, not just doctors.
+    supabase
+      .from("visit_notes")
+      .select("id, journey_task_id, occurred_at, note, follow_up, author_id")
+      .eq("patient_id", journey.patient_id)
+      .order("occurred_at", { ascending: false }),
+    // Tried with the result-tracking columns first (patch-referral-results.sql); falls back to the
+    // base columns so existing referrals still show before that patch has been applied.
     supabase
       .from("referrals")
-      .select("id, recipient, reason, created_at")
+      .select("id, recipient, reason, created_at, result_status, result_path, result_name, result_received_at")
       .eq("patient_id", journey.patient_id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .then((res) =>
+        res.error
+          ? supabase.from("referrals").select("id, recipient, reason, created_at").eq("patient_id", journey.patient_id).order("created_at", { ascending: false })
+          : res,
+      ),
+    supabase.from("profiles").select("id, full_name").eq("clinic_id", profile.clinic_id),
   ]);
-  const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
   // Separate query so the page still works before patch-outcomes.sql is applied.
   const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
+  const referrals = (referralRows ?? []) as {
+    id: string; recipient: string; reason: string; created_at: string;
+    result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;
+  }[];
+  const resultUrls = new Map<string, string>();
+  await Promise.all(
+    referrals.filter((r) => r.result_path).map(async (r) => {
+      const { data } = await supabase.storage.from("referral-results").createSignedUrl(r.result_path!, 600);
+      if (data?.signedUrl) resultUrls.set(r.id, data.signedUrl);
+    }),
+  );
+  const authorName = new Map((teamRows ?? []).map((p) => [p.id as string, p.full_name as string]));
+  const taskTitleById = new Map(summary.tasks.map((tk) => [tk.id, tk.title]));
+  const summaries: SummaryItem[] = (summaryRows ?? []).map((s) => ({
+    id: s.id, occurredAt: s.occurred_at, note: s.note, followUp: s.follow_up,
+    authorName: authorName.get(s.author_id) ?? tr("איש צוות"),
+    journeyTaskId: s.journey_task_id, linkedTitle: s.journey_task_id ? (taskTitleById.get(s.journey_task_id) ?? null) : null,
+  }));
+  const appointmentOptions: ApptOption[] = summary.tasks
+    .filter((tk) => tk.kind === "appointment")
+    .map((tk) => ({ id: tk.id, title: tk.title, eventDate: tk.eventDate }));
+
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -133,17 +168,38 @@ export default async function PatientPage({
   const urls = new Map<string, string>();
   for (const [taskId, url] of urlEntries) if (url) urls.set(taskId, url);
 
+  const allDocs: DocItem[] = [
+    ...summary.tasks
+      .filter((tk) => tk.evidence_name)
+      .map((tk): DocItem => ({ id: tk.id, title: tk.title, fileName: tk.evidence_name!, url: urls.get(tk.id), date: tk.submitted_at })),
+    ...referrals
+      .filter((r) => r.result_name)
+      .map((r): DocItem => ({
+        id: r.id, title: tr("תוצאה: {recipient}", { recipient: r.recipient }), fileName: r.result_name!,
+        url: resultUrls.get(r.id), date: r.result_received_at ?? null,
+      })),
+  ];
+
   const autoStage = stageOf(summary, !!cancelRow?.cancelled_at);
 
   return (
     <main>
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-6">
         <div className="min-w-0">
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
+        <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-sm">
+          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="text-muted hover:text-ink hover:underline">{tr("דף סיכום להדפסה")}</Link>
+          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="text-muted hover:text-ink hover:underline">{tr("ייצוא כל הנתונים")}</Link>}
+        </div>
       </div>
 
+      {cancelRow?.cancelled_at && (
+        <div className="mt-6">
+          <CancelledBanner journeyId={journey.id} lang={lang} cancelledAt={cancelRow.cancelled_at} cancelledReason={(cancelRow.cancelled_reason ?? null) as CancelReason | null} />
+        </div>
+      )}
       <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
       <div className="min-w-0 space-y-10">
       <section className="card divide-y divide-line">
@@ -165,8 +221,11 @@ export default async function PatientPage({
             <span className="shrink-0 text-sm text-muted">{tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}</span>
           </div>
         )}
+        {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
       </section>
-      <CancelJourney journeyId={journey.id} lang={lang} cancelledAt={cancelRow?.cancelled_at ?? null} cancelledReason={(cancelRow?.cancelled_reason ?? null) as CancelReason | null} />
+      <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
+
+      <PromsCard journeyId={journey.id} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
           {tr("כל המשימות")}
@@ -194,11 +253,11 @@ export default async function PatientPage({
         {visibleTasks.length === 0 && <p className="card mt-3 px-4 py-12 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
         <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
           {visibleTasks.map((t) => (
-            <div key={t.id} className={`px-4 py-4 ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
+            <div key={t.id} className={`px-4 ${t.state === "locked" ? "py-2.5" : "py-4"} ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="break-words font-medium">{t.title}</p>
+                    <p className={`break-words font-medium ${t.state === "locked" ? "text-muted" : ""}`}>{t.title}</p>
                     {!t.mandatory && <span className="pill pill-neutral">{tr("רשות")}</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">
@@ -252,11 +311,12 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
-              {t.kind === "appointment" && isDoctor && <VisitNote taskId={t.id} initialNote={notesByTask.get(t.id) ?? ""} />}
             </div>
           ))}
         </div>
       </section>
+
+      <AllDocuments items={allDocs} />
 
       <section>
         <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
@@ -274,6 +334,7 @@ export default async function PatientPage({
             hospitals={options.hospitals} companies={options.companies}
             autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
+          <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         </section>
         <section aria-label={tr("בני משפחה")}>
@@ -299,7 +360,10 @@ export default async function PatientPage({
           <ReferralsCard
             patientId={journey.patient_id}
             canCreate={isDoctor}
-            items={(referralRows ?? []).map((r) => ({ id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at }))}
+            items={referrals.map((r) => ({
+              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+            }))}
           />
         </section>
       </aside>

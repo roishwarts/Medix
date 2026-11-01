@@ -34,7 +34,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
   const hospitals = [...new Set([...options.hospitals, ...placements.map((p) => p.hospital).filter((h): h is string => !!h)])].sort((a, b) => a.localeCompare(b, "he"));
   const stage = sp.stage === "all" || STAGES.includes(sp.stage as Stage) ? (sp.stage as Stage | "all") : "active";
   const rows: PatientRow[] = all.map((j) => ({
-    id: j.id, name: j.patient.full_name, surgeryDate: j.surgery_date, daysToSurgery: j.summary.daysToSurgery,
+    id: j.id, name: j.patient.full_name, procedure: j.procedure, surgeryDate: j.surgery_date, daysToSurgery: j.summary.daysToSurgery,
     readiness: j.summary.readiness, readinessState: j.summary.readinessState,
     stage: extras.get(j.patient_id)?.stage ?? stageOf(j.summary, !!j.cancelled_at),
     hospital: placeOf.get(j.patient_id)?.hospital ?? null, company: placeOf.get(j.patient_id)?.company ?? null,
