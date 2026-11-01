@@ -15,7 +15,9 @@ const REASON_LABEL: Record<CancelReason, string> = {
   other: "אחר",
 };
 
-export function CancelJourney({
+// Shown above everything else on a cancelled patient's card — the single most important fact
+// about them, so it gets its own prominent banner rather than competing with the rest of the page.
+export function CancelledBanner({
   journeyId,
   lang,
   cancelledAt,
@@ -23,9 +25,33 @@ export function CancelJourney({
 }: {
   journeyId: string;
   lang: "he" | "en" | "ru" | "ar";
-  cancelledAt: string | null;
+  cancelledAt: string;
   cancelledReason: CancelReason | null;
 }) {
+  const t = useT();
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <div className="card border-s-4 border-s-bad bg-bad/5 px-4 py-3">
+      <p className="font-medium text-bad">{t("הניתוח בוטל")}</p>
+      <p className="mt-0.5 text-sm text-muted">
+        {t("סיבה: {reason} · {date}", { reason: t(REASON_LABEL[cancelledReason ?? "other"]), date: formatDateLong(israelParts(cancelledAt).date, lang) })}
+      </p>
+      <button
+        type="button"
+        className="mt-2 text-sm font-medium text-accent hover:underline"
+        disabled={pending}
+        onClick={() => start(async () => { await uncancelJourney(journeyId); router.refresh(); })}
+      >
+        {t("ביטול הסימון (זה טעות)")}
+      </button>
+    </div>
+  );
+}
+
+// A quiet action tucked into the surgery summary card (not cancelled yet) — rare enough that it
+// shouldn't compete for attention with the readiness bar and next-step info right above it.
+export function CancelTrigger({ journeyId }: { journeyId: string }) {
   const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,35 +59,18 @@ export function CancelJourney({
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
-  if (cancelledAt) {
+  if (!open) {
     return (
-      <div className="card border-s-4 border-s-bad bg-bad/5 px-4 py-3">
-        <p className="font-medium text-bad">{t("הניתוח בוטל")}</p>
-        <p className="mt-0.5 text-sm text-muted">
-          {t("סיבה: {reason} · {date}", { reason: t(REASON_LABEL[cancelledReason ?? "other"]), date: formatDateLong(israelParts(cancelledAt).date, lang) })}
-        </p>
-        <button
-          type="button"
-          className="mt-2 text-sm font-medium text-accent hover:underline"
-          disabled={pending}
-          onClick={() => start(async () => { await uncancelJourney(journeyId); router.refresh(); })}
-        >
-          {t("ביטול הסימון (זה טעות)")}
+      <div className="flex justify-end px-4 py-2">
+        <button type="button" onClick={() => setOpen(true)} className="text-sm text-muted hover:text-bad hover:underline">
+          {t("ביטול הניתוח")}
         </button>
       </div>
     );
   }
 
-  if (!open) {
-    return (
-      <button type="button" onClick={() => setOpen(true)} className="btn btn-sm min-h-11 !text-bad sm:min-h-9">
-        {t("ביטול הניתוח")}
-      </button>
-    );
-  }
-
   return (
-    <div className="card space-y-3 px-4 py-3">
+    <div className="space-y-3 px-4 py-3">
       <p className="font-medium">{t("סימון הניתוח כמבוטל")}</p>
       <div>
         <label htmlFor="cancel-reason" className="lbl">{t("סיבת הביטול")}</label>

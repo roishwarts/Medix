@@ -35,10 +35,12 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
   }
 
   // Staff may override the lock: the task is marked done even though what it waits for is not finished.
+  // Locked tasks are the common case in a fresh journey and don't need a full button competing for
+  // attention — the override is a rare escape hatch, so it stays a small quiet link instead.
   if (state === "locked") {
     return (
-      <div className="mt-3">
-        <button className="btn btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={() => run("accept")}>{t("סימון כבוצע (עקיפת הנעילה)")}</button>
+      <div className="mt-1.5">
+        <button className="min-h-11 text-sm text-muted hover:text-ink hover:underline sm:min-h-0" disabled={pending} onClick={() => run("accept")}>{t("עקיפת הנעילה וסימון כבוצע")}</button>
         {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
       </div>
     );

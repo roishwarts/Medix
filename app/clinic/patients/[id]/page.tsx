@@ -23,7 +23,7 @@ import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
-import { CancelJourney } from "./cancel-journey";
+import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
@@ -145,6 +145,11 @@ export default async function PatientPage({
         </div>
       </div>
 
+      {cancelRow?.cancelled_at && (
+        <div className="mt-6">
+          <CancelledBanner journeyId={journey.id} lang={lang} cancelledAt={cancelRow.cancelled_at} cancelledReason={(cancelRow.cancelled_reason ?? null) as CancelReason | null} />
+        </div>
+      )}
       <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
       <div className="min-w-0 space-y-10">
       <section className="card divide-y divide-line">
@@ -166,8 +171,8 @@ export default async function PatientPage({
             <span className="shrink-0 text-sm text-muted">{tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}</span>
           </div>
         )}
+        {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
       </section>
-      <CancelJourney journeyId={journey.id} lang={lang} cancelledAt={cancelRow?.cancelled_at ?? null} cancelledReason={(cancelRow?.cancelled_reason ?? null) as CancelReason | null} />
       <PromsCard journeyId={journey.id} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
@@ -196,11 +201,11 @@ export default async function PatientPage({
         {visibleTasks.length === 0 && <p className="card mt-3 px-4 py-12 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
         <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
           {visibleTasks.map((t) => (
-            <div key={t.id} className={`px-4 py-4 ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
+            <div key={t.id} className={`px-4 ${t.state === "locked" ? "py-2.5" : "py-4"} ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="break-words font-medium">{t.title}</p>
+                    <p className={`break-words font-medium ${t.state === "locked" ? "text-muted" : ""}`}>{t.title}</p>
                     {!t.mandatory && <span className="pill pill-neutral">{tr("רשות")}</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-muted">
