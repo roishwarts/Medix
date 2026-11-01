@@ -176,7 +176,10 @@ export default async function PatientPage({
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
-        <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="btn btn-sm shrink-0">{tr("דף סיכום להדפסה")}</Link>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="btn btn-sm">{tr("דף סיכום להדפסה")}</Link>
+          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="btn btn-sm">{tr("ייצוא כל הנתונים")}</Link>}
+        </div>
       </div>
 
       {cancelRow?.cancelled_at && (
