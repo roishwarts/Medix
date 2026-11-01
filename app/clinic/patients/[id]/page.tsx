@@ -176,6 +176,7 @@ export default async function PatientPage({
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
+        <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="btn btn-sm shrink-0">{tr("דף סיכום להדפסה")}</Link>
       </div>
 
       {cancelRow?.cancelled_at && (

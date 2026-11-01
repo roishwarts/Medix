@@ -5,12 +5,8 @@ import { useActionState, useEffect, useState } from "react";
 import { OptionSelect } from "@/components/option-select";
 import { LANGS, type Lang } from "@/lib/prefs";
 import { STAGES, STAGE_LABEL, STAGE_PILL, type Stage } from "@/lib/journey";
+import { HMOS, HMO_LABEL, type Hmo } from "@/lib/hmo";
 import { updatePatientDetails } from "../actions";
-
-const HMOS = ["clalit", "maccabi", "meuhedet", "leumit", "other"] as const;
-const HMO_LABEL: Record<(typeof HMOS)[number], string> = {
-  clalit: "כללית", maccabi: "מכבי", meuhedet: "מאוחדת", leumit: "לאומית", other: "אחר",
-};
 
 type Props = {
   patientId: string; name: string; phone: string; email: string; hospital: string; company: string;
@@ -54,7 +50,7 @@ export function PatientDetails({
         <div className={row}><span className="shrink-0 text-muted">{t("בית חולים")}</span>{hospital ? <span className="font-medium">{hospital}</span> : <span className="text-muted">{t("לא נבחר")}</span>}</div>
         <div className={row}><span className="shrink-0 text-muted">{t("חברה")}</span>{company ? <span className="font-medium">{company}</span> : <span className="text-muted">{t("לא נבחר")}</span>}</div>
         <div className={row}><span className="shrink-0 text-muted">{t("תעודת זהות")}</span>{nationalId ? <span className="num font-medium">{nationalId}</span> : none}</div>
-        <div className={row}><span className="shrink-0 text-muted">{t("קופת חולים")}</span>{hmo ? <span className="font-medium">{t(HMO_LABEL[hmo as (typeof HMOS)[number]] ?? hmo)}</span> : none}</div>
+        <div className={row}><span className="shrink-0 text-muted">{t("קופת חולים")}</span>{hmo ? <span className="font-medium">{t(HMO_LABEL[hmo as Hmo] ?? hmo)}</span> : none}</div>
         {(insuranceCompany || insurancePolicyNumber || insurancePhone) && (
           <>
             <div className={row}><span className="shrink-0 text-muted">{t("חברת ביטוח פרטי")}</span>{insuranceCompany ? <span className="font-medium">{insuranceCompany}</span> : none}</div>
