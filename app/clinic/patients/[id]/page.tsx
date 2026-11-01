@@ -21,7 +21,7 @@ import { PendingInvites } from "./pending-invites";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { getClinicOptions } from "@/lib/clinic-options";
-import { VisitNote } from "./visit-note";
+import { MeetingSummaries, type SummaryItem, type ApptOption } from "./meeting-summaries";
 import { ReferralsCard } from "./referrals-card";
 import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
@@ -80,7 +80,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: noteRows }, { data: referralRows }] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -112,10 +112,12 @@ export default async function PatientPage({
           return [t.id, data?.signedUrl] as const;
         }),
     ),
-    // RLS already limits this to doctors; skipped outright for staff so the page doesn't wait on it.
-    isDoctor
-      ? supabase.from("visit_notes").select("journey_task_id, note").eq("patient_id", journey.patient_id)
-      : Promise.resolve({ data: null }),
+    // Meeting summaries: now visible to all staff, not just doctors.
+    supabase
+      .from("visit_notes")
+      .select("id, journey_task_id, occurred_at, note, follow_up, author_id")
+      .eq("patient_id", journey.patient_id)
+      .order("occurred_at", { ascending: false }),
     // Tried with the result-tracking columns first (patch-referral-results.sql); falls back to the
     // base columns so existing referrals still show before that patch has been applied.
     supabase
@@ -128,8 +130,8 @@ export default async function PatientPage({
           ? supabase.from("referrals").select("id, recipient, reason, created_at").eq("patient_id", journey.patient_id).order("created_at", { ascending: false })
           : res,
       ),
+    supabase.from("profiles").select("id, full_name").eq("clinic_id", profile.clinic_id),
   ]);
-  const notesByTask = new Map((noteRows ?? []).map((n) => [n.journey_task_id as string, n.note as string]));
   // Separate query so the page still works before patch-outcomes.sql is applied.
   const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   const referrals = (referralRows ?? []) as {
@@ -143,6 +145,17 @@ export default async function PatientPage({
       if (data?.signedUrl) resultUrls.set(r.id, data.signedUrl);
     }),
   );
+  const authorName = new Map((teamRows ?? []).map((p) => [p.id as string, p.full_name as string]));
+  const taskTitleById = new Map(summary.tasks.map((tk) => [tk.id, tk.title]));
+  const summaries: SummaryItem[] = (summaryRows ?? []).map((s) => ({
+    id: s.id, occurredAt: s.occurred_at, note: s.note, followUp: s.follow_up,
+    authorName: authorName.get(s.author_id) ?? tr("איש צוות"),
+    journeyTaskId: s.journey_task_id, linkedTitle: s.journey_task_id ? (taskTitleById.get(s.journey_task_id) ?? null) : null,
+  }));
+  const appointmentOptions: ApptOption[] = summary.tasks
+    .filter((tk) => tk.kind === "appointment")
+    .map((tk) => ({ id: tk.id, title: tk.title, eventDate: tk.eventDate }));
+
   const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
@@ -296,11 +309,12 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
-              {t.kind === "appointment" && isDoctor && <VisitNote taskId={t.id} initialNote={notesByTask.get(t.id) ?? ""} />}
             </div>
           ))}
         </div>
       </section>
+
+      <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
 
       <AllDocuments items={allDocs} />
 
