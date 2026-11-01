@@ -23,15 +23,16 @@ const LEGEND = [
 export default async function PatientCalendarPage({ searchParams }: { searchParams: Promise<{ view?: string; d?: string }> }) {
   const { view, d } = parseCalParams(await searchParams);
   const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [journey] = await loadJourneys();
-  if (!journey)
+  const journeys = await loadJourneys();
+  if (journeys.length === 0)
     return (
       <main className="py-20 text-center">
         <h1 className="display mb-2 text-3xl">{t("היומן שלך")}</h1>
         <p className="text-muted" role="status">{t("עדיין לא הוגדר עבורך מסלול. פנה/י למרפאה.")}</p>
       </main>
     );
-  const events = patientEvents(journey, t);
+  // More than one journey (another surgery, past or planned) shows on the same calendar.
+  const events = journeys.flatMap((j) => patientEvents(j, t));
   const t0 = today();
   const next = events
     .filter((e) => e.kind !== "deadline" && e.date >= t0)

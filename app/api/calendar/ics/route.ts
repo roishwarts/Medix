@@ -44,8 +44,8 @@ function foldLine(line: string): string {
 export async function GET() {
   const t = await getT();
   const profile = await requireProfile(["patient", "caregiver"]);
-  const [journey] = await loadJourneys();
-  if (!journey) return new Response("Not found", { status: 404 });
+  const journeys = await loadJourneys();
+  if (journeys.length === 0) return new Response("Not found", { status: 404 });
 
   const now = dateStamp(new Date().toISOString().slice(0, 10)) + "T000000Z";
   const lines: string[] = [
@@ -55,32 +55,35 @@ export async function GET() {
     "CALSCALE:GREGORIAN",
   ];
 
-  // Surgery day: all-day event.
-  lines.push(
-    "BEGIN:VEVENT",
-    `UID:surgery-${journey.id}@calendar`,
-    `DTSTAMP:${now}`,
-    `DTSTART;VALUE=DATE:${dateStamp(journey.surgery_date)}`,
-    `SUMMARY:${esc(journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"))}`,
-    "END:VEVENT",
-  );
+  // More than one journey (another surgery, past or planned) all go on the same exported calendar.
+  for (const journey of journeys) {
+    // Surgery day: all-day event.
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:surgery-${journey.id}@calendar`,
+      `DTSTAMP:${now}`,
+      `DTSTART;VALUE=DATE:${dateStamp(journey.surgery_date)}`,
+      `SUMMARY:${esc(journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"))}`,
+      "END:VEVENT",
+    );
 
-  // Every appointment-kind task (pre- or post-op): a doctor visit, a test with a set time, etc.
-  for (const task of journey.summary.tasks) {
-    if (task.kind !== "appointment") continue;
-    const place = resolvePlace(task.location, profile.clinic_address);
-    lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`);
-    // Floating local time (no time zone): the same clock time on any phone, with no time-zone definition needed.
-    if (task.eventTime) {
-      lines.push(`DTSTART:${dateTimeStamp(task.eventDate, task.eventTime)}`, `DTEND:${endStamp(task.eventDate, task.eventTime)}`);
-    } else {
-      lines.push(`DTSTART;VALUE=DATE:${dateStamp(task.eventDate)}`);
+    // Every appointment-kind task (pre- or post-op): a doctor visit, a test with a set time, etc.
+    for (const task of journey.summary.tasks) {
+      if (task.kind !== "appointment") continue;
+      const place = resolvePlace(task.location, profile.clinic_address);
+      lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`);
+      // Floating local time (no time zone): the same clock time on any phone, with no time-zone definition needed.
+      if (task.eventTime) {
+        lines.push(`DTSTART:${dateTimeStamp(task.eventDate, task.eventTime)}`, `DTEND:${endStamp(task.eventDate, task.eventTime)}`);
+      } else {
+        lines.push(`DTSTART;VALUE=DATE:${dateStamp(task.eventDate)}`);
+      }
+      lines.push(`SUMMARY:${esc(task.title)}`);
+      if (task.description) lines.push(`DESCRIPTION:${esc(task.description)}`);
+      if (place.address) lines.push(`LOCATION:${esc(place.address)}`);
+      else if (place.place) lines.push(`LOCATION:${esc(place.place)}`);
+      lines.push("END:VEVENT");
     }
-    lines.push(`SUMMARY:${esc(task.title)}`);
-    if (task.description) lines.push(`DESCRIPTION:${esc(task.description)}`);
-    if (place.address) lines.push(`LOCATION:${esc(place.address)}`);
-    else if (place.place) lines.push(`LOCATION:${esc(place.place)}`);
-    lines.push("END:VEVENT");
   }
 
   lines.push("END:VCALENDAR");

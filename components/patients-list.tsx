@@ -10,7 +10,7 @@ import { windowLabel } from "@/lib/windows";
 import type { Readiness } from "@/lib/journey";
 
 export type PatientRow = {
-  id: string; name: string; surgeryDate: string; daysToSurgery: number; readiness: number; readinessState: Readiness;
+  id: string; name: string; procedure: string | null; surgeryDate: string; daysToSurgery: number; readiness: number; readinessState: Readiness;
   stage: Stage; hospital: string | null; company: string | null; step: string;
 };
 type StageFilter = Stage | "active" | "all";
@@ -122,7 +122,12 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
               const link = "block px-2 py-3 min-[400px]:px-3 sm:px-4";
               return (
                 <tr key={r.id} className="link-row">
-                  <td className="min-w-[5.5rem]"><Link href={href} className={`${link} break-words font-medium`}>{r.name}</Link></td>
+                  <td className="min-w-[5.5rem]">
+                    <Link href={href} className={`${link} break-words`}>
+                      <span className="font-medium">{r.name}</span>
+                      {r.procedure && <span className="block text-xs text-muted">{r.procedure}</span>}
+                    </Link>
+                  </td>
                   <td>
                     <Link href={href} tabIndex={-1} className={`${link} num whitespace-nowrap text-muted`}>
                       {formatDate(r.surgeryDate, lang)}

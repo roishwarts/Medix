@@ -187,6 +187,19 @@ export function nowTask(tasks: Task[]): Task | null {
   );
 }
 
+// A patient can have more than one journey (parallel surgeries, or a new one after an earlier one
+// ended). Picks the one to show by default: the earliest still-in-progress journey (the list is
+// already sorted by surgery_date), or — if every journey is finished or cancelled — the most recent
+// one, so there's always something sensible to land on.
+export function pickActiveJourney<J extends { summary: JourneySummary; cancelled_at: string | null }>(journeys: J[]): J | undefined {
+  if (journeys.length === 0) return undefined;
+  const active = journeys.find((j) => {
+    const stage = stageOf(j.summary, !!j.cancelled_at);
+    return stage !== "finished" && stage !== "cancelled";
+  });
+  return active ?? journeys[journeys.length - 1];
+}
+
 // ---- clinic action items ("this week")
 
 export type ActionKind = "rejected" | "review" | "overdue" | "clinic" | "upcoming";

@@ -25,6 +25,7 @@ import { VisitNote } from "./visit-note";
 import { ReferralsCard } from "./referrals-card";
 import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
+import { StartJourney } from "./start-journey";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
@@ -53,10 +54,11 @@ export default async function PatientPage({
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
   // Everything that does not depend on the journey is fetched together with it.
-  const [profile, journey, options] = await Promise.all([
+  const [profile, journey, options, { data: templates }] = await Promise.all([
     requireProfile(["staff", "doctor"]),
     loadJourney(id),
     getClinicOptions(),
+    supabase.from("templates").select("id, name").order("name"),
   ]);
   if (!journey) {
     // Some links (the referral pages) carry the patient's id instead of the journey's: send them to the right card.
@@ -281,6 +283,7 @@ export default async function PatientPage({
             hospitals={options.hospitals} companies={options.companies}
             autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
+          <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         </section>
         <section aria-label={tr("בני משפחה")}>

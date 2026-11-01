@@ -42,7 +42,10 @@ function Notice({ tone, icon, title, children }: { tone: Tone; icon: "check" | "
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [[journey], profile] = await Promise.all([loadJourneys(), getProfile()]);
+  const [journeys, profile] = await Promise.all([loadJourneys(), getProfile()]);
+  // A patient can have more than one journey now, so the task has to be found across all of them,
+  // not just the first.
+  const journey = journeys.find((j) => j.summary.tasks.some((x) => x.id === id));
   const task = journey?.summary.tasks.find((x) => x.id === id);
   if (!journey || !task) notFound();
 
