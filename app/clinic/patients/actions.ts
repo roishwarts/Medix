@@ -108,6 +108,25 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   return { created: { ...created, link: link.url, message: joinMessage(full_name, await getClinicName(), link.url, lang) } };
 }
 
+// A patient can have more than one journey (another surgery, in parallel or later). This starts a
+// second (or third...) one for a patient who already exists — same start_journey RPC the "new
+// patient" flow uses, just without creating a patient row or an account-join link.
+export async function startAdditionalJourney(patientId: string, templateId: string, surgeryDate: string): Promise<{ error?: string; journeyId?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  if (!templateId || !surgeryDate) return { error: t("יש לבחור תבנית ותאריך ניתוח") };
+
+  const supabase = await createClient();
+  const { data: journeyId, error } = await supabase.rpc("start_journey", {
+    p_patient: patientId,
+    p_template: templateId,
+    p_surgery: surgeryDate,
+  });
+  if (error || !journeyId) return { error: t("פתיחת המסלול נכשלה") };
+  revalidatePath("/clinic", "layout");
+  return { journeyId: journeyId as string };
+}
+
 export type LinkResult = { error?: string; link?: string; message?: string; phone?: string | null; email?: string | null };
 
 // A new join link for a patient who has not created a login yet (resend / lost link).

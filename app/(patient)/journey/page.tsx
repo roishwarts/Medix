@@ -4,7 +4,7 @@ import { HomeSettingsButton } from "@/components/home-settings";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { loadJourneys } from "@/lib/queries";
-import { nowTask, ownerLabel, type Task } from "@/lib/journey";
+import { nowTask, ownerLabel, pickActiveJourney, type Task } from "@/lib/journey";
 import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
@@ -18,17 +18,22 @@ import { whatsAppUrl } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
-export default async function JourneyPage() {
+export default async function JourneyPage({ searchParams }: { searchParams: Promise<{ j?: string }> }) {
   const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [profile, [journey], links, videos] = await Promise.all([
+  const [profile, journeys, links, videos, sp] = await Promise.all([
     requireProfile(["patient", "caregiver"]),
     loadJourneys(),
     getClinicLinks(),
     getClinicVideos(),
+    searchParams,
   ]);
-  if (!journey) {
+  if (journeys.length === 0) {
     return <p className="py-20 text-center text-muted">{t("עדיין לא הוגדר עבורך מסלול. פנה/י למרפאה.")}</p>;
   }
+  // A patient can have more than one journey (another surgery, past or planned). ?j= picks a
+  // specific one (from the "other journeys" switcher below); otherwise the active one shows by default.
+  const journey = (sp.j && journeys.find((j) => j.id === sp.j)) || pickActiveJourney(journeys)!;
+  const otherJourneys = journeys.filter((j) => j.id !== journey.id);
   const videoUrls = await signClinicVideos(videos);
   const { summary } = journey;
   const surgeryPassed = summary.daysToSurgery < 0;
@@ -70,6 +75,17 @@ export default async function JourneyPage() {
         <p className="hero-accent mt-1 font-medium">{formatDateLong(journey.surgery_date, lang)}</p>
         {surgeryPassed && <p className="hero-muted mt-3">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
         </div>
+
+        {otherJourneys.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="text-muted">{t("מסלולים נוספים:")}</span>
+            {otherJourneys.map((j) => (
+              <Link key={j.id} href={`/journey?j=${j.id}`} className="font-medium text-accent hover:underline">
+                {j.procedure || j.template_name} · {formatDate(j.surgery_date, lang)}
+              </Link>
+            ))}
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap gap-2">
           <AddToCalendar next={nextCalendarEvent} />

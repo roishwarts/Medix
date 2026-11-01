@@ -16,9 +16,11 @@ export type TaskRow = {
   position: number;
   depends_on: string[];
   status: Status;
-  kind: "task" | "appointment";
+  kind: "task" | "appointment" | "proms";
   location: string | null;
   scheduled_at: string | null;
+  proms_instrument: "eq5d5l" | "oks" | null;
+  proms_timepoint: "baseline" | "month3" | "year1" | null;
   evidence_path: string | null;
   evidence_name: string | null;
   patient_note: string | null;
@@ -183,6 +185,19 @@ export function nowTask(tasks: Task[]): Task | null {
   return (
     tasks.find((t) => t.owner === "patient" && (t.state === "todo" || t.state === "rejected")) ?? null
   );
+}
+
+// A patient can have more than one journey (parallel surgeries, or a new one after an earlier one
+// ended). Picks the one to show by default: the earliest still-in-progress journey (the list is
+// already sorted by surgery_date), or — if every journey is finished or cancelled — the most recent
+// one, so there's always something sensible to land on.
+export function pickActiveJourney<J extends { summary: JourneySummary; cancelled_at: string | null }>(journeys: J[]): J | undefined {
+  if (journeys.length === 0) return undefined;
+  const active = journeys.find((j) => {
+    const stage = stageOf(j.summary, !!j.cancelled_at);
+    return stage !== "finished" && stage !== "cancelled";
+  });
+  return active ?? journeys[journeys.length - 1];
 }
 
 // ---- clinic action items ("this week")

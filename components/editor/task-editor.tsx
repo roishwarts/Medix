@@ -128,6 +128,7 @@ export function TaskEditor({
                       <select id={`${uid}-${tk.id}-kind`} className="field" value={tk.kind} onChange={(e) => update(tk.id, { kind: e.target.value as EditorTask["kind"] })}>
                         <option value="task">{t("משימה")}</option>
                         <option value="appointment">{t("תור במרפאה")}</option>
+                        {tk.kind === "proms" && <option value="proms" disabled>{t("שאלון (לא ניתן לעריכה כאן)")}</option>}
                       </select>
                     </div>
                     <div>
