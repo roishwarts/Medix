@@ -4,8 +4,8 @@
 -- Run after patch-visit-notes.sql. Safe to re-run.
 
 alter table visit_notes alter column journey_task_id drop not null;
-drop index if exists visit_notes_journey_task_id_key;
 alter table visit_notes drop constraint if exists visit_notes_journey_task_id_key;
+drop index if exists visit_notes_journey_task_id_key;
 
 do $$ begin
   alter table visit_notes rename column doctor_id to author_id;
