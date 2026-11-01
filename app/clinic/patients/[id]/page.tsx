@@ -184,14 +184,14 @@ export default async function PatientPage({
 
   return (
     <main>
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-6">
         <div className="min-w-0">
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="btn btn-sm">{tr("דף סיכום להדפסה")}</Link>
-          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="btn btn-sm">{tr("ייצוא כל הנתונים")}</Link>}
+        <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-sm">
+          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="text-muted hover:text-ink hover:underline">{tr("דף סיכום להדפסה")}</Link>
+          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="text-muted hover:text-ink hover:underline">{tr("ייצוא כל הנתונים")}</Link>}
         </div>
       </div>
 
@@ -223,6 +223,8 @@ export default async function PatientPage({
         )}
         {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
       </section>
+      <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
+
       <PromsCard journeyId={journey.id} />
       <section>
         <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
@@ -313,8 +315,6 @@ export default async function PatientPage({
           ))}
         </div>
       </section>
-
-      <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
 
       <AllDocuments items={allDocs} />
 
