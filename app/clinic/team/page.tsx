@@ -1,14 +1,13 @@
 import { getT } from "@/lib/i18n/server";
+import { requireProfile } from "@/lib/auth";
 import { loadTeam } from "./actions";
 import { TeamForm } from "./team-form";
+import { TeamMemberRow } from "./team-member-row";
 
 export const dynamic = "force-dynamic";
 
-const ROLE_LABEL: Record<"staff" | "doctor", string> = { staff: "צוות", doctor: "רופא" };
-
 export default async function TeamPage() {
-  const t = await getT();
-  const team = await loadTeam();
+  const [t, profile, team] = await Promise.all([getT(), requireProfile(["doctor"]), loadTeam()]);
 
   return (
     <main className="max-w-2xl pb-6">
@@ -25,10 +24,7 @@ export default async function TeamPage() {
       ) : (
         <ul className="card mt-6 divide-y divide-line" aria-label={t("אנשי צוות")}>
           {team.map((m) => (
-            <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-3">
-              <span className="min-w-0 break-words font-medium">{m.full_name}</span>
-              <span className="pill pill-neutral shrink-0">{t(ROLE_LABEL[m.role])}</span>
-            </li>
+            <TeamMemberRow key={m.id} id={m.id} name={m.full_name} username={m.username} role={m.role} disabled={m.disabled} mfa={m.mfa} isSelf={m.id === profile.id} />
           ))}
         </ul>
       )}
