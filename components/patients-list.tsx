@@ -118,7 +118,53 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
       </div>
 
       <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
-      <div className="card mt-5 overflow-x-auto">
+
+      {/* A phone screen can't fit the table's extra columns even hidden behind a scrollbar, so it
+          gets its own compact card per patient with every field visible, instead of a table that
+          quietly drops hospital/company/current-step until the screen is wider. The table's
+          sortable headers aren't shown here, so the same sort state gets a plain select instead. */}
+      <div className="mt-5 flex justify-end sm:hidden">
+        <select
+          aria-label={t("מיון")} className="field !min-h-9 w-auto py-1 text-sm"
+          value={sort ? `${sort.key}:${sort.dir}` : ""}
+          onChange={(e) => {
+            const v = e.target.value;
+            setSort(v ? { key: v.split(":")[0] as SortKey, dir: Number(v.split(":")[1]) as 1 | -1 } : null);
+          }}
+        >
+          <option value="">{t("לפי תאריך ניתוח (ברירת מחדל)")}</option>
+          <option value="name:1">{t("שם (א-ת)")}</option>
+          <option value="readiness:1">{t("מוכנות (נמוך לגבוה)")}</option>
+          <option value="readiness:-1">{t("מוכנות (גבוה לנמוך)")}</option>
+        </select>
+      </div>
+      <div className="mt-2 space-y-2 sm:hidden">
+        {sorted.map((r) => (
+          <Link key={r.id} href={`/clinic/patients/${r.id}`} className="card block min-h-11 p-3.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 break-words font-medium">{r.name}</span>
+              <span className={`pill ${STAGE_PILL[r.stage]} shrink-0`}>{t(STAGE_LABEL[r.stage])}</span>
+            </div>
+            {r.procedure && <p className="mt-0.5 text-sm text-muted">{r.procedure}</p>}
+            <div className="mt-2.5 flex items-center gap-3">
+              <span className="num shrink-0 text-sm text-muted">
+                {formatDate(r.surgeryDate, lang)} · {r.daysToSurgery >= 0 ? t("({n} ימים)", { n: r.daysToSurgery }) : t("(עבר)")}
+              </span>
+              <span className="num shrink-0 text-sm font-medium">{r.readiness}%</span>
+              <div className="min-w-0 flex-1" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
+            </div>
+            {(r.hospital || r.company) && (
+              <p className="mt-1.5 text-sm text-muted">
+                {[r.hospital, r.company].filter(Boolean).join(" · ")}
+              </p>
+            )}
+            <p className="mt-1.5 text-sm text-muted">{r.step}</p>
+          </Link>
+        ))}
+        {shown.length === 0 && <p className="card px-4 py-10 text-center text-muted">{t("אין מטופלים שמתאימים לסינון.")}</p>}
+      </div>
+
+      <div className="card mt-5 hidden overflow-x-auto sm:block">
         <table className="w-full text-start">
           <caption className="sr-only">{t("רשימת מטופלים")}</caption>
           <thead>
@@ -133,8 +179,8 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
                 <button type="button" onClick={() => toggleSort("readiness")} className="inline-flex min-h-11 items-center gap-1 hover:text-ink sm:min-h-0">{t("מוכנות")} {sortIndicator("readiness")}</button>
               </th>
               <th scope="col" className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">{t("סטטוס")}</th>
-              <th scope="col" className="hidden px-4 py-3 text-start font-medium lg:table-cell">{t("בית חולים")}</th>
-              <th scope="col" className="hidden px-4 py-3 text-start font-medium lg:table-cell">{t("חברה")}</th>
+              <th scope="col" className="hidden px-4 py-3 text-start font-medium md:table-cell">{t("בית חולים")}</th>
+              <th scope="col" className="hidden px-4 py-3 text-start font-medium md:table-cell">{t("חברה")}</th>
               <th scope="col" className="hidden px-4 py-3 text-start font-medium md:table-cell">{t("שלב נוכחי")}</th>
             </tr>
           </thead>
@@ -166,8 +212,8 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
                     </Link>
                   </td>
                   <td><Link href={href} tabIndex={-1} className={link}><span className={`pill ${STAGE_PILL[r.stage]}`}>{t(STAGE_LABEL[r.stage])}</span></Link></td>
-                  <td className="hidden lg:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{r.hospital ?? "—"}</Link></td>
-                  <td className="hidden lg:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{r.company ?? "—"}</Link></td>
+                  <td className="hidden md:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{r.hospital ?? "—"}</Link></td>
+                  <td className="hidden md:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{r.company ?? "—"}</Link></td>
                   <td className="hidden md:table-cell"><Link href={href} tabIndex={-1} className={`${link} text-sm text-muted`}>{r.step}</Link></td>
                 </tr>
               );
