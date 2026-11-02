@@ -121,7 +121,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <main className="space-y-8">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h1 className="display order-1 flex-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+        <div className="order-1 min-w-0 flex-1">
+          <p className="eyebrow">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
+          <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+        </div>
         <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
         <div className="order-3 flex basis-full items-center gap-3 md:order-2 md:basis-auto">
           <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
