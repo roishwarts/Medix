@@ -56,7 +56,7 @@ export default async function ClinicContentPage() {
 
       <div className="mt-5 space-y-5">
         <div id="logo" className="scroll-mt-4 md:scroll-mt-20">
-          <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} />
+          <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} brandDark={profile.brand_dark} />
         </div>
         <div id="contact" className="scroll-mt-4 md:scroll-mt-20">
           <ContactForm

@@ -4,12 +4,97 @@ import { useT } from "@/components/i18n-provider";
 import { useId, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui";
-import { saveClinicLogo, removeClinicLogo, saveClinicBrandColor } from "./actions";
+import { saveClinicLogo, removeClinicLogo, saveClinicBrandColor, saveClinicBrandDark } from "./actions";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const DEFAULT_COLOR = "#4b6584";
+const DEFAULT_DARK = "#1b2430";
 
-export function LogoForm({ clinicId, logoUrl, brandColor }: { clinicId: string; logoUrl: string | null; brandColor: string | null }) {
+// One color picker + hex field + save button, reused for the accent color and the dark/top-bar
+// color below it - same behavior, just a different target field and default.
+function ColorField({
+  label, defaultColor, initial, onSave,
+}: {
+  label: string; defaultColor: string; initial: string | null; onSave: (color: string) => Promise<{ error?: string }>;
+}) {
+  const t = useT();
+  const [color, setColor] = useState(initial ?? defaultColor);
+  const [hexInput, setHexInput] = useState(initial ?? defaultColor);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const colorId = useId();
+  const hexId = useId();
+
+  function onPickerChange(v: string) {
+    setColor(v);
+    setHexInput(v);
+    setSaved(false);
+  }
+
+  function onHexChange(v: string) {
+    setHexInput(v);
+    const val = v.startsWith("#") ? v : `#${v}`;
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      setColor(val);
+      setSaved(false);
+    }
+  }
+
+  const hexValid = /^#?[0-9a-fA-F]{6}$/.test(hexInput);
+
+  function save() {
+    setError(null);
+    setSaved(false);
+    if (!hexValid) return setError(t("צבע לא תקין"));
+    start(async () => {
+      const res = await onSave(color);
+      if (res.error) setError(res.error);
+      else setSaved(true);
+    });
+  }
+
+  return (
+    <div>
+      <label htmlFor={colorId} className="lbl">{label}</label>
+      <div className="mt-1 flex flex-wrap items-center gap-3">
+        <input
+          id={colorId}
+          type="color"
+          aria-label={label}
+          value={hexValid ? (hexInput.startsWith("#") ? hexInput : `#${hexInput}`) : color}
+          onChange={(e) => onPickerChange(e.target.value)}
+          className="size-11 shrink-0 cursor-pointer rounded-lg border border-line p-0.5"
+        />
+        <div>
+          <label htmlFor={hexId} className="sr-only">{t("קוד צבע (הקס)")}</label>
+          <input
+            id={hexId}
+            className="field num w-28 text-center"
+            dir="ltr"
+            value={hexInput}
+            onChange={(e) => onHexChange(e.target.value)}
+            maxLength={7}
+            placeholder={defaultColor}
+            aria-invalid={hexInput.length > 0 && !hexValid}
+          />
+        </div>
+        <button type="button" className="btn btn-sm" onClick={save} disabled={pending}>
+          {pending ? t("שומר…") : t("שמירה")}
+        </button>
+        {saved && <span role="status" className="text-sm text-ok">{t("נשמר")}</span>}
+      </div>
+      {hexInput.length > 0 && !hexValid && <p className="mt-1.5 text-sm text-muted">{t("קוד צבע בפורמט הקס, למשל {example}", { example: defaultColor })}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+    </div>
+  );
+}
+
+export function LogoForm({
+  clinicId, logoUrl, brandColor, brandDark,
+}: {
+  clinicId: string; logoUrl: string | null; brandColor: string | null; brandDark: string | null;
+}) {
   const t = useT();
   const [preview, setPreview] = useState(logoUrl);
   const [uploading, setUploading] = useState(false);
@@ -17,16 +102,7 @@ export function LogoForm({ clinicId, logoUrl, brandColor }: { clinicId: string; 
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-
-  const [color, setColor] = useState(brandColor ?? DEFAULT_COLOR);
-  const [hexInput, setHexInput] = useState(brandColor ?? DEFAULT_COLOR);
-  const [colorSaved, setColorSaved] = useState(false);
-  const [colorError, setColorError] = useState<string | null>(null);
-  const [colorPending, startColor] = useTransition();
-
   const fileId = useId();
-  const colorId = useId();
-  const hexId = useId();
 
   function pick(file: File) {
     setError(null);
@@ -57,38 +133,10 @@ export function LogoForm({ clinicId, logoUrl, brandColor }: { clinicId: string; 
     });
   }
 
-  function onPickerChange(v: string) {
-    setColor(v);
-    setHexInput(v);
-    setColorSaved(false);
-  }
-
-  function onHexChange(v: string) {
-    setHexInput(v);
-    const val = v.startsWith("#") ? v : `#${v}`;
-    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-      setColor(val);
-      setColorSaved(false);
-    }
-  }
-
-  const hexValid = /^#?[0-9a-fA-F]{6}$/.test(hexInput);
-
-  function saveColor() {
-    setColorError(null);
-    setColorSaved(false);
-    if (!hexValid) return setColorError(t("צבע לא תקין"));
-    startColor(async () => {
-      const res = await saveClinicBrandColor(color);
-      if (res.error) setColorError(res.error);
-      else setColorSaved(true);
-    });
-  }
-
   return (
     <div className="card p-4 sm:p-5">
       <h3 className="font-semibold">{t("מיתוג")}</h3>
-      <p className="mt-1 text-sm text-muted">{t("הלוגו וצבע המרפאה מופיעים לכל מי שנכנס למערכת — מטופלים וגם צוות.")}</p>
+      <p className="mt-1 text-sm text-muted">{t("הלוגו וצבעי המרפאה מופיעים לכל מי שנכנס למערכת — מטופלים וגם צוות.")}</p>
 
       <div className="mt-4 flex items-center gap-4">
         {/* A fixed light chip around the logo: most logos are designed for a light backdrop, so this
@@ -117,37 +165,12 @@ export function LogoForm({ clinicId, logoUrl, brandColor }: { clinicId: string; 
       {logoSaved && <p role="status" className="mt-2 text-sm text-ok">{t("נשמר")}</p>}
       {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
 
-      <div className="mt-5 border-t border-line pt-4">
-        <label htmlFor={colorId} className="lbl">{t("צבע ראשי")}</label>
-        <div className="mt-1 flex flex-wrap items-center gap-3">
-          <input
-            id={colorId}
-            type="color"
-            aria-label={t("בחירת צבע ראשי")}
-            value={hexValid ? (hexInput.startsWith("#") ? hexInput : `#${hexInput}`) : color}
-            onChange={(e) => onPickerChange(e.target.value)}
-            className="size-11 shrink-0 cursor-pointer rounded-lg border border-line p-0.5"
-          />
-          <div>
-            <label htmlFor={hexId} className="sr-only">{t("קוד צבע (הקס)")}</label>
-            <input
-              id={hexId}
-              className="field num w-28 text-center"
-              dir="ltr"
-              value={hexInput}
-              onChange={(e) => onHexChange(e.target.value)}
-              maxLength={7}
-              placeholder={DEFAULT_COLOR}
-              aria-invalid={hexInput.length > 0 && !hexValid}
-            />
-          </div>
-          <button type="button" className="btn btn-sm" onClick={saveColor} disabled={colorPending}>
-            {colorPending ? t("שומר…") : t("שמירה")}
-          </button>
-          {colorSaved && <span role="status" className="text-sm text-ok">{t("נשמר")}</span>}
+      <div className="mt-5 space-y-5 border-t border-line pt-4">
+        <ColorField label={t("צבע ראשי")} defaultColor={DEFAULT_COLOR} initial={brandColor} onSave={saveClinicBrandColor} />
+        <div>
+          <ColorField label={t("צבע כהה (סרגלים ומסך הפתיחה למטופל)")} defaultColor={DEFAULT_DARK} initial={brandDark} onSave={saveClinicBrandDark} />
+          <p className="mt-1.5 text-sm text-muted">{t("לא חובה. בלעדיו הסרגלים נשארים בעיצוב הבהיר הרגיל.")}</p>
         </div>
-        {hexInput.length > 0 && !hexValid && <p className="mt-1.5 text-sm text-muted">{t("קוד צבע בפורמט הקס, למשל {example}", { example: DEFAULT_COLOR })}</p>}
-        {colorError && <p role="alert" className="mt-2 text-sm text-bad">{colorError}</p>}
       </div>
     </div>
   );
