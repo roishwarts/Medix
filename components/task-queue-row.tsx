@@ -71,7 +71,7 @@ export function TaskQueueRow({
       <Link href={href} className="min-w-0 flex-1 px-2 py-2.5 link-row">
         {children}
       </Link>
-      <div className="flex items-center gap-2 pe-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 pe-3 max-sm:basis-full max-sm:justify-start max-sm:ps-11">
         {reminder}
         <button
           type="button"

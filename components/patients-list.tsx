@@ -66,7 +66,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
     return [...shown].sort((a, b) => cmp(a, b) * sort.dir);
   }, [shown, sort]);
 
-  const sel = "field !min-h-9 w-auto max-w-[12rem] py-1 text-sm max-sm:max-w-none max-sm:flex-1";
+  const sel = "field min-h-11 w-auto max-w-[12rem] max-sm:max-w-none max-sm:flex-1 sm:min-h-9 sm:py-1 sm:text-sm";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
   const hasFilters = !!q.trim() || !!hospital || days !== null || stage !== "active";
   const clear = () => {
@@ -82,7 +82,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
         <input
           type="search" value={q} onChange={(e) => { setQ(e.target.value); sync({ q: e.target.value }); }}
           aria-label={t("חיפוש שם")} placeholder={t("חיפוש שם")} autoComplete="off" enterKeyHint="search"
-          className="field !min-h-9 w-full py-1 text-sm sm:w-48"
+          className="field min-h-11 w-full sm:min-h-9 sm:w-48 sm:py-1 sm:text-sm"
         />
         <select aria-label={t("בית חולים")} className={sel} value={hospital} onChange={(e) => { setHospital(e.target.value); sync({ hospital: e.target.value }); }}>
           <option value="">{t("כל בתי החולים")}</option>
@@ -104,14 +104,14 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
           <input
             type="number" inputMode="numeric" min={1} max={3650} value={days ?? ""} aria-label={t("ניתוח בעוד (ימים)")} placeholder={t("ימים")}
             onChange={(e) => { const d = e.target.value ? Math.max(1, Math.floor(Number(e.target.value))) : null; setDays(d); sync({ days: d }); }}
-            className="field num !min-h-9 w-24 py-1 text-sm"
+            className="field num min-h-11 w-24 sm:min-h-9 sm:py-1 sm:text-sm"
           />
         )}
         <select aria-label={t("סטטוס המטופל")} className={sel} value={stage} onChange={(e) => { const s = e.target.value as StageFilter; setStage(s); sync({ stage: s }); }}>
           {stageOptions.map(([key, label]) => <option key={key} value={key}>{label} ({count(key)})</option>)}
         </select>
         {hasFilters && (
-          <button type="button" onClick={clear} className="btn btn-quiet btn-sm !min-h-9">{t("ניקוי סינון")}</button>
+          <button type="button" onClick={clear} className="btn btn-quiet btn-sm">{t("ניקוי סינון")}</button>
         )}
       </div>
         <div className="order-2 ms-auto md:order-3 md:ms-0">{action}</div>
@@ -125,7 +125,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
           sortable headers aren't shown here, so the same sort state gets a plain select instead. */}
       <div className="mt-5 flex justify-end sm:hidden">
         <select
-          aria-label={t("מיון")} className="field !min-h-9 w-auto py-1 text-sm"
+          aria-label={t("מיון")} className="field min-h-11 w-auto text-sm"
           value={sort ? `${sort.key}:${sort.dir}` : ""}
           onChange={(e) => {
             const v = e.target.value;

@@ -11,7 +11,7 @@ export function HospitalFilter({ hospitals, hospital }: { hospitals: string[]; h
   const search = useSearchParams();
   return (
     <select
-      aria-label={t("בית חולים")} value={hospital ?? ""} className="field !min-h-9 w-auto max-w-[14rem] py-1 text-sm"
+      aria-label={t("בית חולים")} value={hospital ?? ""} className="field min-h-11 w-auto max-w-[14rem] sm:min-h-9 sm:py-1 sm:text-sm"
       onChange={(e) => {
         const p = new URLSearchParams(search.toString());
         if (e.target.value) p.set("hospital", e.target.value); else p.delete("hospital");
