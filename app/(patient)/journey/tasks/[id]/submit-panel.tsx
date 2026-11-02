@@ -2,16 +2,16 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui";
 import { useT } from "@/components/i18n-provider";
-import { submitTask } from "../../actions";
+import { queueOrRun } from "@/lib/offline/queue";
+import { setOptimisticState } from "@/components/task-optimistic";
+import { toast } from "@/components/toast";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export function SubmitPanel({
   taskId,
-  journeyId,
   requiresEvidence,
   needsReview,
   resubmit = false,
@@ -30,24 +30,21 @@ export function SubmitPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
+  // Works offline: the file (if any) and the note go into a local queue when there's no
+  // connection, and sync automatically once it's back — this is one of the two actions explicitly
+  // scoped as safe to queue (see lib/offline/queue.ts).
   function send() {
     setError(null);
     start(async () => {
-      let path: string | undefined;
-      let name: string | undefined;
-      // v0: the file is optional so the whole flow can be demoed without real documents.
       const file = requiresEvidence ? fileRef.current?.files?.[0] : undefined;
-      if (file) {
-        if (file.size > MAX_BYTES) return setError(t("הקובץ גדול מדי (עד 10MB)"));
-        const ext = (file.name.split(".").pop() ?? "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "bin";
-        path = `${journeyId}/${taskId}/${crypto.randomUUID()}.${ext}`;
-        name = file.name;
-        const { error: upErr } = await createClient().storage.from("evidence").upload(path, file, { contentType: file.type || undefined });
-        if (upErr) return setError(t("העלאת הקובץ נכשלה. נסה/י שוב."));
+      if (file && file.size > MAX_BYTES) return setError(t("הקובץ גדול מדי (עד 10MB)"));
+
+      const result = await queueOrRun({ kind: "patient_submit", taskId, note, fileBlob: file, fileName: file?.name });
+      if (result.rejected) return setError(t("השליחה נכשלה. ייתכן שהמשימה כבר טופלה אחרת — רענן/י ונסה/י שוב."));
+      if (result.queued) {
+        setOptimisticState(taskId, requiresEvidence || needsReview ? "review" : "done");
+        toast(t("אין חיבור לרגע — השמירה בוצעה במכשיר ותישלח אוטומטית כשהחיבור יחזור."));
       }
-      const res = await submitTask(taskId, { path, name, note });
-      if (res.error) return setError(res.error);
-      // revalidatePath in the action already marked /journey stale, so a single navigation shows fresh data.
       router.push("/journey");
     });
   }

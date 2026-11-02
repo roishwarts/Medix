@@ -12,6 +12,9 @@ import { I18nProvider } from "@/components/i18n-provider";
 import { PrefsProvider } from "@/components/prefs-provider";
 import { PublicChrome } from "@/components/public-chrome";
 import { VersionBadge } from "@/components/version-badge";
+import { OfflineInit } from "@/components/offline-init";
+import { OfflineBanner } from "@/components/offline-banner";
+import { Toaster } from "@/components/toast";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin", "cyrillic", "arabic"],
@@ -56,8 +59,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PrefsProvider initial={{ ...prefs, lang }}>
           <I18nProvider lang={lang} dict={dictionaryFor(lang)}>
             <PublicChrome />
+            <OfflineInit />
+            <OfflineBanner />
             {children}
             {(admin || viewingAs) && <VersionBadge />}
+            <Toaster />
           </I18nProvider>
         </PrefsProvider>
       </body>
