@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useT, useLang } from "@/components/i18n-provider";
-import { ReadinessBar } from "@/components/ui";
+import { Icon, ReadinessBar } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { STAGES, STAGE_LABEL, STAGE_PILL, isActiveStage, type Stage } from "@/lib/journey";
 import { windowLabel } from "@/lib/windows";
@@ -14,6 +14,7 @@ export type PatientRow = {
   stage: Stage; hospital: string | null; company: string | null; step: string;
 };
 type StageFilter = Stage | "active" | "all";
+type SortKey = "name" | "surgery" | "readiness";
 const PRESETS = [7, 14, 21, 30, 60, 90];
 
 // The patients table with its filters. Filtering happens on the page itself as the user types or chooses,
@@ -29,6 +30,14 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
   const [days, setDays] = useState<number | null>(initial.days);
   const [custom, setCustom] = useState(initial.days !== null && !PRESETS.includes(initial.days));
   const [stage, setStage] = useState<StageFilter>(initial.stage);
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+
+  // Clicking a sortable header cycles ascending → descending → back to the default (surgery-date) order.
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => (s?.key === key ? (s.dir === 1 ? { key, dir: -1 } : null) : { key, dir: 1 }));
+  const sortIndicator = (key: SortKey) => sort?.key === key && <Icon name={sort.dir === 1 ? "up" : "down"} size={12} />;
+  const ariaSort = (key: SortKey): React.AriaAttributes["aria-sort"] =>
+    sort?.key !== key ? "none" : sort.dir === 1 ? "ascending" : "descending";
 
   const sync = (next: { q?: string; hospital?: string; days?: number | null; stage?: StageFilter }) => {
     const v = { q, hospital, days, stage, ...next };
@@ -48,6 +57,14 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
     .filter((r) => (q.trim() ? r.name.toLowerCase().includes(q.trim().toLowerCase()) : true)), [rows, days, hospital, q]);
   const shown = base.filter((r) => inStage(r.stage, stage));
   const count = (f: StageFilter) => base.filter((r) => inStage(r.stage, f)).length;
+  const sorted = useMemo(() => {
+    if (!sort) return shown;
+    const cmp: (a: PatientRow, b: PatientRow) => number =
+      sort.key === "name" ? (a, b) => a.name.localeCompare(b.name, "he")
+      : sort.key === "surgery" ? (a, b) => (a.surgeryDate < b.surgeryDate ? -1 : a.surgeryDate > b.surgeryDate ? 1 : 0)
+      : (a, b) => a.readiness - b.readiness;
+    return [...shown].sort((a, b) => cmp(a, b) * sort.dir);
+  }, [shown, sort]);
 
   const sel = "field !min-h-9 w-auto max-w-[12rem] py-1 text-sm max-sm:max-w-none max-sm:flex-1";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
@@ -106,9 +123,15 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
           <caption className="sr-only">{t("רשימת מטופלים")}</caption>
           <thead>
             <tr className="border-b border-line text-start text-sm text-muted">
-              <th scope="col" className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">{t("מטופל")}</th>
-              <th scope="col" className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">{t("ניתוח")}</th>
-              <th scope="col" className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">{t("מוכנות")}</th>
+              <th scope="col" aria-sort={ariaSort("name")} className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">
+                <button type="button" onClick={() => toggleSort("name")} className="inline-flex min-h-11 items-center gap-1 hover:text-ink sm:min-h-0">{t("מטופל")} {sortIndicator("name")}</button>
+              </th>
+              <th scope="col" aria-sort={ariaSort("surgery")} className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">
+                <button type="button" onClick={() => toggleSort("surgery")} className="inline-flex min-h-11 items-center gap-1 hover:text-ink sm:min-h-0">{t("ניתוח")} {sortIndicator("surgery")}</button>
+              </th>
+              <th scope="col" aria-sort={ariaSort("readiness")} className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">
+                <button type="button" onClick={() => toggleSort("readiness")} className="inline-flex min-h-11 items-center gap-1 hover:text-ink sm:min-h-0">{t("מוכנות")} {sortIndicator("readiness")}</button>
+              </th>
               <th scope="col" className="px-2 py-3 min-[400px]:px-3 sm:px-4 text-start font-medium">{t("סטטוס")}</th>
               <th scope="col" className="hidden px-4 py-3 text-start font-medium lg:table-cell">{t("בית חולים")}</th>
               <th scope="col" className="hidden px-4 py-3 text-start font-medium lg:table-cell">{t("חברה")}</th>
@@ -116,7 +139,7 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {shown.map((r) => {
+            {sorted.map((r) => {
               const href = `/clinic/patients/${r.id}`;
               // Every cell is a link, so tapping anywhere on the row opens the patient.
               const link = "block px-2 py-3 min-[400px]:px-3 sm:px-4";
