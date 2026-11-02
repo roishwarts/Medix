@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { loadJourneys } from "@/lib/queries";
@@ -6,6 +5,7 @@ import { ACTION_LABEL, ownerLabel, actionItems, type ActionItem, type ActionKind
 import { formatDate, israelParts, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { TasksFilter } from "@/components/tasks-filter";
+import { TaskQueueRow } from "@/components/task-queue-row";
 import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
@@ -99,22 +99,26 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             )}
             <div className="card divide-y divide-line">
               {list.map((i) => (
-                <Link
+                <TaskQueueRow
                   key={i.task.id}
+                  taskId={i.task.id}
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  className="flex flex-col gap-0.5 px-4 py-2.5 link-row"
+                  kind={i.kind}
+                  owner={i.task.owner}
                 >
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                    <span className={`shrink-0 text-xs ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
-                      {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
+                  <span className="flex flex-col gap-0.5">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="min-w-0 break-words font-medium">{i.patientName}</span>
+                      <span className={`shrink-0 text-xs ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
+                        {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
+                      </span>
+                    </span>
+                    <span className="min-w-0 break-words text-sm text-muted">
+                      {i.task.title}
+                      {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
                     </span>
                   </span>
-                  <span className="min-w-0 break-words text-sm text-muted">
-                    {i.task.title}
-                    {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
-                  </span>
-                </Link>
+                </TaskQueueRow>
               ))}
             </div>
           </section>
