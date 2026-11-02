@@ -62,6 +62,7 @@ export function TeamMemberRow({
   }
 
   const btn = "btn btn-sm min-h-11 max-sm:flex-1 sm:min-h-9";
+  const quietBtn = "btn btn-quiet btn-sm min-h-11 max-sm:flex-1 sm:min-h-9";
   return (
     <li className="px-4 py-3.5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -83,8 +84,8 @@ export function TeamMemberRow({
             <option value="staff">{t("צוות")}</option>
             <option value="doctor">{t("רופא")}</option>
           </select>
-          {mfa && <button className={btn} disabled={pending} onClick={resetMfa}>{t("איפוס אימות דו-שלבי")}</button>}
-          <button className={btn} disabled={pending} aria-expanded={resetting} onClick={() => { setResetting(!resetting); setMsg(null); }}>{t("איפוס סיסמה")}</button>
+          {mfa && <button className={quietBtn} disabled={pending} onClick={resetMfa}>{t("איפוס אימות דו-שלבי")}</button>}
+          <button className={quietBtn} disabled={pending} aria-expanded={resetting} onClick={() => { setResetting(!resetting); setMsg(null); }}>{t("איפוס סיסמה")}</button>
           {!isSelf && (
             <button className={`${btn} ${disabled ? "" : "btn-danger"}`} disabled={pending} onClick={toggleDisabled}>
               {disabled ? t("הפעלה מחדש") : t("השבתה")}

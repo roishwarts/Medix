@@ -27,6 +27,9 @@ export default async function WeeklySummaryPage() {
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
 
   const stat = (n: number) => (n === 0 ? "text-ok" : "text-bad");
+  // Pending review isn't a failure like rejected/overdue, so it never goes bad/red - but it
+  // should still read as "nothing pending" (ok) at zero, matching its sibling tiles' language.
+  const reviewStat = (n: number) => (n === 0 ? "text-ok" : "text-warn");
 
   return (
     <main className="max-w-2xl space-y-8 pb-6">
@@ -61,7 +64,7 @@ export default async function WeeklySummaryPage() {
             <p className="text-sm text-muted">{t("באיחור")}</p>
           </Link>
           <Link href="/clinic/tasks?status=review" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
-            <p className="num display text-3xl text-warn">{review.length}</p>
+            <p className={`num display text-3xl ${reviewStat(review.length)}`}>{review.length}</p>
             <p className="text-sm text-muted">{t("ממתין לבדיקה")}</p>
           </Link>
         </div>

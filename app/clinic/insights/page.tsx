@@ -57,7 +57,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
           <p className="text-sm text-muted">{t("ניתוחים")}</p>
         </div>
         <div>
-          <p className={`num display text-3xl ${cancelled.length > 0 ? "text-bad" : ""}`}>{cancelled.length}</p>
+          <p className={`num display text-3xl ${cancelRate > 10 ? "text-bad" : ""}`}>{cancelled.length}</p>
           <p className="text-sm text-muted">{t("ביטולים")}</p>
         </div>
         <div>
