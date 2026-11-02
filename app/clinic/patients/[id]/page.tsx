@@ -29,6 +29,7 @@ import { AllDocuments, type DocItem } from "./all-documents";
 import { StartJourney } from "./start-journey";
 import { ClinicalSummary, type ClinicalData } from "./clinical-summary";
 import { DoctorQuestions } from "./doctor-questions";
+import { DoctorQuickBar } from "./doctor-quick-bar";
 import { loadQuestions } from "@/lib/doctor-questions";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
@@ -220,6 +221,19 @@ export default async function PatientPage({
       <div className="min-w-0 space-y-10">
       <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
       <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
+      {isDoctor && (
+        <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
+          <h2 className="eyebrow mb-2">{tr("הפניות שקיבל המטופל")}</h2>
+          <ReferralsCard
+            patientId={journey.patient_id}
+            canCreate
+            items={referrals.map((r) => ({
+              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+            }))}
+          />
+        </section>
+      )}
       <section className="card divide-y divide-line">
         <div className="grid gap-x-8 gap-y-3 px-4 py-3 sm:grid-cols-2 sm:items-center">
           <p>
@@ -373,19 +387,25 @@ export default async function PatientPage({
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
-        <section aria-label={tr("הפניות")}>
+        {!isDoctor && <section aria-label={tr("הפניות")}>
           <h2 className="eyebrow mb-2">{tr("הפניות")}</h2>
           <ReferralsCard
             patientId={journey.patient_id}
-            canCreate={isDoctor}
+            canCreate={false}
             items={referrals.map((r) => ({
               id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
               resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
             }))}
           />
-        </section>
+        </section>}
       </aside>
       </div>
+      {isDoctor && (
+        <>
+          <div aria-hidden className="h-16 md:hidden" />
+          <DoctorQuickBar patientId={journey.patient_id} phone={journey.patient.phone ?? ""} openQuestions={questions.filter((q) => !q.answeredAt).length} />
+        </>
+      )}
     </main>
   );
 }

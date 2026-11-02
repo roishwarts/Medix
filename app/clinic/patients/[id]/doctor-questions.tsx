@@ -39,7 +39,7 @@ export function DoctorQuestions({
   }
 
   return (
-    <section aria-label={t("שאלות לרופא")}>
+    <section id="doctor-questions" aria-label={t("שאלות לרופא")} className="scroll-mt-4">
       <h2 className="eyebrow mb-2 flex flex-wrap items-center gap-2">
         {t("שאלות לרופא")}
         {waiting.length > 0 && <span className="pill pill-warn">{t("{n} ממתינות", { n: waiting.length })}</span>}
