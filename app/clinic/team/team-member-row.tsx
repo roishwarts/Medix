@@ -2,19 +2,31 @@
 
 import { useId, useState, useTransition } from "react";
 import { useT } from "@/components/i18n-provider";
-import { resetTeamMemberMfa, resetTeamMemberPassword, setTeamMemberDisabled, setTeamMemberRole } from "./actions";
+import { resetTeamMemberMfa, resetTeamMemberPassword, saveMyFullNameEn, setTeamMemberDisabled, setTeamMemberRole } from "./actions";
 
 export function TeamMemberRow({
-  id, name, username, role, disabled, mfa, isSelf,
+  id, name, nameEn, username, role, disabled, mfa, isSelf,
 }: {
-  id: string; name: string; username: string; role: "staff" | "doctor"; disabled: boolean; mfa: boolean; isSelf: boolean;
+  id: string; name: string; nameEn: string | null; username: string; role: "staff" | "doctor"; disabled: boolean; mfa: boolean; isSelf: boolean;
 }) {
   const t = useT();
   const [resetting, setResetting] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameEnValue, setNameEnValue] = useState(nameEn ?? "");
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
   const [pending, start] = useTransition();
   const [pw, setPw] = useState("");
   const pwId = useId();
+  const nameEnId = useId();
+
+  function saveNameEn() {
+    setMsg(null);
+    start(async () => {
+      const res = await saveMyFullNameEn(nameEnValue);
+      if (res.error) setMsg({ error: res.error });
+      else { setMsg({ ok: t("נשמר") }); setEditingName(false); }
+    });
+  }
 
   function generate() {
     const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -86,6 +98,9 @@ export function TeamMemberRow({
           </select>
           {mfa && <button className={quietBtn} disabled={pending} onClick={resetMfa}>{t("איפוס אימות דו-שלבי")}</button>}
           <button className={quietBtn} disabled={pending} aria-expanded={resetting} onClick={() => { setResetting(!resetting); setMsg(null); }}>{t("איפוס סיסמה")}</button>
+          {isSelf && (
+            <button className={quietBtn} disabled={pending} aria-expanded={editingName} onClick={() => { setEditingName(!editingName); setMsg(null); }}>{t("שם באנגלית")}</button>
+          )}
           {!isSelf && (
             <button className={`${btn} ${disabled ? "" : "btn-danger"}`} disabled={pending} onClick={toggleDisabled}>
               {disabled ? t("הפעלה מחדש") : t("השבתה")}
@@ -103,6 +118,17 @@ export function TeamMemberRow({
             <button className="btn btn-primary btn-sm min-h-11 shrink-0" disabled={pending}>{pending ? t("שומר…") : t("שמירה")}</button>
           </div>
         </form>
+      )}
+      {editingName && (
+        <div className="mt-3 max-w-md">
+          <label htmlFor={nameEnId} className="lbl">{t("שם באנגלית")}</label>
+          <div className="flex gap-2">
+            <input id={nameEnId} dir="ltr" className="field min-w-0" maxLength={80} value={nameEnValue}
+              onChange={(e) => setNameEnValue(e.target.value)} placeholder="Dr. Name" />
+            <button type="button" className="btn btn-primary btn-sm min-h-11 shrink-0" disabled={pending} onClick={saveNameEn}>{pending ? t("שומר…") : t("שמירה")}</button>
+          </div>
+          <p className="mt-1.5 text-sm text-muted">{t("מוצג במקום השם בעברית כשהמערכת מוצגת בשפה אחרת.")}</p>
+        </div>
       )}
       {msg?.error && <p role="alert" className="mt-2 text-sm text-bad">{msg.error}</p>}
       {msg?.ok && <p role="status" className="mt-2 text-sm text-ok">{msg.ok}</p>}

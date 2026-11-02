@@ -126,7 +126,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               so the logo otherwise never appears on a phone at all - this is its one mobile spot. */}
           {profile.logo_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-10 w-auto max-w-24 shrink-0 object-contain md:hidden" />
+            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain md:hidden" />
           )}
           <div className="min-w-0">
             <p className="eyebrow">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>

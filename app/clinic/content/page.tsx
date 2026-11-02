@@ -27,7 +27,16 @@ export default async function ClinicContentPage() {
     templates = (fallback.data ?? []).map((row) => ({ ...row, red_flags: null }));
   }
 
-  const [links, videos] = await Promise.all([getClinicLinks(), getClinicVideos()]);
+  const [links, videos, clinicNameRes] = await Promise.all([
+    getClinicLinks(),
+    getClinicVideos(),
+    // Raw Hebrew name + its English translation, if any — profile.clinic_name above may already
+    // be resolved to English for the current viewer, which isn't what this form needs to show.
+    // name_en (patch-name-translations.sql) may not exist yet: fall back to a select without it.
+    supabase.from("clinics").select("name, name_en").eq("id", profile.clinic_id).maybeSingle()
+      .then((res) => (res.error ? supabase.from("clinics").select("name").eq("id", profile.clinic_id).maybeSingle() : res)),
+  ]);
+  const clinicNameEn = (clinicNameRes.data as { name_en?: string | null } | null)?.name_en ?? null;
 
   const sections = [
     { id: "logo", label: t("מיתוג") },
@@ -56,7 +65,7 @@ export default async function ClinicContentPage() {
 
       <div className="mt-5 space-y-5">
         <div id="logo" className="scroll-mt-4 md:scroll-mt-20">
-          <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} brandDark={profile.brand_dark} />
+          <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} brandDark={profile.brand_dark} nameEn={clinicNameEn} />
         </div>
         <div id="contact" className="scroll-mt-4 md:scroll-mt-20">
           <ContactForm

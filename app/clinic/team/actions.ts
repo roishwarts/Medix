@@ -52,19 +52,34 @@ export async function addTeamMember(_: FormState, formData: FormData): Promise<F
   return { ok: t("המשתמש {username} נוצר בהצלחה", { username }) };
 }
 
-export type TeamMember = { id: string; full_name: string; role: "staff" | "doctor"; username: string; disabled: boolean; mfa: boolean };
+export type TeamMember = { id: string; full_name: string; full_name_en: string | null; role: "staff" | "doctor"; username: string; disabled: boolean; mfa: boolean };
 
 export async function loadTeam(): Promise<TeamMember[]> {
   const profile = await requireProfile(["doctor"]);
   const admin = createAdminClient();
   const supabase = await createClient();
-  const { data } = await supabase
+  // full_name_en (patch-name-translations.sql) may not exist yet: fall back to a select without it.
+  type Row = { id: string; full_name: string; full_name_en: string | null; role: "staff" | "doctor"; disabled: boolean };
+  let data: Row[] | null;
+  const withEn = await supabase
     .from("profiles")
-    .select("id, full_name, role, disabled")
+    .select("id, full_name, full_name_en, role, disabled")
     .eq("clinic_id", profile.clinic_id)
     .in("role", ["staff", "doctor"])
     .order("role")
     .order("full_name");
+  if (!withEn.error) {
+    data = withEn.data as Row[] | null;
+  } else {
+    const withoutEn = await supabase
+      .from("profiles")
+      .select("id, full_name, role, disabled")
+      .eq("clinic_id", profile.clinic_id)
+      .in("role", ["staff", "doctor"])
+      .order("role")
+      .order("full_name");
+    data = (withoutEn.data ?? []).map((p) => ({ ...p, full_name_en: null })) as Row[];
+  }
   if (!data || !admin) return (data ?? []).map((p) => ({ ...p, username: "", mfa: false }));
 
   return Promise.all(
@@ -167,5 +182,18 @@ export async function resetTeamMemberMfa(userId: string): Promise<{ error?: stri
     if (delErr) return { error: t("האיפוס נכשל") };
   }
   revalidatePath("/clinic/team");
+  return {};
+}
+
+// Anyone with a profile may set their own English name (not gated to doctor, unlike the rest of
+// this file) - this is what shows instead of the Hebrew one when the app isn't in Hebrew.
+export async function saveMyFullNameEn(name: string): Promise<{ error?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_my_full_name_en", { p_name: name });
+  if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-name-translations.sql.") };
+  revalidatePath("/clinic/team");
+  revalidatePath("/clinic", "layout");
   return {};
 }

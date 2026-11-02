@@ -151,6 +151,18 @@ export async function saveClinicBrandDark(color: string): Promise<{ error?: stri
   return {};
 }
 
+export async function saveClinicNameEn(name: string): Promise<{ error?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_clinic_name_en", { p_name: name });
+  if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-name-translations.sql.") };
+  revalidatePath("/clinic/content");
+  revalidatePath("/clinic", "layout");
+  revalidatePath("/journey", "layout");
+  return {};
+}
+
 export async function removeClinicVideo(id: string): Promise<{ error?: string }> {
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();

@@ -24,7 +24,7 @@ export default async function TeamPage() {
       ) : (
         <ul className="card mt-6 divide-y divide-line" aria-label={t("אנשי צוות")}>
           {team.map((m) => (
-            <TeamMemberRow key={m.id} id={m.id} name={m.full_name} username={m.username} role={m.role} disabled={m.disabled} mfa={m.mfa} isSelf={m.id === profile.id} />
+            <TeamMemberRow key={m.id} id={m.id} name={m.full_name} nameEn={m.full_name_en} username={m.username} role={m.role} disabled={m.disabled} mfa={m.mfa} isSelf={m.id === profile.id} />
           ))}
         </ul>
       )}

@@ -4,7 +4,7 @@ import { useT } from "@/components/i18n-provider";
 import { useId, useRef, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/ui";
-import { saveClinicLogo, removeClinicLogo, saveClinicBrandColor, saveClinicBrandDark } from "./actions";
+import { saveClinicLogo, removeClinicLogo, saveClinicBrandColor, saveClinicBrandDark, saveClinicNameEn } from "./actions";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const DEFAULT_COLOR = "#4b6584";
@@ -90,10 +90,51 @@ function ColorField({
   );
 }
 
+// A free-text field + save button, same shape as ColorField above but for the clinic's English
+// name - shown instead of the Hebrew one whenever someone views the app in a language other than
+// Hebrew, so the clinic's own name doesn't stay in Hebrew letters around translated UI text.
+function NameEnField({ initial, onSave }: { initial: string | null; onSave: (name: string) => Promise<{ error?: string }> }) {
+  const t = useT();
+  const [value, setValue] = useState(initial ?? "");
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const id = useId();
+
+  function save() {
+    setError(null);
+    setSaved(false);
+    start(async () => {
+      const res = await onSave(value);
+      if (res.error) setError(res.error);
+      else setSaved(true);
+    });
+  }
+
+  return (
+    <div>
+      <label htmlFor={id} className="lbl">{t("שם המרפאה באנגלית")}</label>
+      <div className="mt-1 flex flex-wrap items-center gap-3">
+        <input
+          id={id} dir="ltr" className="field max-w-xs" maxLength={120}
+          value={value} onChange={(e) => { setValue(e.target.value); setSaved(false); }}
+          placeholder="Professor Drexler Clinic"
+        />
+        <button type="button" className="btn btn-sm" onClick={save} disabled={pending}>
+          {pending ? t("שומר…") : t("שמירה")}
+        </button>
+        {saved && <span role="status" className="text-sm text-ok">{t("נשמר")}</span>}
+      </div>
+      <p className="mt-1.5 text-sm text-muted">{t("מוצג במקום השם בעברית כשהמערכת מוצגת בשפה אחרת. ריק = השם בעברית מוצג בכל שפה.")}</p>
+      {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+    </div>
+  );
+}
+
 export function LogoForm({
-  clinicId, logoUrl, brandColor, brandDark,
+  clinicId, logoUrl, brandColor, brandDark, nameEn,
 }: {
-  clinicId: string; logoUrl: string | null; brandColor: string | null; brandDark: string | null;
+  clinicId: string; logoUrl: string | null; brandColor: string | null; brandDark: string | null; nameEn: string | null;
 }) {
   const t = useT();
   const [preview, setPreview] = useState(logoUrl);
@@ -171,6 +212,7 @@ export function LogoForm({
           <ColorField label={t("צבע כהה (סרגלים ומסך הפתיחה למטופל)")} defaultColor={DEFAULT_DARK} initial={brandDark} onSave={saveClinicBrandDark} />
           <p className="mt-1.5 text-sm text-muted">{t("לא חובה. בלעדיו הסרגלים נשארים בעיצוב הבהיר הרגיל.")}</p>
         </div>
+        <NameEnField initial={nameEn} onSave={saveClinicNameEn} />
       </div>
     </div>
   );
