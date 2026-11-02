@@ -40,7 +40,7 @@ export function MeetingSummaries({ patientId, items, appointments }: { patientId
                 <p className="font-medium">{israelParts(s.occurredAt).date.split("-").reverse().join(".")} {israelParts(s.occurredAt).time}</p>
                 <div className="flex items-center gap-3 text-xs text-muted">
                   <span>{s.authorName}</span>
-                  <button type="button" className="text-accent hover:underline" onClick={() => setEditing(s.id)}>{t("עריכה")}</button>
+                  <button type="button" className="min-h-11 text-accent hover:underline sm:min-h-0" onClick={() => setEditing(s.id)}>{t("עריכה")}</button>
                 </div>
               </div>
               {s.linkedTitle && <p className="mt-0.5 text-xs text-muted">{t("בקשר ל: {title}", { title: s.linkedTitle })}</p>}
@@ -104,6 +104,7 @@ function SummaryForm({
 
   function remove() {
     if (!existing) return;
+    if (!confirm(t("למחוק את הסיכום הזה?"))) return;
     start(async () => {
       const res = await deleteMeetingSummary(existing.id);
       if (res.error) setError(res.error);
@@ -142,7 +143,7 @@ function SummaryForm({
         </button>
         <button type="button" className="btn btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={onClose}>{t("ביטול")}</button>
         {existing && (
-          <button type="button" className="text-sm text-bad hover:underline" disabled={pending} onClick={remove}>{t("מחיקה")}</button>
+          <button type="button" className="min-h-11 text-sm text-bad hover:underline sm:min-h-0" disabled={pending} onClick={remove}>{t("מחיקה")}</button>
         )}
         {error && <p role="alert" className="text-sm text-bad">{error}</p>}
       </div>

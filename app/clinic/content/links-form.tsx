@@ -44,7 +44,7 @@ export function LinksForm({ links }: { links: Link[] }) {
                 type="button"
                 aria-label={t("הסרת {name}", { name: l.label })}
                 disabled={pending}
-                className="relative grid size-9 shrink-0 place-items-center rounded-full text-muted hover:bg-black/10 hover:text-ink disabled:opacity-50"
+                className="relative grid size-11 shrink-0 place-items-center sm:size-9 rounded-full text-muted hover:bg-black/10 hover:text-ink disabled:opacity-50"
                 onClick={() => { if (confirm(t("להסיר את \"{label}\"?", { label: l.label }))) start(async () => { await removeClinicLink(l.id); }); }}
               >
                 <Icon name="trash" size={14} />
