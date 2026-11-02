@@ -96,13 +96,15 @@ export default async function PatientPage({
     supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle(),
     // Separate query so the page still works before patch-medical-info.sql is applied.
     supabase.from("patients").select("national_id, hmo, insurance_company, insurance_policy_number, insurance_phone").eq("id", journey.patient_id).maybeSingle(),
+    // Not filtered to still-valid invites: an expired, never-used one is shown too (marked as
+    // such) so staff notice and can re-invite, instead of it just silently vanishing from view.
     supabase
       .from("caregiver_invites")
       .select("id, invitee_name, relation, can_act, expires_at")
       .eq("patient_id", journey.patient_id)
       .is("used_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(10),
     supabase
       .from("activity_events")
       .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
@@ -365,6 +367,7 @@ export default async function PatientPage({
             items={(openInvites ?? []).map((i) => ({
               id: i.id, name: i.invitee_name ?? "", relation: i.relation, canAct: i.can_act,
               expires: israelParts(i.expires_at).date.split("-").reverse().join("."),
+              expired: i.expires_at < new Date().toISOString(),
             }))}
           />
           <AddCaregiver patientId={journey.patient_id} />
