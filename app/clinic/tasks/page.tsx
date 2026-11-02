@@ -6,6 +6,7 @@ import { formatDate, israelParts, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { TasksFilter } from "@/components/tasks-filter";
 import { TaskQueueRow } from "@/components/task-queue-row";
+import { BulkTaskBar } from "@/components/bulk-task-bar";
 import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
@@ -125,6 +126,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         );
       })}
       </div>
+      <BulkTaskBar />
     </main>
   );
 }
