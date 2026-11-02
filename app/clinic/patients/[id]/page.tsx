@@ -234,7 +234,7 @@ export default async function PatientPage({
 
       <PromsCard journeyId={journey.id} />
       <section>
-        <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
+        <h2 className="mb-1 flex flex-wrap items-center gap-2 text-lg font-medium">
           {tr("כל המשימות")}
           {needsAttention > 0 && <span className="pill pill-bad">{tr("{n} דורשות תשומת לב", { n: needsAttention })}</span>}
         </h2>

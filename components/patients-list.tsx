@@ -153,12 +153,12 @@ export function PatientsList({ rows, hospitals, initial, title, action }: {
               <span className="num shrink-0 text-sm font-medium">{r.readiness}%</span>
               <div className="min-w-0 flex-1" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
             </div>
+            <p className="mt-2 border-t border-line pt-2 text-sm">{r.step}</p>
             {(r.hospital || r.company) && (
-              <p className="mt-1.5 text-sm text-muted">
+              <p className="mt-1 text-xs text-muted">
                 {[r.hospital, r.company].filter(Boolean).join(" · ")}
               </p>
             )}
-            <p className="mt-1.5 text-sm text-muted">{r.step}</p>
           </Link>
         ))}
         {shown.length === 0 && <p className="card px-4 py-10 text-center text-muted">{t("אין מטופלים שמתאימים לסינון.")}</p>}
