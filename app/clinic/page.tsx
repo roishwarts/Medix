@@ -121,9 +121,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <main className="space-y-8">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="order-1 min-w-0 flex-1">
-          <p className="eyebrow">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
-          <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+        <div className="order-1 flex min-w-0 flex-1 items-center gap-3">
+          {/* The branded top bar only shows from md up (phones get the bottom tab bar instead),
+              so the logo otherwise never appears on a phone at all - this is its one mobile spot. */}
+          {profile.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-10 w-auto max-w-24 shrink-0 object-contain md:hidden" />
+          )}
+          <div className="min-w-0">
+            <p className="eyebrow">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
+            <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+          </div>
         </div>
         <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
         <div className="order-3 flex basis-full items-center gap-3 md:order-2 md:basis-auto">
