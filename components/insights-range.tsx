@@ -17,7 +17,7 @@ export function InsightsRange({ value }: { value: RangeKey }) {
   const router = useRouter();
   return (
     <select
-      aria-label={t("טווח התקופה")} value={value} className="field !min-h-9 w-auto py-1 text-sm"
+      aria-label={t("טווח התקופה")} value={value} className="field min-h-11 w-auto sm:min-h-9 sm:py-1 sm:text-sm"
       onChange={(e) => router.push(`/clinic/insights?range=${e.target.value}`, { scroll: false })}
     >
       {OPTIONS.map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}

@@ -58,7 +58,7 @@ export function TaskQueueRow({
 
   return (
     <div className={`flex flex-wrap items-stretch gap-2 ${selected && bulkPending ? "opacity-50" : ""}`}>
-      <label className="flex items-center ps-3">
+      <label className="flex min-h-11 min-w-11 items-center justify-center ps-1 sm:min-h-0 sm:min-w-0 sm:ps-3">
         <span className="sr-only">{t("בחירת המשימה לאישור קבוצתי")}</span>
         <input
           type="checkbox"

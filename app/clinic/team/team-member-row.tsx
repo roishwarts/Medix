@@ -77,7 +77,7 @@ export function TeamMemberRow({
         </div>
         <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
           <select
-            aria-label={t("תפקיד")} className="field !min-h-9 w-auto py-1 text-sm"
+            aria-label={t("תפקיד")} className="field min-h-11 w-auto max-sm:flex-1 sm:min-h-9 sm:py-1 sm:text-sm"
             value={role} disabled={pending || isSelf} onChange={(e) => changeRole(e.target.value as "staff" | "doctor")}
           >
             <option value="staff">{t("צוות")}</option>

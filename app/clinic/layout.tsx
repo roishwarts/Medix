@@ -39,9 +39,9 @@ export default async function ClinicLayout({ children }: { children: React.React
         <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
-        <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
           <BackButton home="/clinic" roots={items.map((i) => i.href)} />
-          <CommandPalette />
+          <div className="ms-auto"><CommandPalette /></div>
         </div>
         {children}
       </div>

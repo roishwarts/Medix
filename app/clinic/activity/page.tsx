@@ -92,7 +92,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
           <h1 className="display text-4xl">{t("עדכונים")}</h1>
           <p className="mt-1 text-muted">{t("מה קרה אצל המטופלים, בני המשפחה והצוות.")}</p>
         </div>
-        <Link href={myWeekHref} className="text-sm font-medium text-accent hover:underline">{t("מה עשיתי השבוע")}</Link>
+        <Link href={myWeekHref} className="text-sm text-muted hover:text-ink hover:underline">{t("מה עשיתי השבוע")}</Link>
       </header>
 
       <form className="mt-6 flex flex-wrap items-end gap-2" action="/clinic/activity" role="search" aria-label={t("סינון עדכונים")}>
@@ -111,13 +111,13 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
             {(staff ?? []).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
           </select>
         </div>
-        <div>
+        <div className="min-w-0 flex-1 sm:flex-none">
           <label htmlFor="from" className="lbl">{t("מתאריך")}</label>
-          <input id="from" type="date" name="from" defaultValue={sp.from ?? ""} className="field" />
+          <input id="from" type="date" name="from" defaultValue={sp.from ?? ""} className="field w-full sm:w-40" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1 sm:flex-none">
           <label htmlFor="to" className="lbl">{t("עד תאריך")}</label>
-          <input id="to" type="date" name="to" defaultValue={sp.to ?? ""} className="field" />
+          <input id="to" type="date" name="to" defaultValue={sp.to ?? ""} className="field w-full sm:w-40" />
         </div>
         <button className="btn btn-sm min-h-11 shrink-0">{t("סינון")}</button>
         {hasFilters && <Link href={tabHref(group.key)} className="btn btn-quiet btn-sm min-h-11 shrink-0">{t("ניקוי סינון")}</Link>}
