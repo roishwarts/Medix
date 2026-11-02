@@ -4,9 +4,14 @@ import { loadJourneys } from "@/lib/queries";
 import { ACTION_LABEL, ownerLabel, actionItems, type ActionItem, type ActionKind } from "@/lib/journey";
 import { formatDate, israelParts, relativeDays, today } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { getClinicName } from "@/lib/auth";
+import { getOrigin } from "@/lib/account-links";
+import { loadPatientExtras } from "@/lib/patient-extras";
+import { taskReminderMessage } from "@/lib/messages";
 import { TasksFilter } from "@/components/tasks-filter";
 import { TaskQueueRow } from "@/components/task-queue-row";
 import { BulkTaskBar } from "@/components/bulk-task-bar";
+import { ReminderButton } from "@/components/reminder-button";
 import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
@@ -38,19 +43,24 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const { status } = await searchParams;
   const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
   const supabase = await createClient();
-  const [journeys, { data: resetRequests }] = await Promise.all([
+  const [journeys, { data: resetRequests }, clinicName, origin, patientExtras] = await Promise.all([
     loadJourneys(),
     supabase
       .from("password_reset_requests")
       .select("id, full_name, role, requested_at")
       .is("handled_at", null)
       .order("requested_at"),
+    getClinicName(),
+    getOrigin(),
+    loadPatientExtras(),
   ]);
   const t0 = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
     actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0),
   );
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
+  const phoneByPatient = new Map(journeys.map((j) => [j.patient_id, j.patient.phone]));
+  const reminderLink = `${origin}/journey`;
 
   return (
     <main className="space-y-10">
@@ -106,6 +116,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
                   kind={i.kind}
                   owner={i.task.owner}
+                  reminder={
+                    i.task.owner === "patient" && i.kind !== "review" ? (
+                      <ReminderButton
+                        phone={phoneByPatient.get(i.patientId)}
+                        subject={t("תזכורת מ{clinic}", { clinic: clinicName })}
+                        message={taskReminderMessage(i.patientName, clinicName, i.task.title, reminderLink, patientExtras.get(i.patientId)?.lang ?? "he")}
+                      />
+                    ) : undefined
+                  }
                 >
                   <span className="flex flex-col gap-0.5">
                     <span className="flex items-baseline justify-between gap-3">

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getClinicName } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
+import { getOrigin } from "@/lib/account-links";
+import { taskReminderMessage } from "@/lib/messages";
+import { ReminderButton } from "@/components/reminder-button";
 import { ownerLabel, blockerLabel } from "@/lib/journey";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
@@ -55,11 +58,13 @@ export default async function PatientPage({
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
   // Everything that does not depend on the journey is fetched together with it.
-  const [profile, journey, options, { data: templates }] = await Promise.all([
+  const [profile, journey, options, { data: templates }, clinicName, origin] = await Promise.all([
     requireProfile(["staff", "doctor"]),
     loadJourney(id),
     getClinicOptions(),
     supabase.from("templates").select("id, name").order("name"),
+    getClinicName(),
+    getOrigin(),
   ]);
   if (!journey) {
     // Some links (the referral pages) carry the patient's id instead of the journey's: send them to the right card.
@@ -311,6 +316,16 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
+              {t.owner === "patient" && (t.state === "todo" || t.state === "rejected") && (
+                <div className="mt-2">
+                  <ReminderButton
+                    phone={journey.patient.phone}
+                    email={patientRow?.email}
+                    subject={tr("תזכורת מ{clinic}", { clinic: clinicName })}
+                    message={taskReminderMessage(journey.patient.full_name, clinicName, t.title, `${origin}/journey`, extras?.lang ?? "he")}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

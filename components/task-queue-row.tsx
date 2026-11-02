@@ -18,12 +18,14 @@ export function TaskQueueRow({
   href,
   kind,
   owner,
+  reminder,
   children,
 }: {
   taskId: string;
   href: string;
   kind: ActionKind;
   owner: Owner;
+  reminder?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const t = useT();
@@ -69,7 +71,8 @@ export function TaskQueueRow({
       <Link href={href} className="min-w-0 flex-1 px-2 py-2.5 link-row">
         {children}
       </Link>
-      <div className="flex items-center pe-3">
+      <div className="flex items-center gap-2 pe-3">
+        {reminder}
         <button
           type="button"
           onClick={accept}
