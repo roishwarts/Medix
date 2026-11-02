@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
+import { VoiceTextarea } from "@/components/voice-input";
 import { israelParts } from "@/lib/dates";
 import { saveMeetingSummary, deleteMeetingSummary } from "./notes-actions";
 
@@ -130,11 +131,11 @@ function SummaryForm({
       </div>
       <div>
         <label className="lbl" htmlFor="sum-note">{t("מה נדון")}</label>
-        <textarea id="sum-note" className="field min-h-24" placeholder={t("מה נאמר בפגישה, מה סוכם…")} value={note} onChange={(e) => setNote(e.target.value)} />
+        <VoiceTextarea id="sum-note" className="field min-h-24" placeholder={t("מה נאמר בפגישה, מה סוכם…")} value={note} onChange={setNote} />
       </div>
       <div>
         <label className="lbl" htmlFor="sum-followup">{t("המשך ומעקב (לא חובה)")}</label>
-        <textarea id="sum-followup" className="field min-h-16" placeholder={t("מה צריך לעשות הלאה…")} value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
+        <VoiceTextarea id="sum-followup" className="field min-h-16" placeholder={t("מה צריך לעשות הלאה…")} value={followUp} onChange={setFollowUp} />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className="btn btn-primary btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={save}>

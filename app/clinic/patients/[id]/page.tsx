@@ -27,6 +27,9 @@ import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
 import { AllDocuments, type DocItem } from "./all-documents";
 import { StartJourney } from "./start-journey";
+import { ClinicalSummary, type ClinicalData } from "./clinical-summary";
+import { DoctorQuestions } from "./doctor-questions";
+import { loadQuestions } from "@/lib/doctor-questions";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
@@ -134,6 +137,19 @@ export default async function PatientPage({
   ]);
   // Separate query so the page still works before patch-outcomes.sql is applied.
   const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
+  // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
+  const [clinicalRes, questions] = await Promise.all([
+    supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes").eq("journey_id", journey.id).maybeSingle(),
+    loadQuestions({ patientId: journey.patient_id, limit: 50 }),
+  ]);
+  const clinicalAvailable = !clinicalRes.error;
+  const clinical: ClinicalData | null = clinicalRes.data
+    ? {
+        diagnosis: clinicalRes.data.diagnosis, side: clinicalRes.data.side as ClinicalData["side"], allergies: clinicalRes.data.allergies,
+        medications: clinicalRes.data.medications, medicalHistory: clinicalRes.data.medical_history, notes: clinicalRes.data.notes,
+      }
+    : null;
+  const questionsAvailable = !(await supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1)).error;
   const referrals = (referralRows ?? []) as {
     id: string; recipient: string; reason: string; created_at: string;
     result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;
@@ -202,6 +218,8 @@ export default async function PatientPage({
       )}
       <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
       <div className="min-w-0 space-y-10">
+      <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
+      <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
       <section className="card divide-y divide-line">
         <div className="grid gap-x-8 gap-y-3 px-4 py-3 sm:grid-cols-2 sm:items-center">
           <p>
