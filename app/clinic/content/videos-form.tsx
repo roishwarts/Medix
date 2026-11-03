@@ -24,7 +24,7 @@ function VideoList({ title, videos, pending, onRemove }: { title: string; videos
                 type="button"
                 aria-label={t("הסרת {name}", { name: v.title })}
                 disabled={pending}
-                className="relative grid size-9 shrink-0 place-items-center rounded-full text-muted hover:bg-black/10 hover:text-ink disabled:opacity-50"
+                className="relative grid size-11 shrink-0 place-items-center sm:size-9 rounded-full text-muted hover:bg-black/10 hover:text-ink disabled:opacity-50"
                 onClick={() => onRemove(v.id, v.title)}
               >
                 <Icon name="trash" size={14} />

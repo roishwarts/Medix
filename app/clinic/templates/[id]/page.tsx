@@ -117,7 +117,7 @@ export default async function TemplatePage({
       )}
 
       {friction.length > 0 && (
-        <div className="mt-6 rounded-2xl bg-bad-soft p-4">
+        <div className="card mt-6 border-s-4 border-s-bad bg-bad/5 p-4">
           <h2 className="flex items-center gap-1.5 font-medium text-bad"><Icon name="alert" size={16} />{t("נקודות חיכוך בתבנית הזו")}</h2>
           <p className="mt-1 text-sm text-bad">
             {t("משימות שכרגע מוחזרות לתיקון אצל יותר ממטופל אחד — ייתכן שההנחיה לא ברורה מספיק.")}

@@ -11,7 +11,8 @@ export default async function NewPatientPage() {
   const options = await getClinicOptions();
   return (
     <main className="max-w-xl">
-      <h1 className="display text-4xl">{t("מטופל חדש")}</h1>
+      <p className="eyebrow">{t("מטופלים")}</p>
+      <h1 className="display mt-1 text-4xl">{t("מטופל חדש")}</h1>
       <p className="mt-2 text-muted">{t("אחרי היצירה תוכל לשלוח למטופל קישור אישי, והוא יצור בעצמו משתמש וסיסמה.")}</p>
       {templates && templates.length > 0 ? (
         <NewPatientForm templates={templates} hospitals={options.hospitals} companies={options.companies} />

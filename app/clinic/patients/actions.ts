@@ -36,6 +36,42 @@ export async function reviewTask(taskId: string, decision: "accept" | "reject" |
   return {};
 }
 
+export type PatientSearchResult = { id: string; name: string; procedure: string | null; surgeryDate: string | null };
+
+// Backs the ⌘K quick search (command-palette.tsx): a short, by-name lookup across the whole
+// clinic instead of filtering the (already-loaded) patients table on one page at a time. RLS on
+// `patients` already scopes this to the caller's own clinic.
+export async function searchPatients(query: string): Promise<PatientSearchResult[]> {
+  await requireProfile(["staff", "doctor"]);
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const supabase = await createClient();
+
+  const { data: patients } = await supabase.from("patients").select("id, full_name").ilike("full_name", `%${q}%`).order("full_name").limit(8);
+  if (!patients || patients.length === 0) return [];
+
+  const ids = patients.map((p) => p.id);
+  const { data: journeys } = await supabase
+    .from("journeys")
+    .select("patient_id, surgery_date, template_name, templates(procedure)")
+    .in("patient_id", ids)
+    .order("surgery_date");
+  const byPatient = new Map<string, { surgeryDate: string; procedure: string | null }>();
+  for (const j of journeys ?? []) {
+    if (byPatient.has(j.patient_id)) continue;
+    const templates = j.templates as { procedure: string | null } | { procedure: string | null }[] | null;
+    const procedure = (Array.isArray(templates) ? templates[0] : templates)?.procedure ?? j.template_name;
+    byPatient.set(j.patient_id, { surgeryDate: j.surgery_date, procedure });
+  }
+
+  return patients.map((p) => ({
+    id: p.id,
+    name: p.full_name,
+    procedure: byPatient.get(p.id)?.procedure ?? null,
+    surgeryDate: byPatient.get(p.id)?.surgeryDate ?? null,
+  }));
+}
+
 export type CreatePatientState =
   | {
       error?: string;

@@ -88,5 +88,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // The icons, share image and manifest must load without signing in (home screen, WhatsApp previews).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|opengraph-image.png|twitter-image.png|manifest.webmanifest|icon-192.png|icon-512.png).*)"],
+  // sw.js must too: the service worker has to register before the browser knows whether anyone is
+  // signed in, and a redirect response breaks registration outright (wrong MIME type, not JS).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|opengraph-image.png|twitter-image.png|manifest.webmanifest|icon-192.png|icon-512.png|sw.js).*)"],
 };

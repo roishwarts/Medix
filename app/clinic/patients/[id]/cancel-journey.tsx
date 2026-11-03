@@ -39,9 +39,12 @@ export function CancelledBanner({
       </p>
       <button
         type="button"
-        className="mt-2 text-sm font-medium text-accent hover:underline"
+        className="mt-2 min-h-11 text-sm font-medium text-accent hover:underline sm:min-h-0"
         disabled={pending}
-        onClick={() => start(async () => { await uncancelJourney(journeyId); router.refresh(); })}
+        onClick={() => {
+          if (!confirm(t("לבטל את סימון הביטול? הניתוח יחזור להיות פעיל."))) return;
+          start(async () => { await uncancelJourney(journeyId); router.refresh(); });
+        }}
       >
         {t("ביטול הסימון (זה טעות)")}
       </button>
@@ -62,7 +65,7 @@ export function CancelTrigger({ journeyId }: { journeyId: string }) {
   if (!open) {
     return (
       <div className="flex justify-end px-4 py-2">
-        <button type="button" onClick={() => setOpen(true)} className="text-sm text-muted hover:text-bad hover:underline">
+        <button type="button" onClick={() => setOpen(true)} className="min-h-11 text-sm text-muted hover:text-bad hover:underline sm:min-h-0">
           {t("ביטול הניתוח")}
         </button>
       </div>

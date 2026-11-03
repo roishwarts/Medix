@@ -5,6 +5,8 @@ import { useT } from "@/components/i18n-provider";
 import { reviewTask } from "../actions";
 import type { Owner, TaskState } from "@/lib/journey";
 import { setOptimisticState, useTaskState } from "@/components/task-optimistic";
+import { queueOrRun } from "@/lib/offline/queue";
+import { toast } from "@/components/toast";
 
 export function TaskReview({ taskId, state: serverState, owner }: { taskId: string; state: TaskState; owner: Owner }) {
   const t = useT();
@@ -22,6 +24,20 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
     // Show the outcome immediately; the server confirms (or we roll back) a moment later.
     setOptimisticState(taskId, decision === "accept" ? "done" : decision === "reject" ? "rejected" : "todo");
     setRejecting(false);
+
+    // Accept is the one staff action scoped as safe to use offline: it goes through the local
+    // queue (lib/offline/queue.ts) instead of the server action, so it still works with no
+    // connection. Reject/reopen touch review notes and state transitions with real conflict risk,
+    // so they stay server-action-only and simply fail with a clear message when offline.
+    if (decision === "accept") {
+      start(async () => {
+        const result = await queueOrRun({ kind: "staff_accept", taskId });
+        if (result.rejected) { setOptimisticState(taskId, null); setError(t("הפעולה נכשלה. ייתכן שהמשימה כבר טופלה אחרת — רענן/י ונסה/י שוב.")); }
+        else if (result.queued) toast(t("אין חיבור לרגע — השמירה בוצעה במכשיר ותישלח אוטומטית כשהחיבור יחזור."));
+      });
+      return;
+    }
+
     start(async () => {
       try {
         const res = await reviewTask(taskId, decision, note);

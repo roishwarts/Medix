@@ -1,20 +1,21 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ShareLink } from "@/components/share-link";
 import { createCaregiverInviteByStaff } from "../actions";
 
 export function AddCaregiver({ patientId }: { patientId: string }) {
   const t = useT();
   const [state, action, pending] = useActionState(createCaregiverInviteByStaff.bind(null, patientId), undefined);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (state?.link && state.message) {
+  if (state?.link && state.message && !dismissed) {
     return (
       <div className="card mt-3 space-y-3 p-4">
         <p className="font-medium">{t("ההזמנה ל{name} מוכנה", { name: state.name ?? "" })}</p>
         <ShareLink link={state.link} message={state.message} phone={state.phone} email={state.email} emailSubject={t("הזמנה לעקוב אחרי ההכנה לניתוח")} />
-        <button type="button" className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" onClick={() => window.location.reload()}>{t("הוספת בן משפחה נוסף")}</button>
+        <button type="button" className="btn btn-quiet btn-sm min-h-11 sm:min-h-9" onClick={() => setDismissed(true)}>{t("הוספת בן משפחה נוסף")}</button>
       </div>
     );
   }
@@ -22,7 +23,7 @@ export function AddCaregiver({ patientId }: { patientId: string }) {
   return (
     <details className="card mt-3">
       <summary className="flex min-h-11 cursor-pointer items-center px-4 py-3 font-medium">{t("הוספת בן משפחה")}</summary>
-      <form action={action} className="grid gap-4 border-t border-line p-4 sm:grid-cols-2">
+      <form action={action} onSubmit={() => setDismissed(false)} className="grid gap-4 border-t border-line p-4 sm:grid-cols-2">
         <div>
           <label htmlFor="cg-name" className="lbl">{t("שם")}</label>
           <input id="cg-name" name="invitee_name" className="field" maxLength={60} required />
