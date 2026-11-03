@@ -62,7 +62,7 @@ export function BulkTaskBar() {
             {t("ביטול")}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={pending} onClick={acceptSelected}>
-            {pending ? t("מאשר…") : t("אישור הנבחרות")}
+            {pending ? t("מסמן…") : t("סמן כבוצע")}
           </button>
         </div>
       </div>

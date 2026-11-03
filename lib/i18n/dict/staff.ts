@@ -1,5 +1,7 @@
 // Staff and admin screens.
 export const en: Record<string, string> = {
+  "סמן כבוצע": "Mark as done",
+  "מסמן…": "Marking…",
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "The tables do not exist yet. Run the file {file} in the Supabase SQL editor.",
   "{open} פתוחות מתוך {total}": "{open} open of {total}",
   "רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.": "A private planning list: subjects, and below them the tasks on the way.",
@@ -609,6 +611,8 @@ export const en: Record<string, string> = {
   "בוטל": "Cancelled",
 };
 export const ru: Record<string, string> = {
+  "סמן כבוצע": "Отметить выполненным",
+  "מסמן…": "Отмечаю…",
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "Таблиц ещё нет. Выполните файл {file} в Supabase SQL editor.",
   "{open} פתוחות מתוך {total}": "Открыто {open} из {total}",
   "רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.": "Личный список планирования: темы и под ними задачи.",
@@ -1218,6 +1222,8 @@ export const ru: Record<string, string> = {
   "בוטל": "Отменён",
 };
 export const ar: Record<string, string> = {
+  "סמן כבוצע": "وضع علامة منجز",
+  "מסמן…": "جارٍ التعليم…",
   "הטבלאות עדיין לא קיימות. יש להריץ ב־Supabase SQL editor את הקובץ {file}.": "الجداول غير موجودة بعد. شغّل الملف {file} في محرر SQL في Supabase.",
   "{open} פתוחות מתוך {total}": "{open} مفتوحة من {total}",
   "רשימת תכנון פרטית: נושאים, ומתחתם המשימות שבדרך.": "قائمة تخطيط خاصة: مواضيع وتحتها المهام القادمة.",

@@ -9,7 +9,7 @@ export function TasksFilter({ options, value }: { options: { key: string; label:
   const router = useRouter();
   return (
     <select
-      aria-label={t("סינון פעולות לפי סטטוס")} value={value} className="field min-h-11 w-full sm:min-h-9 sm:w-auto sm:min-w-56 sm:py-1 sm:text-sm"
+      aria-label={t("סינון פעולות לפי סטטוס")} value={value} className="field min-h-11 w-auto min-w-0 max-w-full text-sm sm:min-h-9 sm:min-w-56 sm:py-1"
       onChange={(e) => router.push(e.target.value === "all" ? "/clinic/tasks" : `/clinic/tasks?status=${e.target.value}`, { scroll: false })}
     >
       {options.map((o) => <option key={o.key} value={o.key}>{o.label} ({o.count})</option>)}
