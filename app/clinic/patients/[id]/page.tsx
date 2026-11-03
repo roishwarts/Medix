@@ -16,7 +16,7 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
-import { loadPatientExtras } from "@/lib/patient-extras";
+import { patientExtras } from "@/lib/patient-extras";
 import { stageOf } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
@@ -85,7 +85,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }, { data: cancelRow }, extras] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -138,9 +138,10 @@ export default async function PatientPage({
           : res,
       ),
     supabase.from("profiles").select("id, full_name").eq("clinic_id", profile.clinic_id),
+    // Separate query so the page still works before patch-outcomes.sql is applied.
+    supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle(),
+    patientExtras(journey.patient_id),
   ]);
-  // Separate query so the page still works before patch-outcomes.sql is applied.
-  const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   const referrals = (referralRows ?? []) as {
     id: string; recipient: string; reason: string; created_at: string;
     result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;
@@ -163,7 +164,6 @@ export default async function PatientPage({
     .filter((tk) => tk.kind === "appointment")
     .map((tk) => ({ id: tk.id, title: tk.title, eventDate: tk.eventDate }));
 
-  const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
     patientNames: new Map(),

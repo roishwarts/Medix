@@ -20,3 +20,11 @@ export async function patientLang(patientId: string): Promise<Lang> {
   const { data } = await supabase.from("patients").select("lang").eq("id", patientId).maybeSingle();
   return toLang(data?.lang);
 }
+
+// Same as loadPatientExtras, but for the one patient a page actually needs (the patient card),
+// instead of pulling every patient in the clinic just to throw away all but one row.
+export async function patientExtras(patientId: string): Promise<PatientExtras> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("patients").select("lang, stage_override").eq("id", patientId).maybeSingle();
+  return { lang: toLang(data?.lang), stage: toStage(data?.stage_override) };
+}
