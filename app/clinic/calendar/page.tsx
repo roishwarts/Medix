@@ -36,11 +36,11 @@ export default async function ClinicCalendarPage({
       <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div>
           <h1 className="display text-4xl">{t("יומן")}</h1>
-          <p className="mt-1 text-sm text-muted" aria-live="polite">
-            {notReady
-              ? t("מוצגים רק מטופלים שעדיין לא מוכנים ({n} מתוך {total})", { n: journeys.length, total: all.length })
-              : t("ניתוחים, תורים ומועדי משימות של כל המטופלים")}
-          </p>
+          {notReady && (
+            <p className="mt-1 text-sm text-muted" aria-live="polite">
+              {t("מוצגים רק מטופלים שעדיין לא מוכנים ({n} מתוך {total})", { n: journeys.length, total: all.length })}
+            </p>
+          )}
         </div>
         <Link href={`/clinic/calendar?${toggle.toString()}`} aria-current={notReady ? "true" : undefined}
           className={`btn ${notReady ? "btn-primary" : ""}`}>

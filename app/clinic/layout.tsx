@@ -8,6 +8,7 @@ import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ActivityBadge } from "./activity-badge";
+import { QuestionsBadge } from "./questions-badge";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -25,6 +26,7 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic/patients", label: t("מטופלים"), icon: "patients" },
     { href: "/clinic/calendar", label: t("יומן"), icon: "calendar" },
     { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
+    { href: "/clinic/questions", label: t("שאלות לרופא"), icon: "question", more: true, badge: <Suspense fallback={null}><QuestionsBadge /></Suspense> },
     { href: "/clinic/insights", label: t("תובנות ניהול"), icon: "insights", more: true },
     ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
     ...(profile.role === "doctor" ? [{ href: "/clinic/team", label: t("הצוות שלי"), icon: "users" as const, more: true }] : []),

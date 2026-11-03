@@ -56,14 +56,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       <header>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-          <div className="flex flex-1 justify-end max-sm:basis-full">
+          <div className="flex min-w-0 flex-1 justify-end">
             <TasksFilter
               value={active}
               options={TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }))}
             />
           </div>
         </div>
-        <p className="mt-2 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({

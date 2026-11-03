@@ -11,7 +11,7 @@ import { fetchAllRows } from "@/lib/supabase/paginate";
 
 export const dynamic = "force-dynamic";
 
-type Search = { q?: string; days?: string; hospital?: string; stage?: string; template?: string };
+type Search = { q?: string; days?: string; hospital?: string; procedure?: string; stage?: string; ready?: string; sort?: string; template?: string };
 
 export default async function PatientsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const t = await getT();
@@ -39,7 +39,11 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
     stage: extras.get(j.patient_id)?.stage ?? stageOf(j.summary, !!j.cancelled_at),
     hospital: placeOf.get(j.patient_id)?.hospital ?? null, company: placeOf.get(j.patient_id)?.company ?? null,
     step: j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : t("ההכנות הושלמו"),
+    procedureLabel: j.procedure || j.template_name,
   }));
+  const procedures = [...new Set(allUnfiltered.map((j) => j.procedure || j.template_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  const ready = sp.ready === "ready" || sp.ready === "in_progress" || sp.ready === "not_ready" ? sp.ready : "all";
+  const sort = sp.sort === "readiness" || sp.sort === "name" ? sp.sort : "date";
 
   return (
     <main>
@@ -53,7 +57,8 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
       )}
       <PatientsList
         title={t("מטופלים")} action={<Link href="/clinic/patients/new" className="btn btn-primary">{t("מטופל חדש")}</Link>}
-        rows={rows} hospitals={hospitals} initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", days: parseDays(sp.days), stage }}
+        rows={rows} hospitals={hospitals} procedures={procedures}
+        initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", procedure: sp.procedure ?? "", days: parseDays(sp.days), stage, ready, sort }}
       />
     </main>
   );
