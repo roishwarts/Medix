@@ -9,6 +9,7 @@ import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ActivityBadge } from "./activity-badge";
 import { QuestionsBadge } from "./questions-badge";
+import { PatientSearch } from "@/components/patient-search";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -40,7 +41,11 @@ export default async function ClinicLayout({ children }: { children: React.React
         <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
-        <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
+        <div className="flex items-start justify-between gap-2 print:hidden">
+          <BackButton home="/clinic" roots={items.map((i) => i.href)} />
+          {/* On a phone the top bar is hidden, so patient search sits here, on every page. */}
+          <span className="ms-auto md:hidden"><PatientSearch /></span>
+        </div>
         {children}
       </div>
     </div>

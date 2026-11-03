@@ -1,5 +1,9 @@
 // Doctor tools: questions for the doctor, the clinical summary and voice input.
 export const en: Record<string, string> = {
+  "חיפוש מטופל": "Search patient",
+  "שם, טלפון או תעודת זהות": "Name, phone or ID number",
+  "הקלידו לפחות שתי אותיות": "Type at least two characters",
+  "לא נמצאו מטופלים": "No patients found",
   "הפניות שקיבל המטופל": "Referrals the patient received",
   "פעולות מהירות": "Quick actions",
   "התקשרות": "Call",
@@ -59,6 +63,10 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "חיפוש מטופל": "Поиск пациента",
+  "שם, טלפון או תעודת זהות": "Имя, телефон или номер удостоверения",
+  "הקלידו לפחות שתי אותיות": "Введите не менее двух символов",
+  "לא נמצאו מטופלים": "Пациенты не найдены",
   "הפניות שקיבל המטופל": "Направления, выданные пациенту",
   "פעולות מהירות": "Быстрые действия",
   "התקשרות": "Позвонить",
@@ -118,6 +126,10 @@ export const ru: Record<string, string> = {
 };
 
 export const ar: Record<string, string> = {
+  "חיפוש מטופל": "بحث عن مريض",
+  "שם, טלפון או תעודת זהות": "الاسم أو الهاتف أو رقم الهوية",
+  "הקלידו לפחות שתי אותיות": "اكتبوا حرفين على الأقل",
+  "לא נמצאו מטופלים": "لم يتم العثور على مرضى",
   "הפניות שקיבל המטופל": "الإحالات التي تلقاها المريض",
   "פעולות מהירות": "إجراءات سريعة",
   "התקשרות": "اتصال",
