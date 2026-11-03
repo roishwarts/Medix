@@ -90,7 +90,6 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
           <h1 className="display text-4xl">{t("עדכונים")}</h1>
-          <p className="mt-1 text-muted">{t("מה קרה אצל המטופלים, בני המשפחה והצוות.")}</p>
         </div>
         <Link href={myWeekHref} className="text-sm text-muted hover:text-ink hover:underline">{t("מה עשיתי השבוע")}</Link>
       </header>

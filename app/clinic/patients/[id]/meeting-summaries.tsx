@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
+import { VoiceTextarea } from "@/components/voice-input";
 import { israelParts } from "@/lib/dates";
 import { saveMeetingSummary, deleteMeetingSummary } from "./notes-actions";
+import { NEW_SUMMARY_EVENT } from "./doctor-quick-bar";
 
 export type SummaryItem = {
   id: string;
@@ -26,8 +28,18 @@ export function MeetingSummaries({ patientId, items, appointments }: { patientId
   const t = useT();
   const [editing, setEditing] = useState<string | null>(null); // summary id, or "new"
 
+  // The phone's quick-action bar asks for a new summary: open the form and bring it into view.
+  useEffect(() => {
+    const open = () => {
+      setEditing("new");
+      setTimeout(() => document.getElementById("meeting-summaries")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    };
+    window.addEventListener(NEW_SUMMARY_EVENT, open);
+    return () => window.removeEventListener(NEW_SUMMARY_EVENT, open);
+  }, []);
+
   return (
-    <section aria-label={t("סיכומי פגישות")}>
+    <section id="meeting-summaries" aria-label={t("סיכומי פגישות")} className="scroll-mt-4">
       <h2 className="eyebrow mb-2">{t("סיכומי פגישות")}</h2>
       <div className="card divide-y divide-line">
         {items.length === 0 && editing !== "new" && <p className="px-4 py-3 text-sm text-muted">{t("אין עדיין סיכומי פגישות.")}</p>}
@@ -131,11 +143,11 @@ function SummaryForm({
       </div>
       <div>
         <label className="lbl" htmlFor="sum-note">{t("מה נדון")}</label>
-        <textarea id="sum-note" className="field min-h-24" placeholder={t("מה נאמר בפגישה, מה סוכם…")} value={note} onChange={(e) => setNote(e.target.value)} />
+        <VoiceTextarea id="sum-note" className="field min-h-24" placeholder={t("מה נאמר בפגישה, מה סוכם…")} value={note} onChange={setNote} />
       </div>
       <div>
         <label className="lbl" htmlFor="sum-followup">{t("המשך ומעקב (לא חובה)")}</label>
-        <textarea id="sum-followup" className="field min-h-16" placeholder={t("מה צריך לעשות הלאה…")} value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
+        <VoiceTextarea id="sum-followup" className="field min-h-16" placeholder={t("מה צריך לעשות הלאה…")} value={followUp} onChange={setFollowUp} />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className="btn btn-primary btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={save}>

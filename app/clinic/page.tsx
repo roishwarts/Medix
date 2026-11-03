@@ -15,6 +15,7 @@ import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { requireProfile } from "@/lib/auth";
 import { Icon } from "@/components/ui";
+import { loadQuestions } from "@/lib/doctor-questions";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const journeys = allJourneys
     .filter((j) => (sp.hospital ? hospitalOf.get(j.patient_id) === sp.hospital : true));
   const resetRequests = resetRes.count ?? 0;
+  // Questions the team sent to the doctor, shown on the doctor's own home screen (urgent first, then oldest).
+  const openQuestions = profile.role === "doctor"
+    ? (await loadQuestions({ limit: 50 })).filter((q) => !q.answeredAt).sort((a, b) => (a.urgent === b.urgent ? (a.askedAt < b.askedAt ? -1 : 1) : a.urgent ? -1 : 1))
+    : [];
 
   const items: ActionItem[] = journeys.flatMap((j) => actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0));
   const reviewCount = items.filter((i) => i.kind === "review").length;
@@ -158,6 +163,30 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <p className="text-sm text-muted">{t("יש לכם תבנית מוכנה — עכשיו אפשר להתחיל מסלול למטופל הראשון שלכם.")}</p>
           <Link href="/clinic/patients/new" className="btn btn-primary btn-sm">{t("הוספת מטופל")}</Link>
         </div>
+      )}
+
+      {openQuestions.length > 0 && (
+        <section aria-label={t("שאלות לרופא")} className="card overflow-hidden border-accent-line">
+          <div className="flex items-center justify-between gap-3 bg-accent-soft px-4 py-3">
+            <h2 className="font-medium">
+              {openQuestions.length === 1 ? t("שאלה אחת ממתינה לתשובתך") : t("{n} שאלות ממתינות לתשובתך", { n: openQuestions.length })}
+            </h2>
+            <Link href="/clinic/questions" className="shrink-0 text-sm text-accent underline-offset-4 hover:underline">{t("לכל השאלות")}</Link>
+          </div>
+          <ul className="divide-y divide-line">
+            {openQuestions.slice(0, 3).map((q) => (
+              <li key={q.id}>
+                <Link href="/clinic/questions" className="flex min-h-14 items-center justify-between gap-3 px-4 py-2.5 hover:bg-paper">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{q.patientName}</span>
+                    <span className="block truncate text-sm text-muted">{q.question}</span>
+                  </span>
+                  {q.urgent && <span className="pill pill-bad shrink-0">{t("דחוף")}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {resetRequests > 0 && (

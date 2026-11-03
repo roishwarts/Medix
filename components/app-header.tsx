@@ -106,7 +106,7 @@ export function AppHeader({
                     <li key={i.href}>
                       <Link href={i.href} aria-current={active(i) ? "page" : undefined}
                         className={`flex min-h-12 items-center gap-3 rounded-2xl px-3 text-base ${active(i) ? "glass-on font-medium" : "hover:bg-[var(--hover-tint)]"}`}>
-                        <NavIcon name={i.icon} /> <span>{i.label}</span>
+                        <NavIcon name={i.icon} /> <span>{i.label}</span>{i.badge}
                       </Link>
                     </li>
                   ))}

@@ -30,6 +30,10 @@ import { CancelledBanner, CancelTrigger } from "./cancel-journey";
 import { PromsCard } from "./proms-card";
 import { AllDocuments, type DocItem } from "./all-documents";
 import { StartJourney } from "./start-journey";
+import { ClinicalSummary, type ClinicalData } from "./clinical-summary";
+import { DoctorQuestions } from "./doctor-questions";
+import { DoctorQuickBar } from "./doctor-quick-bar";
+import { loadQuestions } from "@/lib/doctor-questions";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
 export const dynamic = "force-dynamic";
@@ -142,6 +146,19 @@ export default async function PatientPage({
     supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle(),
     patientExtras(journey.patient_id),
   ]);
+  // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
+  const [clinicalRes, questions] = await Promise.all([
+    supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes").eq("journey_id", journey.id).maybeSingle(),
+    loadQuestions({ patientId: journey.patient_id, limit: 50 }),
+  ]);
+  const clinicalAvailable = !clinicalRes.error;
+  const clinical: ClinicalData | null = clinicalRes.data
+    ? {
+        diagnosis: clinicalRes.data.diagnosis, side: clinicalRes.data.side as ClinicalData["side"], allergies: clinicalRes.data.allergies,
+        medications: clinicalRes.data.medications, medicalHistory: clinicalRes.data.medical_history, notes: clinicalRes.data.notes,
+      }
+    : null;
+  const questionsAvailable = !(await supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1)).error;
   const referrals = (referralRows ?? []) as {
     id: string; recipient: string; reason: string; created_at: string;
     result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;
@@ -209,6 +226,21 @@ export default async function PatientPage({
       )}
       <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
       <div className="min-w-0 space-y-10">
+      <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
+      <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
+      {isDoctor && (
+        <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
+          <h2 className="eyebrow mb-2">{tr("הפניות שקיבל המטופל")}</h2>
+          <ReferralsCard
+            patientId={journey.patient_id}
+            canCreate
+            items={referrals.map((r) => ({
+              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+            }))}
+          />
+        </section>
+      )}
       <section className="card divide-y divide-line">
         <div className="grid gap-x-8 gap-y-3 px-4 py-3 sm:grid-cols-2 sm:items-center">
           <p>
@@ -373,19 +405,25 @@ export default async function PatientPage({
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
-        <section aria-label={tr("הפניות")}>
+        {!isDoctor && <section aria-label={tr("הפניות")}>
           <h2 className="eyebrow mb-2">{tr("הפניות")}</h2>
           <ReferralsCard
             patientId={journey.patient_id}
-            canCreate={isDoctor}
+            canCreate={false}
             items={referrals.map((r) => ({
               id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
               resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
             }))}
           />
-        </section>
+        </section>}
       </aside>
       </div>
+      {isDoctor && (
+        <>
+          <div aria-hidden className="h-16 md:hidden" />
+          <DoctorQuickBar patientId={journey.patient_id} phone={journey.patient.phone ?? ""} openQuestions={questions.filter((q) => !q.answeredAt).length} />
+        </>
+      )}
     </main>
   );
 }

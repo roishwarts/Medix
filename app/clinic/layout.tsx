@@ -7,8 +7,8 @@ import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
-import { CommandPalette } from "@/components/command-palette";
 import { ActivityBadge } from "./activity-badge";
+import { QuestionsBadge } from "./questions-badge";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -26,6 +26,7 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic/patients", label: t("מטופלים"), icon: "patients" },
     { href: "/clinic/calendar", label: t("יומן"), icon: "calendar" },
     { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
+    { href: "/clinic/questions", label: t("שאלות לרופא"), icon: "question", more: true, badge: <Suspense fallback={null}><QuestionsBadge /></Suspense> },
     { href: "/clinic/insights", label: t("תובנות ניהול"), icon: "insights", more: true },
     ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
     ...(profile.role === "doctor" ? [{ href: "/clinic/team", label: t("הצוות שלי"), icon: "users" as const, more: true }] : []),
@@ -39,10 +40,7 @@ export default async function ClinicLayout({ children }: { children: React.React
         <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <BackButton home="/clinic" roots={items.map((i) => i.href)} />
-          <div className="ms-auto"><CommandPalette /></div>
-        </div>
+        <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
         {children}
       </div>
     </div>
