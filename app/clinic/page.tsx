@@ -129,8 +129,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain md:hidden" />
           )}
           <div className="min-w-0">
-            <p className="eyebrow">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
-            <h1 className="display mt-1 text-3xl sm:text-4xl">{t("לוח בקרה")}</h1>
+            <p className="text-sm font-medium text-muted sm:text-base">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
+            <h1 className="display mt-0.5 text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
           </div>
         </div>
         <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
