@@ -63,7 +63,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             />
           </div>
         </div>
-        <p className="mt-2 text-muted">{t("כל מה שמחכה לטיפול הצוות: בדיקות, איחורים ומשימות קרובות.")}</p>
       </header>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({

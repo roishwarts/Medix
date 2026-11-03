@@ -51,7 +51,6 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
           <h1 className="display text-4xl">{t("עדכונים")}</h1>
-          <p className="mt-1 text-muted">{t("מה קרה אצל המטופלים, בני המשפחה והצוות.")}</p>
         </div>
         <form className="flex w-full items-end gap-2 sm:w-auto" action="/clinic/activity" role="search" aria-label={t("סינון לפי מטופל")}>
           {group.key !== "all" && <input type="hidden" name="type" value={group.key} />}
