@@ -1,36 +1,25 @@
+import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { addMonths, diffDays, monthTitle, today } from "@/lib/dates";
+import { monthTitle } from "@/lib/dates";
+import { loadInsights, REASON_LABEL, isRangeKey, type RangeKey } from "@/lib/insights";
+import { InsightsRange } from "@/components/insights-range";
 
 export const dynamic = "force-dynamic";
 
-const REASON_LABEL: Record<string, string> = {
-  patient_request: "בקשת המטופל",
-  medical: "שינוי במצב הרפואי",
-  insurance: "ביטוח / מימון",
-  clinic_schedule: "שינוי בלו״ז המרפאה",
-  other: "אחר",
-};
-const REASON_ORDER = Object.keys(REASON_LABEL);
+const RANGE_LABEL: Record<RangeKey, string> = { "3m": "3 החודשים האחרונים", "6m": "6 החודשים האחרונים", "12m": "12 החודשים האחרונים" };
 
-type Row = { id: string; surgery_date: string; created_at: string; cancelled_at: string | null; cancelled_reason: string | null; prep_completed_at: string | null };
-
-export default async function InsightsPage() {
+export default async function InsightsPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const [t, lang] = await Promise.all([getT(), getLang()]);
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();
+  const sp = await searchParams;
+  const range: RangeKey = isRangeKey(sp.range) ? sp.range : "6m";
+  const data = await loadInsights(supabase, range);
 
-  const monthStart = addMonths(today(), -5);
-  const windowEnd = addMonths(today(), 1);
-  const { data, error } = await supabase
-    .from("journeys")
-    .select("id, surgery_date, created_at, cancelled_at, cancelled_reason, prep_completed_at")
-    .gte("surgery_date", monthStart)
-    .lt("surgery_date", windowEnd);
-
-  if (error) {
+  if ("error" in data) {
     return (
       <main className="max-w-2xl">
         <h1 className="display text-4xl">{t("תובנות ניהול")}</h1>
@@ -42,63 +31,24 @@ export default async function InsightsPage() {
     );
   }
 
-  const rows = (data ?? []) as Row[];
-  const cancelled = rows.filter((r) => r.cancelled_at);
-  const active = rows.filter((r) => !r.cancelled_at);
-  const cancelRate = rows.length ? Math.round((cancelled.length / rows.length) * 100) : 0;
-
-  const months = Array.from({ length: 6 }, (_, i) => addMonths(monthStart, i));
-  const perMonth = months.map((m) => {
-    const end = addMonths(m, 1);
-    return { month: m, count: active.filter((r) => r.surgery_date >= m && r.surgery_date < end).length };
-  });
+  const {
+    active, cancelled, cancelRate, perMonth, reasonRows,
+    avgDecision, decisionCount, avgPrep, prepCount,
+    oksBaseline, oksMonth3, oksImprovement, oksPaired, staff,
+  } = data;
   const maxCount = Math.max(1, ...perMonth.map((p) => p.count));
-
-  const reasonCounts = new Map<string, number>();
-  for (const r of cancelled) {
-    const key = r.cancelled_reason ?? "other";
-    reasonCounts.set(key, (reasonCounts.get(key) ?? 0) + 1);
-  }
-  const reasonRows = REASON_ORDER.map((key) => ({ key, count: reasonCounts.get(key) ?? 0 }))
-    .filter((r) => r.count > 0)
-    .sort((a, b) => b.count - a.count);
-
-  const decisionDays = active.map((r) => diffDays(r.surgery_date, r.created_at.slice(0, 10)));
-  const avgDecision = decisionDays.length ? Math.round(decisionDays.reduce((a, b) => a + b, 0) / decisionDays.length) : null;
-
-  const prepRows = active.filter((r) => r.prep_completed_at);
-  const prepDays = prepRows.map((r) => diffDays(r.prep_completed_at!.slice(0, 10), r.created_at.slice(0, 10)));
-  const avgPrep = prepDays.length ? Math.round(prepDays.reduce((a, b) => a + b, 0) / prepDays.length) : null;
-
-  // Separate, tolerant query (patch-proms.sql) — the rest of the dashboard still works without it.
-  const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
-  let oksBaseline: number | null = null, oksMonth3: number | null = null, oksImprovement: number | null = null, oksPaired = 0;
-  if (active.length > 0) {
-    const { data: oks } = await supabase
-      .from("proms_responses")
-      .select("journey_id, timepoint, score")
-      .eq("instrument", "oks")
-      .in("journey_id", active.map((r) => r.id));
-    if (oks) {
-      const byJourney = new Map<string, Partial<Record<"baseline" | "month3", number>>>();
-      for (const r of oks as { journey_id: string; timepoint: string; score: number | null }[]) {
-        if (r.score === null || (r.timepoint !== "baseline" && r.timepoint !== "month3")) continue;
-        byJourney.set(r.journey_id, { ...byJourney.get(r.journey_id), [r.timepoint]: r.score });
-      }
-      const all = [...byJourney.values()];
-      oksBaseline = avg(all.map((v) => v.baseline).filter((n): n is number => n !== undefined));
-      oksMonth3 = avg(all.map((v) => v.month3).filter((n): n is number => n !== undefined));
-      const paired = all.filter((v) => v.baseline !== undefined && v.month3 !== undefined) as { baseline: number; month3: number }[];
-      oksPaired = paired.length;
-      oksImprovement = avg(paired.map((v) => v.month3 - v.baseline));
-    }
-  }
 
   return (
     <main className="max-w-3xl space-y-8 pb-6">
-      <header>
-        <p className="eyebrow">{t("6 החודשים האחרונים")}</p>
-        <h1 className="display mt-1 text-4xl">{t("תובנות ניהול")}</h1>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">{t(RANGE_LABEL[range])}</p>
+          <h1 className="display mt-1 text-4xl">{t("תובנות ניהול")}</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <InsightsRange value={range} />
+          <Link href={`/clinic/insights/export?range=${range}`} className="btn btn-sm">{t("ייצוא ל-CSV")}</Link>
+        </div>
       </header>
 
       <section className="card grid grid-cols-3 gap-3 p-5 text-center">
@@ -107,7 +57,7 @@ export default async function InsightsPage() {
           <p className="text-sm text-muted">{t("ניתוחים")}</p>
         </div>
         <div>
-          <p className={`num display text-3xl ${cancelled.length > 0 ? "text-bad" : ""}`}>{cancelled.length}</p>
+          <p className={`num display text-3xl ${cancelRate > 10 ? "text-bad" : ""}`}>{cancelled.length}</p>
           <p className="text-sm text-muted">{t("ביטולים")}</p>
         </div>
         <div>
@@ -153,14 +103,36 @@ export default async function InsightsPage() {
         <div className="card p-5">
           <p className="text-sm text-muted">{t("זמן מההחלטה לניתוח")}</p>
           <p className="num display mt-1 text-3xl">{avgDecision !== null ? t("{n} ימים בממוצע", { n: avgDecision }) : t("אין מידע עדיין")}</p>
-          <p className="mt-1 text-xs text-muted">{t("מרישום המטופל במערכת ועד תאריך הניתוח · מבוסס על {n} מטופלים", { n: decisionDays.length })}</p>
+          <p className="mt-1 text-xs text-muted">{t("מרישום המטופל במערכת ועד תאריך הניתוח · מבוסס על {n} מטופלים", { n: decisionCount })}</p>
         </div>
         <div className="card p-5">
           <p className="text-sm text-muted">{t("זמן השלמת הכנה")}</p>
           <p className="num display mt-1 text-3xl">{avgPrep !== null ? t("{n} ימים בממוצע", { n: avgPrep }) : t("אין מידע עדיין")}</p>
-          <p className="mt-1 text-xs text-muted">{t("מתחילת המסלול ועד שהמוכנות הגיעה ל-100% · מבוסס על {n} מטופלים", { n: prepDays.length })}</p>
+          <p className="mt-1 text-xs text-muted">{t("מתחילת המסלול ועד שהמוכנות הגיעה ל-100% · מבוסס על {n} מטופלים", { n: prepCount })}</p>
         </div>
       </section>
+
+      <section aria-labelledby="h-staff">
+        <h2 id="h-staff" className="mb-3 text-lg font-medium">{t("עומס בדיקת משימות לפי איש צוות")}</h2>
+        {staff.length === 0 ? (
+          <p className="card px-4 py-8 text-center text-muted">{t("אין עדיין משימות שנבדקו בתקופה הזו.")}</p>
+        ) : (
+          <div className="card divide-y divide-line">
+            {staff.map((s) => (
+              <div key={s.staffId} className="flex items-center justify-between gap-4 px-4 py-3">
+                <span className="min-w-0 break-words font-medium">{s.name}</span>
+                <span className="shrink-0 text-end text-sm text-muted">
+                  <span className="num font-medium text-ink">{s.accepted + s.rejected}</span> {t("נבדקו")}
+                  {" · "}
+                  {s.avgHours !== null ? t("זמן תגובה ממוצע {h} שעות", { h: s.avgHours }) : t("—")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="mt-2 text-xs text-muted">{t("רק משימות שהמטופל שלח ואיש צוות אישר/דחה, לא משימות שסומנו ישירות כבוצעו.")}</p>
+      </section>
+
       {(oksBaseline !== null || oksMonth3 !== null) && (
         <section aria-labelledby="h-oks">
           <h2 id="h-oks" className="mb-3 text-lg font-medium">{t("מדד הברך (Oxford Knee Score)")}</h2>

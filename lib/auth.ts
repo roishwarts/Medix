@@ -3,6 +3,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
+import { getLang } from "./prefs-server";
 
 export type Profile = {
   id: string;
@@ -51,9 +52,17 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   // than failing the whole profile fetch, which would sign everyone out of every page.
   let { data, error } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name, disabled, onboarded_at, clinics(*)")
+    .select("id, clinic_id, role, full_name, full_name_en, disabled, onboarded_at, clinics(*)")
     .eq("id", userId)
     .maybeSingle();
+  if (error) {
+    ({ data } = await supabase
+      .from("profiles")
+      // full_name_en (patch-name-translations.sql) may not exist yet.
+      .select("id, clinic_id, role, full_name, disabled, onboarded_at, clinics(*)")
+      .eq("id", userId)
+      .maybeSingle());
+  }
   if (error) {
     ({ data } = await supabase
       .from("profiles")
@@ -64,6 +73,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   if (!data || data.disabled) return null;
   const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as {
     name: string;
+    name_en?: string | null;
     mfa_required?: boolean;
     address?: string | null;
     contact_name?: string | null;
@@ -79,12 +89,16 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const logoUrl = clinic?.logo_path ? (/^https:\/\//.test(clinic.logo_path) ? clinic.logo_path : supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null) : null;
   const brandColor = clinic?.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null;
+  // Hebrew is always shown in Hebrew; any other language shows the Latin-letter name when one was
+  // given, falling back to the Hebrew spelling (which still reads fine in a Latin-script UI).
+  const lang = await getLang();
+  const fullNameEn = (data as { full_name_en?: string | null }).full_name_en;
   return {
     id: data.id,
     clinic_id: data.clinic_id,
     role: data.role,
-    full_name: data.full_name,
-    clinic_name: clinic?.name ?? "",
+    full_name: lang !== "he" && fullNameEn ? fullNameEn : data.full_name,
+    clinic_name: lang !== "he" && clinic?.name_en ? clinic.name_en : clinic?.name ?? "",
     mfa_required: !!clinic?.mfa_required,
     clinic_address: clinic?.address ?? null,
     contact_name: clinic?.contact_name ?? null,

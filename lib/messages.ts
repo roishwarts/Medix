@@ -14,3 +14,6 @@ export const caregiverMessage = (inviteeName: string, patientName: string, clini
 
 export const resetMessage = (name: string, link: string, lang: Lang = "he") =>
   makeT(lang)("שלום {name}, קישור לאיפוס הסיסמה (תקף 48 שעות): {link}", { name: first(name), link: withLang(link, lang) });
+
+export const taskReminderMessage = (patientName: string, clinicName: string, taskTitle: string, link: string, lang: Lang = "he") =>
+  makeT(lang)("שלום {name}, תזכורת מ{clinic}: נשארה משימה פתוחה — \"{task}\". ניתן להשלים אותה באפליקציה: {link}", { name: first(patientName), clinic: clinicName, task: taskTitle, link: withLang(link, lang) });

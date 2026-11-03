@@ -88,6 +88,10 @@ export function AppHeader({
           <div ref={sheet} id="settings-sheet" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-[var(--color-page)] shadow-2xl">
             <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
+                {logo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logo} alt={brand} className="brand-logo h-8 w-auto max-w-20 shrink-0 object-contain" />
+                )}
                 <div className="min-w-0">
                   {greeting && <p className="display truncate text-lg">{greeting}</p>}
                   <p className="truncate text-sm text-muted">{brand}</p>

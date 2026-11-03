@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, getClinicName } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadJourney } from "@/lib/queries";
+import { getOrigin } from "@/lib/account-links";
+import { taskReminderMessage } from "@/lib/messages";
+import { ReminderButton } from "@/components/reminder-button";
 import { ownerLabel, blockerLabel } from "@/lib/journey";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
@@ -13,7 +16,7 @@ import { TaskReview } from "./task-review";
 import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
-import { loadPatientExtras } from "@/lib/patient-extras";
+import { patientExtras } from "@/lib/patient-extras";
 import { stageOf } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
@@ -59,11 +62,13 @@ export default async function PatientPage({
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
   // Everything that does not depend on the journey is fetched together with it.
-  const [profile, journey, options, { data: templates }] = await Promise.all([
+  const [profile, journey, options, { data: templates }, clinicName, origin] = await Promise.all([
     requireProfile(["staff", "doctor"]),
     loadJourney(id),
     getClinicOptions(),
     supabase.from("templates").select("id, name").order("name"),
+    getClinicName(),
+    getOrigin(),
   ]);
   if (!journey) {
     // Some links (the referral pages) carry the patient's id instead of the journey's: send them to the right card.
@@ -84,7 +89,7 @@ export default async function PatientPage({
       ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
       : summary.tasks.filter((t) => matches(t, active));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }, { data: cancelRow }, extras] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -95,13 +100,15 @@ export default async function PatientPage({
     supabase.from("patients").select("hospital, company").eq("id", journey.patient_id).maybeSingle(),
     // Separate query so the page still works before patch-medical-info.sql is applied.
     supabase.from("patients").select("national_id, hmo, insurance_company, insurance_policy_number, insurance_phone").eq("id", journey.patient_id).maybeSingle(),
+    // Not filtered to still-valid invites: an expired, never-used one is shown too (marked as
+    // such) so staff notice and can re-invite, instead of it just silently vanishing from view.
     supabase
       .from("caregiver_invites")
       .select("id, invitee_name, relation, can_act, expires_at")
       .eq("patient_id", journey.patient_id)
       .is("used_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(10),
     supabase
       .from("activity_events")
       .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
@@ -135,9 +142,10 @@ export default async function PatientPage({
           : res,
       ),
     supabase.from("profiles").select("id, full_name").eq("clinic_id", profile.clinic_id),
+    // Separate query so the page still works before patch-outcomes.sql is applied.
+    supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle(),
+    patientExtras(journey.patient_id),
   ]);
-  // Separate query so the page still works before patch-outcomes.sql is applied.
-  const { data: cancelRow } = await supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle();
   // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
   const [clinicalRes, questions] = await Promise.all([
     supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes").eq("journey_id", journey.id).maybeSingle(),
@@ -173,7 +181,6 @@ export default async function PatientPage({
     .filter((tk) => tk.kind === "appointment")
     .map((tk) => ({ id: tk.id, title: tk.title, eventDate: tk.eventDate }));
 
-  const extras = (await loadPatientExtras()).get(journey.patient_id);
   const history = toItems((historyRows ?? []) as ActivityRow[], {
     t: tr,
     patientNames: new Map(),
@@ -259,7 +266,7 @@ export default async function PatientPage({
 
       <PromsCard journeyId={journey.id} />
       <section>
-        <h2 className="eyebrow mb-1 flex flex-wrap items-center gap-2">
+        <h2 className="mb-1 flex flex-wrap items-center gap-2 text-lg font-medium">
           {tr("כל המשימות")}
           {needsAttention > 0 && <span className="pill pill-bad">{tr("{n} דורשות תשומת לב", { n: needsAttention })}</span>}
         </h2>
@@ -343,6 +350,16 @@ export default async function PatientPage({
                 />
               )}
               <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
+              {t.owner === "patient" && (t.state === "todo" || t.state === "rejected") && (
+                <div className="mt-2">
+                  <ReminderButton
+                    phone={journey.patient.phone}
+                    email={patientRow?.email}
+                    subject={tr("תזכורת מ{clinic}", { clinic: clinicName })}
+                    message={taskReminderMessage(journey.patient.full_name, clinicName, t.title, `${origin}/journey`, extras?.lang ?? "he")}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -382,6 +399,7 @@ export default async function PatientPage({
             items={(openInvites ?? []).map((i) => ({
               id: i.id, name: i.invitee_name ?? "", relation: i.relation, canAct: i.can_act,
               expires: israelParts(i.expires_at).date.split("-").reverse().join("."),
+              expired: i.expires_at < new Date().toISOString(),
             }))}
           />
           <AddCaregiver patientId={journey.patient_id} />
