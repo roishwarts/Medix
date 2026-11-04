@@ -12,15 +12,15 @@ export function ReferralForm({ patientId }: { patientId: string }) {
       <input type="hidden" name="patient_id" value={patientId} />
       <div>
         <label htmlFor="recipient" className="lbl">{t("לכבוד (נמען ההפניה)")}</label>
-        <input id="recipient" name="recipient" className="field" placeholder={t("לדוגמה: מכון דימות / ד״ר כהן, אורתופד")} required />
+        <input id="recipient" name="recipient" className="field" maxLength={120} placeholder={t("לדוגמה: מכון דימות / ד״ר כהן, אורתופד")} required />
       </div>
       <div>
         <label htmlFor="reason" className="lbl">{t("סיבת ההפניה")}</label>
-        <input id="reason" name="reason" className="field" placeholder={t("לדוגמה: בדיקת MRI לברך ימין")} required />
+        <input id="reason" name="reason" className="field" maxLength={200} placeholder={t("לדוגמה: בדיקת MRI לברך ימין")} required />
       </div>
       <div>
         <label htmlFor="body" className="lbl">{t("פירוט נוסף (אופציונלי)")}</label>
-        <textarea id="body" name="body" className="field min-h-28" placeholder={t("רקע קליני, ממצאים, בקשות ספציפיות…")} />
+        <textarea id="body" name="body" className="field min-h-28" maxLength={4000} placeholder={t("רקע קליני, ממצאים, בקשות ספציפיות…")} />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn btn-primary min-h-11 max-sm:w-full" disabled={pending}>{pending ? t("יוצר…") : t("יצירת ההפניה")}</button>

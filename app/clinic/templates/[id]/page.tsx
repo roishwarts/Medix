@@ -32,17 +32,17 @@ export default async function TemplatePage({
   let tasks: EditorTask[] = [];
   let friction: { id: string; title: string; rejected: number; total: number }[] = [];
   let usedBy = 0;
+  let promsSkipped = false;
 
   if (sourceId) {
     const supabase = await createClient();
-    const { data: tpl } = await supabase
-      .from("templates")
-      .select("name, procedure, description, journeys(count)")
-      .eq("id", sourceId)
-      .maybeSingle();
+    // Neither query depends on the other's result (both just need sourceId) — fetch together.
+    const [{ data: tpl }, { data: rows }] = await Promise.all([
+      supabase.from("templates").select("name, procedure, description, journeys(count)").eq("id", sourceId).maybeSingle(),
+      supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position"),
+    ]);
     if (!tpl) notFound();
     if (!isNew) usedBy = (tpl.journeys as { count: number }[] | null)?.[0]?.count ?? 0;
-    const { data: rows } = await supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position");
 
     // Not a copy (duplicating starts clean) and not brand new: show where real patients are currently
     // stuck on this protocol — a task a lot of people bounce off is a signal the instructions are unclear.
@@ -70,9 +70,16 @@ export default async function TemplatePage({
     procedure = tpl.procedure ?? "";
     description = tpl.description ?? "";
 
-    // Duplicating: give every task a fresh id and remap dependencies.
-    const idMap = new Map((rows ?? []).map((r) => [r.id as string, isNew ? crypto.randomUUID() : (r.id as string)]));
-    tasks = (rows ?? []).map((r) => ({
+    // Duplicating: give every task a fresh id and remap dependencies. PROMS questionnaire tasks
+    // carry a proms_instrument/proms_timepoint pair that neither the editor (EditorTask) nor the
+    // save payload model — they're only ever seeded via SQL onto an existing task id, never created
+    // or copied through this UI. Minting a new id for one here would save a "proms" task with no
+    // instrument attached, which patients then can't ever submit (submit_proms rejects it). Drop
+    // them from the duplicate instead of silently producing a broken task.
+    const sourceRows = isNew ? (rows ?? []).filter((r) => r.kind !== "proms") : (rows ?? []);
+    promsSkipped = isNew && (rows ?? []).some((r) => r.kind === "proms");
+    const idMap = new Map(sourceRows.map((r) => [r.id as string, isNew ? crypto.randomUUID() : (r.id as string)]));
+    tasks = sourceRows.map((r) => ({
       id: idMap.get(r.id)!,
       title: r.title,
       description: r.description ?? "",
@@ -100,6 +107,13 @@ export default async function TemplatePage({
         <p className="mt-3 flex items-start gap-1.5 text-sm text-muted">
           <span className="mt-0.5 shrink-0"><Icon name="file" /></span>
           <span>{t("זה עותק עצמאי. שינויים כאן לא ישפיעו על התבנית המקורית או על מטופלים שכבר התחילו בה.")}</span>
+        </p>
+      )}
+
+      {isNew && from && promsSkipped && (
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted" role="note">
+          <span className="mt-0.5 shrink-0"><Icon name="alert" size={16} /></span>
+          <span>{t("שאלוני מעקב (PROMS) בתבנית המקורית לא שוכפלו — יש להוסיף אותם ידנית אם נדרש.")}</span>
         </p>
       )}
 

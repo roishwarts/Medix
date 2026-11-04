@@ -17,7 +17,10 @@ export async function createReferral(_: ReferralFormState, formData: FormData): 
   const body = String(formData.get("body") ?? "").trim();
 
   if (!recipient) return { error: t("יש להזין נמען") };
+  if (recipient.length > 120) return { error: t("שם הנמען ארוך מדי (עד 120 תווים)") };
   if (!reason) return { error: t("יש להזין סיבת ההפניה") };
+  if (reason.length > 200) return { error: t("סיבת ההפניה ארוכה מדי (עד 200 תווים)") };
+  if (body.length > 4000) return { error: t("תוכן ההפניה ארוך מדי (עד 4000 תווים)") };
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("save_referral", {
@@ -34,6 +37,16 @@ export async function markReferralResultReceived(referralId: string, path: strin
   const t = await getT();
   await requireProfile(["staff", "doctor"]);
   const supabase = await createClient();
+  // Defense in depth: the file picker's `accept` attribute (and the client-side check next to it)
+  // only hint at image/PDF - either is trivially bypassable. Verify what was actually uploaded.
+  const folder = path.split("/").slice(0, -1).join("/");
+  const filename = path.split("/").pop() ?? "";
+  const { data: listing } = await supabase.storage.from("referral-results").list(folder);
+  const mime = listing?.find((f) => f.name === filename)?.metadata?.mimetype as string | undefined;
+  if (mime && !/^image\//.test(mime) && mime !== "application/pdf") {
+    await supabase.storage.from("referral-results").remove([path]);
+    return { error: t("סוג קובץ לא נתמך. יש להעלות תמונה או PDF.") };
+  }
   const { error } = await supabase.rpc("mark_referral_result_received", { p_referral_id: referralId, p_path: path, p_name: name });
   if (error) return { error: t("שמירת התוצאה נכשלה. ודאו שהורצה התוספת supabase/patch-referral-results.sql.") };
   revalidatePath("/clinic", "layout");

@@ -67,7 +67,7 @@ export function DoctorQuestions({
             </div>
           </div>
         ) : (
-          <button type="button" className="block w-full px-4 py-2.5 text-start text-sm font-medium text-accent hover:underline" onClick={() => setOpen(true)}>
+          <button type="button" className="flex min-h-11 w-full items-center px-4 py-2.5 text-start text-sm font-medium text-accent hover:underline" onClick={() => setOpen(true)}>
             {t("שאלה חדשה לרופא")}
           </button>
         )}

@@ -42,14 +42,37 @@ export function VoiceTextarea({
   // Latest text, so words that arrive while talking are appended to what is there now, not what was there at the start.
   const latest = useRef(value);
   latest.current = value;
+  // Mirrors `listening` synchronously (state updates are not visible to the very next event handler call),
+  // so a second tap that lands before React re-renders can't start a second, overlapping recognition session.
+  const activeRef = useRef(false);
+
+  // Detaches the handlers before stopping, so a recognition session that is already winding down
+  // can never call setState (or append a stray transcript) once this component no longer wants it.
+  function detach(r: Recognition) {
+    r.onresult = null;
+    r.onerror = null;
+    r.onend = null;
+  }
 
   useEffect(() => {
     setSupported(!!getCtor());
-    return () => rec.current?.stop();
+    return () => {
+      activeRef.current = false;
+      if (rec.current) {
+        detach(rec.current);
+        rec.current.stop();
+        rec.current = null;
+      }
+    };
   }, []);
 
   function toggle() {
-    if (listening) { rec.current?.stop(); return; }
+    if (activeRef.current) {
+      activeRef.current = false;
+      rec.current?.stop();
+      setListening(false);
+      return;
+    }
     const Ctor = getCtor();
     if (!Ctor) return;
     setError(null);
@@ -72,17 +95,21 @@ export function VoiceTextarea({
     r.onerror = (e) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") setError(t("אין הרשאה למיקרופון. אפשרו אותה בהגדרות הדפדפן."));
       else if (e.error !== "no-speech" && e.error !== "aborted") setError(t("ההקלטה נכשלה. נסו שוב."));
+      // Some browsers skip onend after certain errors; never leave the mic looking "live" when it is not.
+      // Only touch shared state if this instance is still the current one — a late event from an
+      // instance the user already replaced (fast re-tap) must not clobber the newer session.
+      if (rec.current === r) { activeRef.current = false; setListening(false); }
     };
-    r.onend = () => { setListening(false); rec.current = null; };
+    r.onend = () => { if (rec.current === r) { activeRef.current = false; setListening(false); rec.current = null; } };
     rec.current = r;
-    try { r.start(); setListening(true); } catch { setListening(false); }
+    try { activeRef.current = true; r.start(); setListening(true); } catch { activeRef.current = false; setListening(false); }
   }
 
   return (
     <div>
       <div className="relative">
         <textarea
-          id={id} className={`${className} ${supported ? "pe-12" : ""}`} placeholder={placeholder} rows={rows}
+          id={id} className={`${className} ${supported ? "pe-14" : ""}`} placeholder={placeholder} rows={rows}
           value={value} onChange={(e) => onChange(e.target.value)}
         />
         {supported && (
@@ -92,7 +119,7 @@ export function VoiceTextarea({
             aria-pressed={listening}
             aria-label={listening ? t("עצירת הקלטה") : t("הקלטה קולית")}
             title={listening ? t("עצירת הקלטה") : t("הקלטה קולית")}
-            className={`absolute end-2 top-2 grid size-9 place-items-center rounded-full border transition ${listening ? "animate-pulse border-bad bg-bad text-white" : "border-line bg-surface text-muted hover:text-ink"}`}
+            className={`absolute end-2 top-2 grid size-11 place-items-center rounded-full border transition ${listening ? "animate-pulse border-bad bg-bad text-white" : "border-line bg-surface text-muted hover:text-ink"}`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <rect x="9" y="3" width="6" height="12" rx="3" />
