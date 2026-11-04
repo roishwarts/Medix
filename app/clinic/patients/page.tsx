@@ -1,9 +1,9 @@
+import { parseDays } from "@/components/patient-filters";
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { blockerLabel, stageOf, STAGES, type Stage } from "@/lib/journey";
 import { loadPatientExtras } from "@/lib/patient-extras";
 import { getClinicOptions } from "@/lib/clinic-options";
-import { parseDays } from "@/components/patient-filters";
 import { PatientsList, type PatientRow } from "@/components/patients-list";
 import { loadJourneys } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +42,6 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
     procedureLabel: j.procedure || j.template_name,
   }));
   const procedures = [...new Set(allUnfiltered.map((j) => j.procedure || j.template_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
-  const ready = sp.ready === "ready" || sp.ready === "in_progress" || sp.ready === "not_ready" ? sp.ready : "all";
 
   return (
     <main>
@@ -55,9 +54,9 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
         </div>
       )}
       <PatientsList
-        title={t("מטופלים")} action={<Link href="/clinic/patients/new" className="btn btn-primary">{t("מטופל חדש")}</Link>}
+        title={t("מטופלים")} action={<Link href="/clinic/patients/new" className="btn btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>{t("מטופל חדש")}</Link>}
         rows={rows} hospitals={hospitals} procedures={procedures}
-        initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", procedure: sp.procedure ?? "", days: parseDays(sp.days), stage, ready }}
+        initial={{ q: sp.q ?? "", hospital: sp.hospital ?? "", procedure: sp.procedure ?? "", days: parseDays(sp.days), stage }}
       />
     </main>
   );

@@ -27,9 +27,9 @@ function Kpi({ href, label, value, tone, alert, noIcon }: { href: string; label:
   return (
     <Link
       href={href}
-      className={`card block min-h-28 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
+      className={`card block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
-      <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted sm:text-sm">
+      <p className="flex items-center gap-1.5 text-xs text-muted sm:whitespace-nowrap sm:text-sm">
         {alert && !noIcon && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
         {label}
       </p>
@@ -131,15 +131,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               so the logo otherwise never appears on a phone at all - this is its one mobile spot. */}
           {profile.logo_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain md:hidden" />
+            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[7rem] shrink-0 object-contain min-[380px]:max-w-[11rem] md:hidden" />
           )}
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted sm:text-base">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
-            <h1 className="display mt-0.5 text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
+            <h1 className="display mt-0.5 whitespace-nowrap text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
           </div>
         </div>
         <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
-        <div className="order-3 flex basis-full items-center gap-3 md:order-2 md:basis-auto">
+        <div className="order-3 flex min-w-0 basis-full items-center gap-3 md:order-2 md:basis-auto">
           <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
         </div>
@@ -164,6 +164,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Link href="/clinic/patients/new" className="btn btn-primary btn-sm">{t("הוספת מטופל")}</Link>
         </div>
       )}
+
+      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
+        <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
+        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
+      </section>
+
+      <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">
+        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} param="kd" days={surgeryDays} />
+        <KpiWindow
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} param="rd" days={readyDays}
+          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
+        />
+      </section>
 
       {openQuestions.length > 0 && (
         <section aria-label={t("שאלות לרופא")} className="card overflow-hidden border-accent-line">
@@ -197,20 +211,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <span className="shrink-0 text-sm text-accent">{t("לטיפול")}</span>
         </Link>
       )}
-
-      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
-        <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
-      </section>
-
-      <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">
-        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
-        <KpiWindow
-          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}`} param="rd" days={readyDays}
-          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
-        />
-      </section>
 
       <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
         <div className="min-w-0 space-y-8 lg:col-span-3">

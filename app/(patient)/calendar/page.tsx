@@ -5,6 +5,8 @@ import { today, relativeDays, formatDateLong } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { Calendar, parseCalParams } from "@/components/calendar";
+import { AddEventButton } from "@/components/add-event-button";
+import { LOCALE } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -37,12 +39,14 @@ export default async function PatientCalendarPage({ searchParams }: { searchPara
   const next = events
     .filter((e) => e.kind !== "deadline" && e.date >= t0)
     .sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")))[0];
+  // The next few things on the calendar: the surgery, appointments and the deadlines that are still open.
+  const upcoming = events
+    .filter((e) => e.date >= t0 && (e.kind !== "deadline" || e.tone !== "ok"))
+    .sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")))
+    .slice(0, 6);
   return (
     <main>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="display text-3xl">{t("היומן שלך")}</h1>
-        <a href="/api/calendar/ics" className="btn btn-sm">{t("הוספה ליומן")}</a>
-      </div>
+      <h1 className="display text-3xl">{t("היומן שלך")}</h1>
       <p className="mb-5 mt-1 text-muted">
         {next ? (
           <>
@@ -66,6 +70,36 @@ export default async function PatientCalendarPage({ searchParams }: { searchPara
           </li>
         ))}
       </ul>
+
+      {/* Coming up: each item has its own "add to calendar" button. */}
+      {upcoming.length > 0 && (
+        <section className="mt-8" aria-labelledby="h-soon">
+          <h2 id="h-soon" className="eyebrow mb-2">{t("בקרוב")}</h2>
+          <ul className="card divide-y divide-line">
+            {upcoming.map((e) => {
+              const box = e.kind === "surgery" ? "bg-accent text-white" : e.kind === "appointment" ? "bg-accent-soft text-accent" : "bg-warn-soft text-warn";
+              const day = e.date.slice(8, 10).replace(/^0/, "");
+              const month = new Date(`${e.date}T12:00:00`).toLocaleDateString(LOCALE[lang], { month: "short" });
+              return (
+                <li key={e.id} className="flex items-center gap-3 px-4 py-3">
+                  <span className={`grid size-14 shrink-0 place-items-center rounded-xl text-center leading-tight ${box}`} aria-hidden="true">
+                    <span><span className="num block text-lg font-semibold">{day}</span><span className="block text-xs">{month}</span></span>
+                  </span>
+                  <Link href={e.href} className="min-w-0 flex-1 break-words">
+                    <span className="block font-medium">{e.title}</span>
+                    <span className="block text-sm text-muted">
+                      {e.kind === "deadline" ? t("מועד יעד") : formatDateLong(e.date, lang)}
+                      {e.time ? <> · <span className="num" dir="ltr">{e.time}</span></> : null}
+                      {e.sub ? <> · {e.sub}</> : null}
+                    </span>
+                  </Link>
+                  <AddEventButton id={e.id} event={{ title: e.title, date: e.date, time: e.time, location: e.sub ?? null }} />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }

@@ -43,7 +43,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const { status } = await searchParams;
   const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
   const supabase = await createClient();
-  const [journeys, { data: resetRequests }, clinicName, origin, patientExtras] = await Promise.all([
+  const [allJourneys, { data: resetRequests }, clinicName, origin, patientExtras] = await Promise.all([
     loadJourneys(),
     supabase
       .from("password_reset_requests")
@@ -54,6 +54,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     getOrigin(),
     loadPatientExtras(),
   ]);
+  // A cancelled surgery no longer needs the clinic's attention (same as the dashboard).
+  const journeys = allJourneys.filter((j) => !j.cancelled_at);
   const t0 = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
     actionItems(j.patient_id, j.patient.full_name, j.surgery_date, j.summary.tasks, t0),
