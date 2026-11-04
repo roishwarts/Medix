@@ -22,8 +22,7 @@ const LEGEND = [
 
 export default async function PatientCalendarPage({ searchParams }: { searchParams: Promise<{ view?: string; d?: string }> }) {
   const { view, d } = parseCalParams(await searchParams);
-  const [t, lang] = await Promise.all([getT(), getLang()]);
-  const journeys = await loadJourneys();
+  const [t, lang, journeys] = await Promise.all([getT(), getLang(), loadJourneys()]);
   if (journeys.length === 0)
     return (
       <main className="py-20 text-center">

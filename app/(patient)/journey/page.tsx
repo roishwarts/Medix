@@ -19,8 +19,9 @@ import { whatsAppUrl } from "@/lib/phone";
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage({ searchParams }: { searchParams: Promise<{ j?: string }> }) {
-  const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [profile, journeys, links, videos, sp] = await Promise.all([
+  const [t, lang, profile, journeys, links, videos, sp] = await Promise.all([
+    getT(),
+    getLang(),
     requireProfile(["patient", "caregiver"]),
     loadJourneys(),
     getClinicLinks(),
@@ -44,7 +45,14 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
 
   const now = nowTask(summary.tasks);
   const waiting = summary.tasks.filter((t) => t.owner === "patient" && t.state === "review");
-  const nextAppt = surgeryPassed ? undefined : summary.tasks.find((t) => t.kind === "appointment" && t.state !== "done" && t.eventDate >= t0);
+  // Tasks are sorted by dueDate, which can drift from the real appointment date once an appointment
+  // is rescheduled (scheduled_at overrides eventDate but not the sort key) — so pick the soonest
+  // upcoming appointment by eventDate, not just the first match in dueDate order.
+  const nextAppt = surgeryPassed
+    ? undefined
+    : summary.tasks
+        .filter((t) => t.kind === "appointment" && t.state !== "done" && t.eventDate >= t0)
+        .sort((a, b) => (a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0))[0];
 
   const preopDone = preop.filter((t) => t.state === "done").length;
   // Collapse a long run of finished steps at the start of the journey.
@@ -183,7 +191,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
             {profile.contact_phone && (
               <div className="mt-3 flex flex-wrap gap-2">
                 <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn btn-sm">{t("חיוג")}</a>
-                <a href={whatsAppUrl(profile.contact_phone, `שלום, אני ${profile.full_name}`)} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
+                <a href={whatsAppUrl(profile.contact_phone, t("שלום, אני {name}", { name: profile.full_name }))} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
                   WhatsApp
                 </a>
               </div>

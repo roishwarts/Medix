@@ -16,6 +16,7 @@ export async function acceptInvite(token: string, _: AcceptState, formData: Form
   const password = String(formData.get("password") ?? "");
 
   if (!full_name) return { error: t("יש להזין שם מלא") };
+  if (full_name.length > 80) return { error: t("השם ארוך מהמותר (עד 80 תווים)") };
   if (!/^[a-z0-9._-]{3,30}$/.test(username)) return { error: t("שם משתמש: 3–30 תווים באנגלית, מספרים או . _ -") };
   if (password.length < 8) return { error: t("הסיסמה צריכה להכיל לפחות 8 תווים") };
 

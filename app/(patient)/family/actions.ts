@@ -32,6 +32,7 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
   const { count } = await supabase
     .from("caregiver_invites")
     .select("id", { count: "exact", head: true })
+    .eq("patient_id", patient.id)
     .is("used_at", null)
     .gt("expires_at", new Date().toISOString());
   if ((count ?? 0) >= 10) return { error: t("יש יותר מדי הזמנות פתוחות. אפשר לבטל הזמנה קיימת.") };
@@ -57,11 +58,19 @@ export async function createInvite(_: InviteState, formData: FormData): Promise<
 }
 
 export async function revokeInvite(id: string) {
-  await requireProfile(["patient"]);
+  const profile = await requireProfile(["patient"]);
   const t = await getT();
   const supabase = await createClient();
-  const { error } = await supabase.from("caregiver_invites").delete().eq("id", id);
-  if (error) return { error: t("הביטול נכשל") };
+  const { data: patient } = await supabase.from("patients").select("id").eq("user_id", profile.id).maybeSingle();
+  if (!patient) return { error: t("לא נמצא מטופל מקושר לחשבון הזה") };
+  // Scoped by patient_id (defense in depth, in addition to RLS): an id for someone else's invite
+  // simply matches zero rows here instead of relying solely on the database policy.
+  const { error, count } = await supabase
+    .from("caregiver_invites")
+    .delete({ count: "exact" })
+    .eq("id", id)
+    .eq("patient_id", patient.id);
+  if (error || !count) return { error: t("הביטול נכשל") };
   revalidatePath("/family");
   return {};
 }
