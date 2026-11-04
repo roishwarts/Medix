@@ -30,15 +30,20 @@ function endStamp(dateIso: string, time: string): string {
 }
 
 function foldLine(line: string): string {
-  // RFC 5545 §3.1: lines over 75 octets are folded with CRLF + a leading space.
-  if (line.length <= 75) return line;
-  let out = line.slice(0, 75);
-  let rest = line.slice(75);
-  while (rest.length > 0) {
-    out += "\r\n " + rest.slice(0, 74);
-    rest = rest.slice(74);
+  // RFC 5545 §3.1: lines over 75 octets are folded with CRLF + a leading space (never inside a character).
+  const enc = new TextEncoder();
+  if (enc.encode(line).length <= 75) return line;
+  const parts: string[] = [];
+  let cur = "";
+  let size = 0;
+  for (const ch of line) {
+    const n = enc.encode(ch).length;
+    const max = parts.length === 0 ? 75 : 74;
+    if (size + n > max) { parts.push(cur); cur = ""; size = 0; }
+    cur += ch; size += n;
   }
-  return out;
+  parts.push(cur);
+  return parts.join("\r\n ");
 }
 
 export async function GET(req: Request) {
@@ -96,6 +101,9 @@ export async function GET(req: Request) {
       lines.push("END:VEVENT");
     }
   }
+
+  // An id that matches nothing is an error, not an empty calendar.
+  if (only && !lines.includes("BEGIN:VEVENT")) return new Response("Not found", { status: 404 });
 
   lines.push("END:VCALENDAR");
   const body = lines.map(foldLine).join("\r\n") + "\r\n";

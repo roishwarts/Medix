@@ -66,7 +66,7 @@ export function InviteForm() {
 
       <div>
         <label htmlFor="family_phone" className="lbl">{t("טלפון (לא חובה)")}</label>
-        <input id="family_phone" name="phone" type="tel" dir="ltr" inputMode="tel" autoComplete="off" className="field"
+        <input id="family_phone" name="phone" type="tel" dir="ltr" inputMode="tel" autoComplete="off" pattern="[0-9+\- ()]{7,20}" title={t("מספר טלפון, ספרות בלבד")} className="field"
           placeholder={t("050-1234567")} value={phone} onChange={(e) => setPhone(e.target.value)} />
         <p className="mt-1 text-xs text-muted">{t("אם ממלאים טלפון, אפשר לשלוח את ההזמנה ישירות לוואטסאפ או ל-SMS שלו/שלה בלחיצה אחת.")}</p>
       </div>

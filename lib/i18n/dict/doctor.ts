@@ -73,6 +73,7 @@ export const en: Record<string, string> = {
   "שאלה אחת ממתינה לתשובתך": "One question is waiting for your answer",
   "{n} שאלות ממתינות לתשובתך": "{n} questions are waiting for your answer",
   "לכל השאלות": "All questions",
+  "מספר טלפון, ספרות בלבד": "Phone number, digits only",
 };
 
 export const ru: Record<string, string> = {
@@ -149,6 +150,7 @@ export const ru: Record<string, string> = {
   "שאלה אחת ממתינה לתשובתך": "Один вопрос ждёт вашего ответа",
   "{n} שאלות ממתינות לתשובתך": "Вопросов, ждущих вашего ответа: {n}",
   "לכל השאלות": "Все вопросы",
+  "מספר טלפון, ספרות בלבד": "Номер телефона, только цифры",
 };
 
 export const ar: Record<string, string> = {
@@ -225,4 +227,5 @@ export const ar: Record<string, string> = {
   "שאלה אחת ממתינה לתשובתך": "سؤال واحد بانتظار إجابتك",
   "{n} שאלות ממתינות לתשובתך": "{n} أسئلة بانتظار إجابتك",
   "לכל השאלות": "كل الأسئلة",
+  "מספר טלפון, ספרות בלבד": "رقم الهاتف، أرقام فقط",
 };
