@@ -98,14 +98,14 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         {group.key !== "all" && <input type="hidden" name="type" value={group.key} />}
         <div className="min-w-0 flex-1 sm:flex-none">
           <label htmlFor="patient" className="lbl">{t("מטופל")}</label>
-          <select id="patient" name="patient" defaultValue={sp.patient ?? ""} className="field w-full sm:w-52">
+          <select key={sp.patient ?? ""} id="patient" name="patient" defaultValue={sp.patient ?? ""} className="field w-full sm:w-52">
             <option value="">{t("כל המטופלים")}</option>
             {(patients ?? []).map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
           </select>
         </div>
         <div className="min-w-0 flex-1 sm:flex-none">
           <label htmlFor="actor" className="lbl">{t("איש צוות")}</label>
-          <select id="actor" name="actor" defaultValue={sp.actor ?? ""} className="field w-full sm:w-52">
+          <select key={sp.actor ?? ""} id="actor" name="actor" defaultValue={sp.actor ?? ""} className="field w-full sm:w-52">
             <option value="">{t("כל אנשי הצוות")}</option>
             {(staff ?? []).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
           </select>
@@ -119,7 +119,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
           <input id="to" type="date" name="to" defaultValue={sp.to ?? ""} className="field w-full sm:w-40" />
         </div>
         <button className="btn btn-sm min-h-11 shrink-0">{t("סינון")}</button>
-        {hasFilters && <Link href={tabHref(group.key)} className="btn btn-quiet btn-sm min-h-11 shrink-0">{t("ניקוי סינון")}</Link>}
+        {hasFilters && <Link href={group.key === "all" ? "/clinic/activity" : `/clinic/activity?type=${group.key}`} className="btn btn-quiet btn-sm min-h-11 shrink-0">{t("ניקוי סינון")}</Link>}
       </form>
 
       <nav aria-label={t("סינון עדכונים לפי סוג")} className="chip-row mt-6 flex-wrap">

@@ -20,7 +20,7 @@ type SortKey = "name" | "surgery" | "readiness";
 export function PatientsList({ rows, hospitals, procedures, initial, title, action }: {
   title: string; action: React.ReactNode;
   rows: PatientRow[]; hospitals: string[]; procedures: string[];
-  initial: { q: string; hospital: string; procedure: string; stage: StageFilter };
+  initial: { q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter };
 }) {
   const t = useT();
   const lang = useLang();
@@ -29,6 +29,8 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   const [hospital, setHospital] = useState(initial.hospital);
   const [procedure, setProcedure] = useState(initial.procedure);
   const [stage, setStage] = useState<StageFilter>(initial.stage);
+  // Set by the dashboard numbers ("surgeries in the next N days"); shown as a removable chip, no extra control.
+  const [days, setDays] = useState<number | null>(initial.days);
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
 
   // Clicking a sortable header cycles ascending → descending → back to the default (surgery-date) order.
@@ -38,12 +40,13 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   const ariaSort = (key: SortKey): React.AriaAttributes["aria-sort"] =>
     sort?.key !== key ? "none" : sort.dir === 1 ? "ascending" : "descending";
 
-  const sync = (next: Partial<{ q: string; hospital: string; procedure: string; stage: StageFilter }>) => {
-    const v = { q, hospital, procedure, stage, ...next };
+  const sync = (next: Partial<{ q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter }>) => {
+    const v = { q, hospital, procedure, days, stage, ...next };
     const p = new URLSearchParams();
     if (v.q.trim()) p.set("q", v.q.trim());
     if (v.hospital) p.set("hospital", v.hospital);
     if (v.procedure) p.set("procedure", v.procedure);
+    if (v.days) p.set("days", String(v.days));
     if (v.stage !== "active") p.set("stage", v.stage);
     const query = p.toString();
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
@@ -53,7 +56,8 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   const base = useMemo(() => rows
     .filter((r) => (hospital ? r.hospital === hospital : true))
     .filter((r) => (procedure ? r.procedureLabel === procedure : true))
-    .filter((r) => (q.trim() ? r.name.toLowerCase().includes(q.trim().toLowerCase()) : true)), [rows, hospital, procedure, q]);
+    .filter((r) => (days ? r.daysToSurgery >= 0 && r.daysToSurgery <= days : true))
+    .filter((r) => (q.trim() ? r.name.toLowerCase().includes(q.trim().toLowerCase()) : true)), [rows, hospital, procedure, days, q]);
   const shown = base.filter((r) => inStage(r.stage, stage));
   const count = (f: StageFilter) => base.filter((r) => inStage(r.stage, f)).length;
 
@@ -68,9 +72,9 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
 
   const sel = "field !min-h-11 w-full text-sm sm:!min-h-10 sm:w-auto sm:max-w-[13rem]";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
-  const hasFilters = !!q.trim() || !!hospital || !!procedure || stage !== "active" || !!sort;
+  const hasFilters = !!q.trim() || !!hospital || !!procedure || stage !== "active" || !!days || !!sort;
   const clear = () => {
-    setQ(""); setHospital(""); setProcedure(""); setStage("active"); setSort(null);
+    setQ(""); setHospital(""); setProcedure(""); setDays(null); setStage("active"); setSort(null);
     setSearchOpen(false);
     window.history.replaceState(null, "", window.location.pathname);
   };

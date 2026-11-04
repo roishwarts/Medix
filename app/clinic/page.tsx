@@ -131,15 +131,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               so the logo otherwise never appears on a phone at all - this is its one mobile spot. */}
           {profile.logo_url && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[11rem] shrink-0 object-contain md:hidden" />
+            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[7rem] shrink-0 object-contain min-[380px]:max-w-[11rem] md:hidden" />
           )}
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted sm:text-base">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
-            <h1 className="display mt-0.5 text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
+            <h1 className="display mt-0.5 whitespace-nowrap text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
           </div>
         </div>
         <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
-        <div className="order-3 flex basis-full items-center gap-3 md:order-2 md:basis-auto">
+        <div className="order-3 flex min-w-0 basis-full items-center gap-3 md:order-2 md:basis-auto">
           <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
         </div>
@@ -172,9 +172,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">
-        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
+        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} param="kd" days={surgeryDays} />
         <KpiWindow
-          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}`} param="rd" days={readyDays}
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} param="rd" days={readyDays}
           tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
         />
       </section>
