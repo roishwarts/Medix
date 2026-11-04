@@ -165,6 +165,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
+      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
+        <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
+        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
+      </section>
+
+      <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">
+        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
+        <KpiWindow
+          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}`} param="rd" days={readyDays}
+          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
+        />
+      </section>
+
       {openQuestions.length > 0 && (
         <section aria-label={t("שאלות לרופא")} className="card overflow-hidden border-accent-line">
           <div className="flex items-center justify-between gap-3 bg-accent-soft px-4 py-3">
@@ -197,20 +211,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <span className="shrink-0 text-sm text-accent">{t("לטיפול")}</span>
         </Link>
       )}
-
-      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
-        <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
-      </section>
-
-      <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">
-        <KpiWindow label={t("ניתוחים")} value={String(kpiSurgeries.length)} href={`/clinic/patients?days=${surgeryDays}`} param="kd" days={surgeryDays} />
-        <KpiWindow
-          label={t("מוכנים לניתוח")} value={String(soonReady)} href={`/clinic/patients?stage=ready&days=${readyDays}`} param="rd" days={readyDays}
-          tone={soon.length === 0 ? "none" : soonReady === soon.length ? "ok" : "warn"}
-        />
-      </section>
 
       <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
         <div className="min-w-0 space-y-8 lg:col-span-3">
