@@ -27,9 +27,9 @@ function Kpi({ href, label, value, tone, alert, noIcon }: { href: string; label:
   return (
     <Link
       href={href}
-      className={`card block min-h-28 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
+      className={`card block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
-      <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted sm:text-sm">
+      <p className="flex items-center gap-1.5 text-xs text-muted sm:whitespace-nowrap sm:text-sm">
         {alert && !noIcon && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
         {label}
       </p>
