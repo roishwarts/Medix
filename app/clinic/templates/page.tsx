@@ -87,14 +87,14 @@ export default async function TemplatesPage() {
                 <div className="flex shrink-0 gap-2 max-sm:[&>*]:flex-1">
                   <Link
                     href={`/clinic/templates/new?from=${tpl.id}`}
-                    className="btn btn-sm min-h-11"
+                    className="btn btn-sm min-h-11 sm:min-h-9"
                     aria-label={t("שכפול התבנית {name}", { name: tpl.name })}
                   >
                     {t("שכפול")}
                   </Link>
                   <Link
                     href={`/clinic/templates/${tpl.id}`}
-                    className="btn btn-sm min-h-11"
+                    className="btn btn-sm min-h-11 sm:min-h-9"
                     aria-label={t("עריכת התבנית {name}", { name: tpl.name })}
                   >
                     {t("עריכה")}

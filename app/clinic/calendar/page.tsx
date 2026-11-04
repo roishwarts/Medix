@@ -42,7 +42,7 @@ export default async function ClinicCalendarPage({
             </p>
           )}
         </div>
-        <Link href={`/clinic/calendar?${toggle.toString()}`} aria-current={notReady ? "true" : undefined}
+        <Link href={`/clinic/calendar?${toggle.toString()}`} aria-current={notReady ? "page" : undefined}
           className={`btn ${notReady ? "btn-primary" : ""}`}>
           {notReady && <Icon name="check" size={16} />}
           {t("לא מוכנים בלבד")}

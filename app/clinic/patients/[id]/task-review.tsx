@@ -20,6 +20,7 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
   useEffect(() => { setOptimisticState(taskId, null); }, [taskId, serverState]);
 
   function run(decision: "accept" | "reject" | "reopen") {
+    if (decision === "reopen" && !confirm(t("לפתוח את המשימה הזו מחדש? הסטטוס שלה יחזור ל\"פתוח\"."))) return;
     setError(null);
     // Show the outcome immediately; the server confirms (or we roll back) a moment later.
     setOptimisticState(taskId, decision === "accept" ? "done" : decision === "reject" ? "rejected" : "todo");

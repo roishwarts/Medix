@@ -43,7 +43,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const { status } = await searchParams;
   const active: ActionKind | "all" = TABS.some(([k]) => k === status) ? (status as ActionKind | "all") : "all";
   const supabase = await createClient();
-  const [journeys, { data: resetRequests }, clinicName, origin, patientExtras] = await Promise.all([
+  const [journeys, { data: resetRequests }, clinicName, origin, patientExtras, { data: emailRows }] = await Promise.all([
     loadJourneys(),
     supabase
       .from("password_reset_requests")
@@ -53,6 +53,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     getClinicName(),
     getOrigin(),
     loadPatientExtras(),
+    // Reminder button falls back to email when a patient has no phone on file — same fallback
+    // the patient-card page offers — so it needs the email too, not just the phone from loadJourneys().
+    supabase.from("patients").select("id, email"),
   ]);
   const t0 = today();
   const items: ActionItem[] = journeys.flatMap((j) =>
@@ -60,6 +63,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   );
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
   const phoneByPatient = new Map(journeys.map((j) => [j.patient_id, j.patient.phone]));
+  const emailByPatient = new Map((emailRows ?? []).map((p) => [p.id as string, p.email as string | null]));
   const reminderLink = `${origin}/journey`;
 
   return (
@@ -98,7 +102,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       {ORDER.filter((kind) => active === "all" || kind === active).map((kind) => {
         const list = items
           .filter((i) => i.kind === kind)
-          .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : 1));
+          .sort((a, b) => (a.task.dueDate < b.task.dueDate ? -1 : a.task.dueDate > b.task.dueDate ? 1 : 0));
         if (list.length === 0) return null;
         return (
           <section key={kind} className={active === "all" ? "min-w-0" : "min-w-0 lg:col-span-2 lg:mx-auto lg:w-full lg:max-w-3xl"} aria-label={active === "all" ? undefined : t(ACTION_LABEL[kind])} aria-labelledby={active === "all" ? `h-${kind}` : undefined}>
@@ -115,10 +119,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
                   href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
                   kind={i.kind}
                   owner={i.task.owner}
+                  patientName={i.patientName}
                   reminder={
                     i.task.owner === "patient" && i.kind !== "review" ? (
                       <ReminderButton
                         phone={phoneByPatient.get(i.patientId)}
+                        email={emailByPatient.get(i.patientId)}
                         subject={t("תזכורת מ{clinic}", { clinic: clinicName })}
                         message={taskReminderMessage(i.patientName, clinicName, i.task.title, reminderLink, patientExtras.get(i.patientId)?.lang ?? "he")}
                       />

@@ -50,6 +50,7 @@ export function QuestionCard({
     });
   }
   function withdraw() {
+    if (!confirm(t("להסיר את השאלה? לא ניתן לבטל."))) return;
     start(async () => {
       const res = await withdrawQuestion(q.id);
       if (res.error) setError(res.error);

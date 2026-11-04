@@ -65,6 +65,7 @@ export function TeamMemberRow({
   }
 
   function reset(formData: FormData) {
+    if (!confirm(t("לאפס את הסיסמה של {name}? יהיה צריך למסור לו/לה את הסיסמה החדשה.", { name }))) return;
     setMsg(null);
     start(async () => {
       const res = await resetTeamMemberPassword(id, String(formData.get("password") ?? ""));

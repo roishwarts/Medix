@@ -1,11 +1,12 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TaskEditor } from "@/components/editor/task-editor";
 import type { EditorTask } from "@/components/editor/types";
+import { validateTasksDetailed } from "@/lib/template-payload";
 import { saveJourneyTasks } from "../../../templates/actions";
 
 export function JourneyEditForm({
@@ -22,10 +23,25 @@ export function JourneyEditForm({
   const [date, setDate] = useState(surgeryDate);
   const [tasks, setTasks] = useState(initialTasks);
   const [error, setError] = useState<string | null>(null);
+  const [focusTask, setFocusTask] = useState<{ id: string; nonce: number } | null>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
 
   function save() {
     setError(null);
+    if (!date) {
+      setError(t("יש לבחור תאריך ניתוח"));
+      dateRef.current?.focus();
+      return;
+    }
+    // Validate locally first (same rules the server applies) so a missing title or a dependency
+    // cycle is caught, explained and pointed at immediately, instead of after a round trip.
+    const invalid = validateTasksDetailed(tasks, t);
+    if (invalid) {
+      setError(invalid.error);
+      if (invalid.taskId) setFocusTask({ id: invalid.taskId, nonce: Date.now() });
+      return;
+    }
     start(async () => {
       const res = await saveJourneyTasks({ journeyId, surgeryDate: date, tasks });
       if (res.error) return setError(res.error);
@@ -39,9 +55,11 @@ export function JourneyEditForm({
       <div className="max-w-xs">
         <label className="lbl" htmlFor="date">{t("תאריך ניתוח")}</label>
         <input
+          ref={dateRef}
           id="date"
           type="date"
           required
+          aria-required="true"
           className="field"
           value={date}
           aria-describedby="date-hint"
@@ -49,12 +67,7 @@ export function JourneyEditForm({
         />
         <p id="date-hint" className="mt-1.5 text-sm text-muted">{t("מועדי המשימות מחושבים לפי תאריך זה.")}</p>
       </div>
-      {tasks.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
-          {t("עדיין אין משימות במסלול. אפשר להוסיף משימה ראשונה למטה.")}
-        </p>
-      )}
-      <TaskEditor tasks={tasks} onChange={setTasks} journeyMode />
+      <TaskEditor tasks={tasks} onChange={setTasks} journeyMode focusTask={focusTask} />
       <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface/95 px-4 py-3 shadow-lg backdrop-blur">
         <button className="btn btn-primary min-h-11" onClick={save} disabled={pending} aria-busy={pending}>
           {pending ? t("שומר…") : t("שמירת שינויים")}

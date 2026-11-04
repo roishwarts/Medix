@@ -62,14 +62,30 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   };
 
   const inStage = (s: Stage, f: StageFilter) => (f === "all" ? true : f === "active" ? isActiveStage(s) : s === f);
+  // Collapse repeated inner whitespace so "דני  כהן" (double space, e.g. pasted from elsewhere)
+  // still matches "דני כהן".
+  const needle = q.trim().replace(/\s+/g, " ").toLowerCase();
   const base = useMemo(() => rows
     .filter((r) => (days ? r.daysToSurgery >= 0 && r.daysToSurgery <= days : true))
     .filter((r) => (hospital ? r.hospital === hospital : true))
     .filter((r) => (procedure ? r.procedureLabel === procedure : true))
     .filter((r) => (ready === "all" ? true : r.readinessState === ready))
-    .filter((r) => (q.trim() ? r.name.toLowerCase().includes(q.trim().toLowerCase()) : true)), [rows, days, hospital, procedure, ready, q]);
-  const shown = base.filter((r) => inStage(r.stage, stage));
-  const count = (f: StageFilter) => base.filter((r) => inStage(r.stage, f)).length;
+    .filter((r) => (needle ? r.name.replace(/\s+/g, " ").toLowerCase().includes(needle) : true)), [rows, days, hospital, procedure, ready, needle]);
+  // Memoized so toggling unrelated state (search box open/closed, "more filters" panel, …) doesn't
+  // force the sort below to redo its work on every render.
+  const shown = useMemo(() => base.filter((r) => inStage(r.stage, stage)), [base, stage]);
+  // One pass over `base` for every stage's count, instead of re-filtering the whole list once per
+  // option (6 passes) on every render.
+  const stageCounts = useMemo(() => {
+    const counts = { all: base.length, active: 0 } as Record<StageFilter, number>;
+    for (const s of STAGES) counts[s] = 0;
+    for (const r of base) {
+      if (isActiveStage(r.stage)) counts.active++;
+      counts[r.stage]++;
+    }
+    return counts;
+  }, [base]);
+  const count = (f: StageFilter) => stageCounts[f] ?? 0;
 
   const sorted = useMemo(() => {
     if (!sort) return shown;

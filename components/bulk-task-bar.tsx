@@ -24,8 +24,13 @@ export function BulkTaskBar() {
   const [pending, start] = useTransition();
   const count = useSyncExternalStore(subscribeSelection, selectionSize, () => 0);
 
-  // Leaving the page (or returning to it fresh) shouldn't carry over a stale selection.
-  useEffect(() => clearSelection, []);
+  // Leaving the page (or returning to it fresh) shouldn't carry over a stale selection. Clearing
+  // on mount too (not just the unmount cleanup) guards against the router reusing a cached client
+  // tree across a back/forward navigation without actually unmounting this component in between.
+  useEffect(() => {
+    clearSelection();
+    return clearSelection;
+  }, []);
 
   if (count === 0) return null;
 
@@ -33,11 +38,10 @@ export function BulkTaskBar() {
     setBulkPending(true);
     start(async () => {
       const ids = selectedTaskIds();
-      let failed = 0;
-      for (const taskId of ids) {
-        const result = await queueOrRun({ kind: "staff_accept", taskId });
-        if (result.rejected) failed++;
-      }
+      // Each task is an independent row, so run them concurrently instead of one at a time —
+      // a bulk accept of a dozen tasks shouldn't take a dozen sequential round trips.
+      const results = await Promise.all(ids.map((taskId) => queueOrRun({ kind: "staff_accept", taskId })));
+      const failed = results.filter((r) => r.rejected).length;
       setBulkPending(false);
       clearSelection();
       if (failed > 0) {
@@ -51,9 +55,9 @@ export function BulkTaskBar() {
 
   // Sits above the toast (bottom-20/bottom-6), so a sync toast during a bulk accept doesn't overlap it.
   return (
-    <div className="fixed inset-x-4 bottom-36 z-[70] mx-auto max-w-lg md:bottom-20" role="status">
+    <div className="fixed inset-x-4 bottom-36 z-[70] mx-auto max-w-lg md:bottom-20">
       <div className="card flex flex-wrap items-center justify-between gap-3 px-4 py-3 shadow-lg">
-        <span className="flex items-center gap-2 text-sm font-medium">
+        <span className="flex items-center gap-2 text-sm font-medium" role="status">
           <Icon name="check" size={16} />
           {count === 1 ? t("משימה אחת נבחרה") : t("{n} משימות נבחרו", { n: count })}
         </span>

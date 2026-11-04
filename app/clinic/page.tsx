@@ -28,9 +28,9 @@ function Kpi({ href, label, value, tone, alert, noIcon }: { href: string; label:
       href={href}
       className={`card block min-h-28 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
-      <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted sm:text-sm">
-        {alert && !noIcon && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
-        {label}
+      <p className="flex items-start gap-1.5 text-xs text-muted sm:text-sm">
+        {alert && !noIcon && <span className="hidden shrink-0 sm:inline-flex"><Icon name="alert" size={14} /></span>}
+        <span>{label}</span>
       </p>
       <p className={`display num mt-1 text-3xl sm:text-4xl ${color}`}>{value}</p>
     </Link>
@@ -192,8 +192,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
         <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
+        {/* Pending review isn't a failure like rejected/overdue, so it never goes bad/red - but it
+            should still read as "nothing pending" (ok) at zero, matching the weekly summary's tiles. */}
+        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
       </section>
 
       <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">

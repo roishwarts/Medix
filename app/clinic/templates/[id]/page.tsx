@@ -30,7 +30,7 @@ export default async function TemplatePage({
   let procedure = "";
   let description = "";
   let tasks: EditorTask[] = [];
-  let friction: { title: string; rejected: number; total: number }[] = [];
+  let friction: { id: string; title: string; rejected: number; total: number }[] = [];
   let usedBy = 0;
 
   if (sourceId) {
@@ -61,7 +61,7 @@ export default async function TemplatePage({
         byTask.set(tid, cur);
       }
       friction = rows
-        .map((r) => ({ title: r.title as string, ...(byTask.get(r.id) ?? { rejected: 0, total: 0 }) }))
+        .map((r) => ({ id: r.id as string, title: r.title as string, ...(byTask.get(r.id) ?? { rejected: 0, total: 0 }) }))
         .filter((f) => f.rejected > 0)
         .sort((a, b) => b.rejected - a.rejected);
     }
@@ -124,7 +124,7 @@ export default async function TemplatePage({
           </p>
           <ul className="mt-3 space-y-1 text-sm">
             {friction.map((f) => (
-              <li key={f.title} className="flex items-center justify-between gap-3 text-bad">
+              <li key={f.id} className="flex items-center justify-between gap-3 text-bad">
                 <span className="min-w-0 break-words">{f.title}</span>
                 <span className="num shrink-0 font-medium">{t("{rejected} מתוך {total}", { rejected: f.rejected, total: f.total })}</span>
               </li>

@@ -2,10 +2,12 @@
 
 import { useT } from "@/components/i18n-provider";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { revokeInviteByStaff } from "../actions";
 
 export function PendingInvites({ items }: { items: { id: string; name: string; relation: string; canAct: boolean; expires: string; expired: boolean }[] }) {
   const t = useT();
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   if (items.length === 0) return null;
@@ -40,6 +42,7 @@ export function PendingInvites({ items }: { items: { id: string; name: string; r
                     setError(null);
                     const res = await revokeInviteByStaff(i.id);
                     if (res?.error) setError(res.error);
+                    else router.refresh();
                   })
                 }
               >

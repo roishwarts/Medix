@@ -84,37 +84,42 @@ export async function loadInsights(supabase: Supabase, range: RangeKey): Promise
 
   const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
   let oksBaseline: number | null = null, oksMonth3: number | null = null, oksImprovement: number | null = null, oksPaired = 0;
-  if (active.length > 0) {
-    const { data: oks } = await supabase
-      .from("proms_responses")
-      .select("journey_id, timepoint, score")
-      .eq("instrument", "oks")
-      .in("journey_id", active.map((r) => r.id));
-    if (oks) {
-      const byJourney = new Map<string, Partial<Record<"baseline" | "month3", number>>>();
-      for (const r of oks as { journey_id: string; timepoint: string; score: number | null }[]) {
-        if (r.score === null || (r.timepoint !== "baseline" && r.timepoint !== "month3")) continue;
-        byJourney.set(r.journey_id, { ...byJourney.get(r.journey_id), [r.timepoint]: r.score });
-      }
-      const all = [...byJourney.values()];
-      oksBaseline = avg(all.map((v) => v.baseline).filter((n): n is number => n !== undefined));
-      oksMonth3 = avg(all.map((v) => v.month3).filter((n): n is number => n !== undefined));
-      const paired = all.filter((v) => v.baseline !== undefined && v.month3 !== undefined) as { baseline: number; month3: number }[];
-      oksPaired = paired.length;
-      oksImprovement = avg(paired.map((v) => v.month3 - v.baseline));
+
+  // The OKS lookup and the staff-review lookup are independent of each other (only the OKS one
+  // depends on `active`, computed above) - run them concurrently rather than serially.
+  const [{ data: oks }, { data: reviewed }] = await Promise.all([
+    active.length > 0
+      ? supabase
+          .from("proms_responses")
+          .select("journey_id, timepoint, score")
+          .eq("instrument", "oks")
+          .in("journey_id", active.map((r) => r.id))
+      : Promise.resolve({ data: null as { journey_id: string; timepoint: string; score: number | null }[] | null }),
+    // Staff workload: only tasks a patient actually submitted and a staff/doctor then reviewed -
+    // a task someone marks done on their own (no submission) isn't "review work", so it's excluded.
+    supabase
+      .from("journey_tasks")
+      .select("reviewed_by, status, submitted_at, reviewed_at")
+      .not("reviewed_by", "is", null)
+      .not("submitted_at", "is", null)
+      .gte("reviewed_at", monthStart)
+      .lt("reviewed_at", windowEnd)
+      .in("status", ["accepted", "rejected"]),
+  ]);
+  if (oks) {
+    const byJourney = new Map<string, Partial<Record<"baseline" | "month3", number>>>();
+    for (const r of oks as { journey_id: string; timepoint: string; score: number | null }[]) {
+      if (r.score === null || (r.timepoint !== "baseline" && r.timepoint !== "month3")) continue;
+      byJourney.set(r.journey_id, { ...byJourney.get(r.journey_id), [r.timepoint]: r.score });
     }
+    const all = [...byJourney.values()];
+    oksBaseline = avg(all.map((v) => v.baseline).filter((n): n is number => n !== undefined));
+    oksMonth3 = avg(all.map((v) => v.month3).filter((n): n is number => n !== undefined));
+    const paired = all.filter((v) => v.baseline !== undefined && v.month3 !== undefined) as { baseline: number; month3: number }[];
+    oksPaired = paired.length;
+    oksImprovement = avg(paired.map((v) => v.month3 - v.baseline));
   }
 
-  // Staff workload: only tasks a patient actually submitted and a staff/doctor then reviewed -
-  // a task someone marks done on their own (no submission) isn't "review work", so it's excluded.
-  const { data: reviewed } = await supabase
-    .from("journey_tasks")
-    .select("reviewed_by, status, submitted_at, reviewed_at")
-    .not("reviewed_by", "is", null)
-    .not("submitted_at", "is", null)
-    .gte("reviewed_at", monthStart)
-    .lt("reviewed_at", windowEnd)
-    .in("status", ["accepted", "rejected"]);
   const byStaff = new Map<string, { accepted: number; rejected: number; hours: number[] }>();
   for (const r of (reviewed ?? []) as { reviewed_by: string; status: string; submitted_at: string; reviewed_at: string }[]) {
     const entry = byStaff.get(r.reviewed_by) ?? { accepted: 0, rejected: 0, hours: [] };

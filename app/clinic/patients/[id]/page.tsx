@@ -147,9 +147,10 @@ export default async function PatientPage({
     patientExtras(journey.patient_id),
   ]);
   // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
-  const [clinicalRes, questions] = await Promise.all([
+  const [clinicalRes, questions, questionsAvailabilityRes] = await Promise.all([
     supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes").eq("journey_id", journey.id).maybeSingle(),
     loadQuestions({ patientId: journey.patient_id, limit: 50 }),
+    supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1),
   ]);
   const clinicalAvailable = !clinicalRes.error;
   const clinical: ClinicalData | null = clinicalRes.data
@@ -158,7 +159,7 @@ export default async function PatientPage({
         medications: clinicalRes.data.medications, medicalHistory: clinicalRes.data.medical_history, notes: clinicalRes.data.notes,
       }
     : null;
-  const questionsAvailable = !(await supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1)).error;
+  const questionsAvailable = !questionsAvailabilityRes.error;
   const referrals = (referralRows ?? []) as {
     id: string; recipient: string; reason: string; created_at: string;
     result_status?: "pending" | "received"; result_path?: string | null; result_name?: string | null; result_received_at?: string | null;

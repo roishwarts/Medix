@@ -21,7 +21,8 @@ export default async function ReferralPrintPage({ params }: { params: Promise<{ 
       .eq("id", referralId)
       .eq("patient_id", id)
       .maybeSingle(),
-    supabase.from("patients").select("full_name, phone").eq("id", id).eq("clinic_id", profile.clinic_id).maybeSingle(),
+    // Only full_name is shown on this letter — select nothing else so there is no column to go stale.
+    supabase.from("patients").select("full_name").eq("id", id).eq("clinic_id", profile.clinic_id).maybeSingle(),
   ]);
   if (!referral || !patient) notFound();
 
@@ -33,6 +34,9 @@ export default async function ReferralPrintPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="card space-y-6 p-8 print:border-0 print:p-0 print:shadow-none">
+        {/* The letter has no visible title — printed letterheads don't need one — but a screen
+            reader needs a heading to land on and to announce what this page is. */}
+        <h1 className="sr-only">{t("הפניה")}</h1>
         <header className="flex items-start justify-between gap-4 border-b border-line pb-4">
           <div className="flex items-center gap-3">
             {profile.logo_url && <img src={profile.logo_url} alt={profile.clinic_name} className="h-12 w-auto max-w-[14rem] object-contain" />}

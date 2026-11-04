@@ -18,6 +18,7 @@ export function TaskQueueRow({
   href,
   kind,
   owner,
+  patientName,
   reminder,
   children,
 }: {
@@ -25,6 +26,7 @@ export function TaskQueueRow({
   href: string;
   kind: ActionKind;
   owner: Owner;
+  patientName: string;
   reminder?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -59,7 +61,7 @@ export function TaskQueueRow({
   return (
     <div className={`flex flex-wrap items-stretch gap-2 ${selected && bulkPending ? "opacity-50" : ""}`}>
       <label className="flex min-h-11 min-w-11 items-center justify-center ps-1 sm:min-h-0 sm:min-w-0 sm:ps-3">
-        <span className="sr-only">{t("בחירת המשימה לאישור קבוצתי")}</span>
+        <span className="sr-only">{t("בחירת {name} לאישור קבוצתי", { name: patientName })}</span>
         <input
           type="checkbox"
           className="size-5"
@@ -77,6 +79,7 @@ export function TaskQueueRow({
           type="button"
           onClick={accept}
           disabled={pending || bulkPending}
+          aria-label={`${pending ? t("שומר…") : label} — ${patientName}`}
           className={kind === "review" ? "btn btn-primary btn-sm" : "btn btn-sm"}
         >
           {pending ? t("שומר…") : label}
