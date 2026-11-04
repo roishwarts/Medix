@@ -1,5 +1,10 @@
 // Doctor tools: questions for the doctor, the clinical summary and voice input.
 export const en: Record<string, string> = {
+  "מסלולים נוספים:": "Other journeys:",
+  "המסע שלך: לכל השלבים": "Your journey: all the steps",
+  "חיוג למרפאה": "Call the clinic",
+  "בקרוב": "Coming up",
+  "הוספה ליומן: {title}": "Add to calendar: {title}",
   "כל ההליכים": "All procedures",
   "הליך": "Procedure",
   "סינון נוסף": "More filters",
@@ -71,6 +76,11 @@ export const en: Record<string, string> = {
 };
 
 export const ru: Record<string, string> = {
+  "מסלולים נוספים:": "Другие маршруты:",
+  "המסע שלך: לכל השלבים": "Ваш путь: все шаги",
+  "חיוג למרפאה": "Позвонить в клинику",
+  "בקרוב": "Скоро",
+  "הוספה ליומן: {title}": "Добавить в календарь: {title}",
   "כל ההליכים": "Все процедуры",
   "הליך": "Процедура",
   "סינון נוסף": "Ещё фильтры",
@@ -142,6 +152,11 @@ export const ru: Record<string, string> = {
 };
 
 export const ar: Record<string, string> = {
+  "מסלולים נוספים:": "مسارات أخرى:",
+  "המסע שלך: לכל השלבים": "رحلتك: كل الخطوات",
+  "חיוג למרפאה": "الاتصال بالعيادة",
+  "בקרוב": "قريبًا",
+  "הוספה ליומן: {title}": "إضافة إلى التقويم: {title}",
   "כל ההליכים": "كل الإجراءات",
   "הליך": "الإجراء",
   "סינון נוסף": "مزيد من التصفية",

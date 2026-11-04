@@ -27,9 +27,6 @@ export default async function FamilyPage() {
     <main className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="display text-3xl">{t("משפחה")}</h1>
-        <p className="mt-2 text-muted">
-          {t("אפשר להזמין בן משפחה או מלווה לעקוב אחרי המסע, ואם תרצה/י גם לעזור בו. הם מקבלים כניסה משלהם, בלי הסיסמה שלך. המרפאה רואה מי מקושר ויכולה להסיר גישה.")}
-        </p>
       </div>
 
       <section aria-labelledby="h-linked">

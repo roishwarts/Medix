@@ -41,7 +41,9 @@ function foldLine(line: string): string {
   return out;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  // ?e=<id> exports just that event (the surgery day "s-<journey id>", or one task), so each item can have its own add button.
+  const only = new URL(req.url).searchParams.get("e");
   const t = await getT();
   const profile = await requireProfile(["patient", "caregiver"]);
   const journeys = await loadJourneys();
@@ -58,7 +60,7 @@ export async function GET() {
   // More than one journey (another surgery, past or planned) all go on the same exported calendar.
   for (const journey of journeys) {
     // Surgery day: all-day event.
-    lines.push(
+    if (!only || only === `s-${journey.id}`) lines.push(
       "BEGIN:VEVENT",
       `UID:surgery-${journey.id}@calendar`,
       `DTSTAMP:${now}`,
@@ -69,7 +71,16 @@ export async function GET() {
 
     // Every appointment-kind task (pre- or post-op): a doctor visit, a test with a set time, etc.
     for (const task of journey.summary.tasks) {
-      if (task.kind !== "appointment") continue;
+      const target = only === task.id;
+      if (task.kind !== "appointment" && !target) continue;
+      if (only && !target) continue;
+      if (task.kind !== "appointment") {
+        // A task deadline (only exported on request): an all-day event on its due date.
+        lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`, `DTSTART;VALUE=DATE:${dateStamp(task.dueDate)}`, `SUMMARY:${esc(task.title)}`);
+        if (task.description) lines.push(`DESCRIPTION:${esc(task.description)}`);
+        lines.push("END:VEVENT");
+        continue;
+      }
       const place = resolvePlace(task.location, profile.clinic_address);
       lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`);
       // Floating local time (no time zone): the same clock time on any phone, with no time-zone definition needed.

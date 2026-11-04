@@ -83,11 +83,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   return (
     <main className={`mx-auto pb-8 ${canSubmit ? "max-w-xl lg:grid lg:max-w-none lg:grid-cols-5 lg:items-start lg:gap-16" : "max-w-xl"}`}>
       <div className={canSubmit ? "lg:col-span-3" : undefined}>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="display break-words text-3xl">{task.title}</h1>
           <TaskStatePill state={task.state} overdue={task.overdue} />
           <span className="text-sm text-muted">{ownerText}</span>
         </div>
-        <h1 className="display mt-3 break-words text-3xl">{task.title}</h1>
         {task.description && <p className="mt-3 whitespace-pre-line break-words text-lg text-muted">{task.description}</p>}
 
         <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 rounded-2xl border border-line bg-surface/60 p-4 text-sm sm:grid-cols-2">
