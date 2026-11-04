@@ -35,9 +35,9 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
         <PrintButton />
       </div>
 
-      <div className="card space-y-6 p-8 print:border-0 print:p-0 print:shadow-none">
-        <header className="flex items-start justify-between gap-4 border-b border-line pb-4">
-          <div className="flex items-center gap-3">
+      <div className="card space-y-6 p-4 sm:p-8 print:border-0 print:p-0 print:shadow-none">
+        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-line pb-4">
+          <div className="flex min-w-0 items-center gap-3">
             {profile.logo_url && <img src={profile.logo_url} alt={profile.clinic_name} className="h-12 w-auto max-w-[14rem] object-contain" />}
             <div className="min-w-0">
               {!profile.logo_url && <p className="text-lg font-semibold">{profile.clinic_name}</p>}
@@ -54,7 +54,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
 
         <section>
           <h2 className="eyebrow mb-2">{t("פרטי המטופל")}</h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
             <Field label={t("שם")} value={journey.patient.full_name} />
             <Field label={t("טלפון")} value={journey.patient.phone} />
             <Field label={t("תעודת זהות")} value={patientRow?.national_id ?? null} />
@@ -67,7 +67,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
 
         <section>
           <h2 className="eyebrow mb-2">{t("פרטי הניתוח")}</h2>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
             <Field label={t("תאריך ניתוח")} value={formatDateLong(journey.surgery_date, lang)} />
             <Field label={t("פרוצדורה")} value={journey.procedure} />
           </dl>
@@ -97,7 +97,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
         {(profile.contact_name || profile.contact_phone || profile.emergency_phone) && (
           <section>
             <h2 className="eyebrow mb-2">{t("איש קשר / חירום במרפאה")}</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
               <Field label={t("שם ותפקיד")} value={[profile.contact_name, profile.contact_role].filter(Boolean).join(" · ") || null} />
               <Field label={t("טלפון")} value={profile.contact_phone} />
               <Field label={t("טלפון חירום")} value={profile.emergency_phone} />

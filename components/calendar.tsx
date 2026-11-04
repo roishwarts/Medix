@@ -212,7 +212,7 @@ function MonthGrid({
                   <span className="block truncate text-xs text-muted">{tasksLabel(deadlines.length, t)}</span>
                 )}
                 {deadlines.length > 0 && shown.length >= 2 && hidden > 0 && (
-                  <span className="block text-xs text-muted">+{hidden}</span>
+                  <span className="block text-xs text-muted" dir="ltr">+{hidden}</span>
                 )}
               </span>
               <span className="flex flex-wrap gap-0.5 sm:hidden">

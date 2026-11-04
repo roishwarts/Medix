@@ -1,18 +1,21 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { PasswordField } from "@/components/password-field";
 import { addTeamMember } from "./actions";
 
 export function TeamForm() {
   const t = useT();
   const [state, action, pending] = useActionState(addTeamMember, undefined);
+  // Controlled so a failed submit keeps what was typed (React resets uncontrolled fields after a form action).
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   return (
     <form action={action} className="card mt-2 grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
       <div>
         <label htmlFor="full_name" className="lbl">{t("שם מלא")}</label>
-        <input id="full_name" name="full_name" className="field" autoComplete="off" maxLength={100} required />
+        <input id="full_name" name="full_name" className="field" autoComplete="off" maxLength={100} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
       </div>
       <div>
         <label htmlFor="role" className="lbl">{t("תפקיד")}</label>
@@ -23,7 +26,7 @@ export function TeamForm() {
       </div>
       <div>
         <label htmlFor="username" className="lbl">{t("שם משתמש")}</label>
-        <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" aria-describedby="team-username-hint" required />
+        <input id="username" name="username" className="field" dir="ltr" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" aria-describedby="team-username-hint" value={username} onChange={(e) => setUsername(e.target.value)} required />
         <p id="team-username-hint" className="mt-1 text-sm text-muted">{t("3–30 תווים באנגלית, מספרים או")} <bdi dir="ltr">. _ -</bdi></p>
       </div>
       <div>

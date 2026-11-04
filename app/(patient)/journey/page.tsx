@@ -1,20 +1,16 @@
-import { AddToCalendar } from "@/components/add-to-calendar";
-import type { CalendarEvent } from "@/lib/calendar-links";
+import { JourneyTimeline } from "./timeline";
 import { HomeSettingsButton } from "@/components/home-settings";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { loadJourneys } from "@/lib/queries";
-import { nowTask, ownerLabel, pickActiveJourney, type Task } from "@/lib/journey";
+import { nowTask, pickActiveJourney } from "@/lib/journey";
 import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import type { T } from "@/lib/i18n";
-import type { Lang } from "@/lib/prefs";
 import { Icon, ReadinessBar } from "@/components/ui";
 import { NavigateButtons } from "@/components/navigate-buttons";
 import { resolvePlace } from "@/lib/location";
 import { getClinicLinks, getClinicVideos, signClinicVideos } from "@/lib/clinic-content";
-import { whatsAppUrl } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +37,6 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
   const t0 = today();
 
   const preop = summary.tasks.filter((t) => t.preop);
-  const postop = summary.tasks.filter((t) => !t.preop);
 
   const now = nowTask(summary.tasks);
   const waiting = summary.tasks.filter((t) => t.owner === "patient" && t.state === "review");
@@ -55,33 +50,19 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
         .sort((a, b) => (a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0))[0];
 
   const preopDone = preop.filter((t) => t.state === "done").length;
-  // Collapse a long run of finished steps at the start of the journey.
-  let leading = 0;
-  while (leading < preop.length && preop[leading].state === "done") leading++;
-  const folded = leading >= 3 ? preop.slice(0, leading) : [];
-  const visiblePreop = preop.slice(folded.length);
-
-  // The next thing to add to a calendar: the surgery day or the nearest appointment, whichever comes first.
-  const nextPlace = nextAppt ? resolvePlace(nextAppt.location, profile.clinic_address) : null;
-  const apptEvent: CalendarEvent | null = nextAppt
-    ? { title: nextAppt.title, date: nextAppt.eventDate, time: nextAppt.eventTime, location: nextPlace?.address || nextPlace?.place || null, details: nextAppt.description }
-    : null;
-  const surgeryEvent: CalendarEvent | null = surgeryPassed ? null : { title: journey.procedure ? t("יום הניתוח – {procedure}", { procedure: journey.procedure }) : t("יום הניתוח"), date: journey.surgery_date };
-  const nextCalendarEvent = apptEvent && surgeryEvent ? (apptEvent.date <= surgeryEvent.date ? apptEvent : surgeryEvent) : apptEvent ?? surgeryEvent;
-
   const heading = surgeryPassed ? t("הניתוח הושלם") : summary.daysToSurgery === 0 ? t("הניתוח היום") : t("הניתוח {when}", { when: relativeDays(journey.surgery_date, t0, lang).toLowerCase() });
 
   return (
     <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
       <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-2">
-        <div className="hero">
-        <p className="hero-muted mb-1">{t("שלום {name}", { name: profile.full_name })}</p>
+        <div>
+        <p className="mb-1 text-muted">{t("שלום {name}", { name: profile.full_name })}</p>
         <div className="flex items-start justify-between gap-3">
           <h1 className="display text-3xl">{heading}</h1>
           <HomeSettingsButton home="/journey" />
         </div>
-        <p className="hero-accent mt-1 font-medium">{formatDateLong(journey.surgery_date, lang)}</p>
-        {surgeryPassed && <p className="hero-muted mt-3">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
+        <p className="mt-1.5 text-lg font-medium text-accent">{formatDateLong(journey.surgery_date, lang)}</p>
+        {surgeryPassed && <p className="mt-3 text-muted">{t("מאחלים החלמה מהירה ושלמה.")}</p>}
         </div>
 
         {otherJourneys.length > 0 && (
@@ -95,34 +76,34 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
           </div>
         )}
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <AddToCalendar next={nextCalendarEvent} />
-          {profile.role === "patient" && (
+        {!surgeryPassed && (() => {
+          const readiness = (
             <>
-              <Link href="/family" className="btn btn-sm">{t("שיתוף עם בן משפחה")}</Link>
-              <Link href="/onboarding" className="btn btn-quiet btn-sm">{t("איך זה עובד")}</Link>
+              <div className="mb-2 flex items-baseline justify-between gap-3">
+                <span className="font-medium">{t("מוכנות לניתוח")}</span>
+                <span className="num text-lg font-medium">{summary.readiness}%</span>
+              </div>
+              <ReadinessBar value={summary.readiness} state={summary.readinessState} />
+              <p className="mt-2 flex items-center justify-between gap-3 text-sm">
+                <span className="text-muted">{t("הושלמו {done} מתוך {total} שלבים", { done: preopDone, total: preop.length })}</span>
+                <span className="font-medium text-accent lg:hidden">{t("המסע שלך: לכל השלבים")} ›</span>
+              </p>
             </>
-          )}
-        </div>
-
-        {!surgeryPassed && (
-          <div className="mt-5">
-            <div className="mb-2 flex items-baseline justify-between gap-3">
-              <span className="font-medium">{t("מוכנות לניתוח")}</span>
-              <span className="num text-lg font-medium">{summary.readiness}%</span>
+          );
+          return (
+            <div className="mt-6">
+              {/* On a phone the whole block opens the journey; on a wide screen the journey is already beside it. */}
+              <Link href={journey.id === pickActiveJourney(journeys)!.id ? "/journey/steps" : `/journey/steps?j=${journey.id}`} className="block min-h-11 lg:hidden">{readiness}</Link>
+              <div className="hidden lg:block">{readiness}</div>
             </div>
-            <ReadinessBar value={summary.readiness} state={summary.readinessState} />
-            <p className="mt-2 text-sm text-muted">
-              {t("הושלמו {done} מתוך {total} שלבים", { done: preopDone, total: preop.length })}
-            </p>
-          </div>
-        )}
+          );
+        })()}
 
         {/* NOW */}
         {!surgeryPassed && (
           <section className="mt-8" aria-labelledby="now-title">
             {now ? (
-              <Link href={`/journey/tasks/${now.id}`} className="card block border-accent-line p-5 transition hover:border-accent">
+              <Link href={`/journey/tasks/${now.id}`} className="card block border-accent-line p-5 transition hover:border-accent" style={{ background: "linear-gradient(180deg, var(--color-accent-soft), var(--color-surface))" }}>
                 <p className="text-sm font-medium text-accent">{t("הצעד הבא שלך")}</p>
                 <h2 id="now-title" className="display mt-1 break-words text-2xl">{now.title}</h2>
                 {now.state === "rejected" && now.review_note && (
@@ -161,8 +142,8 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
             <div className="card mt-4 p-4">
               <Link href={`/journey/tasks/${nextAppt.id}`} className="flex min-h-16 items-center justify-between gap-4 rounded-xl">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-muted">{t("התור הקרוב")}</p>
-                  <p className="mt-0.5 break-words font-medium">{nextAppt.title}</p>
+                  <p className="flex items-center gap-2 text-sm font-medium text-muted"><Chip>{CAL_ICON}</Chip>{t("התור הקרוב")}</p>
+                  <p className="mt-1 break-words font-medium">{nextAppt.title}</p>
                   <p className="break-words text-sm text-muted">
                     {formatDateLong(nextAppt.eventDate, lang)}
                     {nextAppt.eventTime && <> · <span className="num">{nextAppt.eventTime}</span></>}
@@ -180,7 +161,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
         {/* CARE TEAM */}
         {(profile.contact_name || profile.contact_phone || profile.emergency_phone) && (
           <div className="card mt-4 p-4">
-            <p className="text-sm font-medium text-muted">{t("הצוות שלי")}</p>
+            <p className="flex items-center gap-2 text-sm font-medium text-muted"><Chip>{TEAM_ICON}</Chip>{t("הצוות שלי")}</p>
             {(profile.contact_name || profile.contact_role) && (
               <p className="mt-1 break-words font-medium">
                 {profile.contact_name}
@@ -189,12 +170,10 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
               </p>
             )}
             {profile.contact_phone && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn btn-sm">{t("חיוג")}</a>
-                <a href={whatsAppUrl(profile.contact_phone, t("שלום, אני {name}", { name: profile.full_name }))} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
-                  WhatsApp
-                </a>
-              </div>
+              <a href={`tel:${profile.contact_phone.replace(/[^\d+]/g, "")}`} className="btn mt-3 w-full">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
+                {t("חיוג למרפאה")}
+              </a>
             )}
             {profile.office_hours && <p className="mt-2 text-sm text-muted">{t("שעות מענה")}: {profile.office_hours}</p>}
             {profile.emergency_phone && (
@@ -227,7 +206,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
           return (
             <details className="card group mt-4">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium [&::-webkit-details-marker]:hidden">
-                <span>{t("מידע נוסף ועזרים")}</span>
+                <span className="flex items-center gap-2"><Chip>{INFO_ICON}</Chip>{t("מידע נוסף ועזרים")}</span>
                 <span className="text-sm text-accent">
                   <span className="group-open:hidden">{t("הצגה")}</span>
                   <span className="hidden group-open:inline">{t("הסתרה")}</span>
@@ -275,92 +254,20 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
         })()}
       </div>
 
-      {/* TIMELINE */}
-      <section className="mt-10 min-w-0 lg:col-span-3 lg:mt-0" aria-labelledby="timeline-title">
-        <h2 id="timeline-title" className="mb-4 text-sm font-medium text-muted">{t("המסע שלך")}</h2>
-        <ol>
-          {folded.length > 0 && (
-            <li className="relative pb-7 ps-11">
-              <span className="absolute start-0 top-0 grid size-7 place-items-center rounded-full bg-ok text-white" aria-hidden="true"><Icon name="check" size={14} /></span>
-              <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />
-              <details className="group">
-                <summary className="flex min-h-7 cursor-pointer list-none flex-wrap items-center gap-x-2 font-medium text-muted [&::-webkit-details-marker]:hidden">
-                  <span>{t("{n} שלבים הושלמו", { n: folded.length })}</span>
-                  <span className="text-sm text-accent group-open:hidden">{t("הצגה")}</span>
-                  <span className="hidden text-sm text-accent group-open:inline">{t("הסתרה")}</span>
-                </summary>
-                <ol className="mt-3 space-y-2 border-s border-line ps-4">
-                  {folded.map((t) => (
-                    <li key={t.id}>
-                      <Link href={`/journey/tasks/${t.id}`} className="flex min-h-11 items-center gap-2 break-words text-muted">
-                        <Icon name="check" size={14} /> {t.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            </li>
-          )}
-          {visiblePreop.map((tk) => (
-            <TimelineItem key={tk.id} task={tk} isNow={tk.id === now?.id} last={false} t={t} lang={lang} />
-          ))}
-          <li className="relative pb-8 ps-11">
-            <span className="absolute start-0 top-0 grid size-7 place-items-center rounded-full bg-accent text-surface" aria-hidden="true">
-              <span className="size-2 rounded-full bg-surface" />
-            </span>
-            {postop.length > 0 && <span className="absolute start-[13px] top-7 bottom-0 w-px bg-line" aria-hidden="true" />}
-            <p className="display text-lg">{t("יום הניתוח")}</p>
-            <p className="text-sm text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
-          </li>
-          {postop.map((tk, i) => (
-            <TimelineItem key={tk.id} task={tk} isNow={tk.id === now?.id} last={i === postop.length - 1} t={t} lang={lang} />
-          ))}
-        </ol>
-      </section>
+      {/* TIMELINE: next to the cards on a wide screen; on a phone it has its own screen (see /journey/steps) */}
+      <JourneyTimeline journey={journey} t={t} lang={lang} className="mt-10 hidden min-w-0 lg:col-span-3 lg:mt-0 lg:block" />
     </main>
   );
 }
 
-function TimelineItem({ task, isNow, last, t, lang }: { task: Task; isNow: boolean; last: boolean; t: T; lang: Lang }) {
-  const { state, overdue } = task;
-  let node: React.ReactNode;
-  if (state === "done") {
-    node = <span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={14} /></span>;
-  } else if (isNow) {
-    node = <span className={`grid size-7 place-items-center rounded-full border-2 ${overdue ? "border-bad" : "border-accent"} bg-surface`}><span className={`size-2.5 rounded-full ${overdue ? "bg-bad" : "bg-accent"}`} /></span>;
-  } else if (state === "review") {
-    node = <span className="grid size-7 place-items-center rounded-full border-2 border-warn bg-warn-soft text-warn"><Icon name="clock" size={14} /></span>;
-  } else if (state === "locked") {
-    node = <span className="grid size-7 place-items-center rounded-full border border-dashed border-line-strong bg-paper text-muted"><Icon name="lock" size={12} /></span>;
-  } else if (overdue || state === "rejected") {
-    node = <span className="grid size-7 place-items-center rounded-full border-2 border-bad bg-bad-soft text-bad"><Icon name="alert" size={14} /></span>;
-  } else {
-    node = <span className="block size-7 rounded-full border-2 border-line-strong bg-surface" />;
-  }
-
-  const when = (iso: string) => formatDate(iso, lang);
-  const sub =
-    state === "done" ? t("הושלם")
-    : state === "review" ? t("ממתין לבדיקת הצוות")
-    : state === "locked" ? t("ייפתח אחרי: {list}", { list: task.blockedBy.map((b) => b.title).join(", ") })
-    : state === "rejected" ? t("הוחזר לתיקון")
-    : task.kind === "appointment" ? `${overdue ? t("באיחור") + " · " : ""}${when(task.eventDate)}${task.eventTime ? ` · ${task.eventTime}` : ""}${task.location ? ` · ${task.location}` : ""}`
-    : overdue ? t("באיחור · היה עד {date}", { date: when(task.dueDate) })
-    : t("עד {date}", { date: when(task.dueDate) });
-
+// A small tinted icon in front of a card's label.
+function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <li className="relative pb-5 ps-11" aria-current={isNow ? "step" : undefined}>
-      <span className="absolute start-0 top-0" aria-hidden="true">{node}</span>
-      {!last && <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />}
-      <Link href={`/journey/tasks/${task.id}`} className="block min-h-11 break-words">
-        <p className={`font-medium leading-snug ${state === "done" || state === "locked" ? "text-muted" : ""}`}>
-          {task.title}
-        </p>
-        <p className={`mt-0.5 text-sm ${overdue || state === "rejected" ? "text-bad" : "text-muted"}`}>
-          {sub}
-          {task.owner !== "patient" && state !== "done" && ` · ${ownerLabel(task.owner, t)}`}
-        </p>
-      </Link>
-    </li>
+    <span className="inline-grid size-7 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+    </span>
   );
 }
+const CAL_ICON = <><rect x="4" y="5.5" width="16" height="14.5" rx="2" /><path d="M4 10h16M9 3.5v4M15 3.5v4" /></>;
+const TEAM_ICON = <><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20c0-3.2 2.5-5.5 5.5-5.5s5.5 2.3 5.5 5.5M16 5.5a3 3 0 0 1 0 5.6M18 14.5c2 .6 3 2.2 3 4.5" /></>;
+const INFO_ICON = <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5M12 8h.01" /></>;
