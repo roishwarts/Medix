@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NavIcon } from "@/components/nav-icons";
+import { Icon } from "@/components/ui";
 import { AccessControls } from "@/components/access-menu";
 import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
 import { useT } from "@/components/i18n-provider";
@@ -66,6 +67,20 @@ export function ClinicSideMenu({
         </div>
 
         <nav aria-label={t("תפריט")} className="flex-1 overflow-y-auto p-3">
+          {/* The two things a secretary reaches for from anywhere. */}
+          <ul className="mb-3 space-y-1 border-b border-line pb-3">
+            <li>
+              <Link href="/clinic/patients/new" onClick={() => setOpen(false)} className="flex min-h-12 items-center gap-3 rounded-2xl bg-accent-soft px-3 text-base font-medium text-accent">
+                <Icon name="plus" size={20} /> <span>{t("מטופל חדש")}</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/clinic/patients?find=1" onClick={() => setOpen(false)} className="flex min-h-12 items-center gap-3 rounded-2xl px-3 text-base hover:bg-[var(--hover-tint)]">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden><circle cx="7" cy="7" r="4.5" /><path d="M13 13l-2.5-2.5" /></svg>
+                <span>{t("חיפוש מטופל")}</span>
+              </Link>
+            </li>
+          </ul>
           <ul className="space-y-1">
             {items.map((i) => (
               <li key={i.href}>

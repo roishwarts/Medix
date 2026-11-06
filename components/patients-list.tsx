@@ -20,12 +20,12 @@ type SortKey = "name" | "surgery" | "readiness";
 export function PatientsList({ rows, hospitals, procedures, initial, title, action }: {
   title: string; action: React.ReactNode;
   rows: PatientRow[]; hospitals: string[]; procedures: string[];
-  initial: { q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter };
+  initial: { find?: boolean; q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter };
 }) {
   const t = useT();
   const lang = useLang();
   const [q, setQ] = useState(initial.q);
-  const [searchOpen, setSearchOpen] = useState(!!initial.q);
+  const [searchOpen, setSearchOpen] = useState(!!initial.q || !!initial.find);
   const [hospital, setHospital] = useState(initial.hospital);
   const [procedure, setProcedure] = useState(initial.procedure);
   const [stage, setStage] = useState<StageFilter>(initial.stage);

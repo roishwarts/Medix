@@ -26,19 +26,20 @@ export function AppHeader({
   useEffect(() => { setOpen(false); }, [path]);
   // The settings button on the main page asks for the sheet to open.
   useEffect(() => {
+    if (!phoneSheet) return; // the staff area has its own side menu (components/clinic-side-menu.tsx)
     const openIt = () => setOpen(true);
     window.addEventListener(OPEN_SETTINGS_EVENT, openIt);
     return () => window.removeEventListener(OPEN_SETTINGS_EVENT, openIt);
-  }, []);
+  }, [phoneSheet]);
   useEffect(() => {
-    if (!open) return;
+    if (!open || !phoneSheet) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("keydown", onKey);
     sheet.current?.querySelector<HTMLElement>("button")?.focus();
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  }, [open, phoneSheet]);
 
   const active = (i: NavItem) => (i.exact ? path === i.href : path === i.href || path.startsWith(i.href + "/"));
   // The main page sits in the middle of the bottom bar.

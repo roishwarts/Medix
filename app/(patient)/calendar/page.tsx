@@ -28,7 +28,9 @@ export default async function PatientCalendarPage({ searchParams }: { searchPara
   // More than one journey (another surgery, past or planned) shows on the same calendar.
   const events = journeys.flatMap((j) => patientEvents(j, t));
   const t0 = today();
-  const sorted = (list: CalEvent[]) => [...list].sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")));
+  const rank = { surgery: 0, appointment: 1, deadline: 2 } as const;
+  const sorted = (list: CalEvent[]) =>
+    [...list].sort((a, b) => a.date.localeCompare(b.date) || rank[a.kind] - rank[b.kind] || (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
   const next = sorted(events.filter((e) => e.kind !== "deadline" && e.date >= t0))[0];
   // The next few things on the calendar: the surgery, appointments and the deadlines that are still open.
   const upcoming = sorted(events.filter((e) => e.date >= t0 && (e.kind !== "deadline" || e.tone !== "ok"))).slice(0, 5);
