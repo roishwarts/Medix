@@ -10,7 +10,7 @@ import { getClinicName, requireProfile } from "@/lib/auth";
 import { israelLocalToIso } from "@/lib/dates";
 import { createAccountLink, getOrigin } from "@/lib/account-links";
 import { patientLang } from "@/lib/patient-extras";
-import { STAGES, type Stage } from "@/lib/journey";
+import { MANUAL_STAGES, type Stage } from "@/lib/journey";
 import type { Lang } from "@/lib/prefs";
 import { CANCEL_REASONS, type CancelReason } from "@/lib/cancel-reasons";
 import { hashToken } from "@/lib/invite";
@@ -39,7 +39,7 @@ export async function reviewTask(taskId: string, decision: "accept" | "reject" |
 export type CreatePatientState =
   | {
       error?: string;
-      created?: { journeyId: string; patientName: string; phone: string; email: string | null; link?: string; message?: string; linkError?: string };
+      created?: { journeyId: string | null; patientId: string; patientName: string; phone: string; email: string | null; link?: string; message?: string; linkError?: string };
     }
   | undefined;
 
@@ -55,8 +55,10 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   const email = String(formData.get("email") ?? "").trim();
   const template_id = String(formData.get("template_id") ?? "");
   const surgery_date = String(formData.get("surgery_date") ?? "");
+  // "למעקב": a patient with no surgery (yet) - no template, no date, no journey. One can be started later from the card.
+  const followUp = formData.get("kind") === "followup";
 
-  if (!full_name || !template_id || !surgery_date) return { error: t("יש למלא שם, תבנית ותאריך ניתוח") };
+  if (!full_name || (!followUp && (!template_id || !surgery_date))) return { error: followUp ? t("יש להזין שם") : t("יש למלא שם, תבנית ותאריך ניתוח") };
   if (full_name.length > 80) return { error: t("יש להזין שם (עד 80 תווים)") };
   if (!PHONE_OK.test(phone)) return { error: t("יש להזין מספר טלפון תקין (לשליחה בוואטסאפ)") };
   if (email && !EMAIL_OK.test(email)) return { error: t("כתובת המייל לא תקינה") };
@@ -87,14 +89,18 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
     await supabase.from("patients").update({ hospital: hospital || null, company: company || null }).eq("id", patient.id);
   }
 
-  const { data: journeyId, error: jErr } = await supabase.rpc("start_journey", {
-    p_patient: patient.id,
-    p_template: template_id,
-    p_surgery: surgery_date,
-  });
-  if (jErr || !journeyId) {
-    await supabase.from("patients").delete().eq("id", patient.id);
-    return { error: t("פתיחת המסלול נכשלה") };
+  let journeyId: string | null = null;
+  if (!followUp) {
+    const { data, error: jErr } = await supabase.rpc("start_journey", {
+      p_patient: patient.id,
+      p_template: template_id,
+      p_surgery: surgery_date,
+    });
+    if (jErr || !data) {
+      await supabase.from("patients").delete().eq("id", patient.id);
+      return { error: t("פתיחת המסלול נכשלה") };
+    }
+    journeyId = data as string;
   }
   revalidatePath("/clinic", "layout");
 
@@ -104,7 +110,7 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
     patientId: patient.id,
     createdBy: profile.id,
   });
-  const created = { journeyId: journeyId as string, patientName: full_name, phone, email: email || null };
+  const created = { journeyId, patientId: patient.id as string, patientName: full_name, phone, email: email || null };
   if ("error" in link) return { created: { ...created, linkError: link.error } };
   return { created: { ...created, link: link.url, message: joinMessage(full_name, await getClinicName(), link.url, lang) } };
 }
@@ -327,7 +333,7 @@ export async function updatePatientDetails(patientId: string, _: DetailsState, f
     const stageRaw = String(formData.get("stage") ?? "");
     const langRaw = String(formData.get("lang") ?? "he");
     const patch: Record<string, string | null> = {};
-    if (formData.has("stage")) patch.stage_override = (STAGES as readonly string[]).includes(stageRaw) ? stageRaw : null;
+    if (formData.has("stage")) patch.stage_override = (MANUAL_STAGES as readonly string[]).includes(stageRaw) ? stageRaw : null;
     if (formData.has("lang") && (["he", "en", "ru", "ar"] as const).some((l) => l === langRaw)) patch.lang = langRaw;
     const { error: extraErr } = await supabase.from("patients").update(patch).eq("id", patientId);
     if (extraErr) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };
@@ -359,7 +365,7 @@ export async function setPatientLang(patientId: string, lang: Lang): Promise<{ e
 export async function setPatientStage(patientId: string, stage: Stage | null): Promise<{ error?: string }> {
   const t = await getT();
   await requireProfile(["staff", "doctor"]);
-  if (stage !== null && !STAGES.includes(stage)) return { error: t("סטטוס לא תקין") };
+  if (stage !== null && !MANUAL_STAGES.includes(stage)) return { error: t("סטטוס לא תקין") };
   const supabase = await createClient();
   const { error } = await supabase.from("patients").update({ stage_override: stage }).eq("id", patientId);
   if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-lang-stage.sql.") };

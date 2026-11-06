@@ -9,7 +9,7 @@ import { STAGES, STAGE_LABEL, STAGE_PILL, isActiveStage, type Stage } from "@/li
 import type { Readiness } from "@/lib/journey";
 
 export type PatientRow = {
-  id: string; name: string; procedure: string | null; surgeryDate: string; daysToSurgery: number; readiness: number; readinessState: Readiness;
+  id: string; href?: string; followUp?: boolean; name: string; procedure: string | null; surgeryDate: string; daysToSurgery: number; readiness: number; readinessState: Readiness;
   stage: Stage; hospital: string | null; company: string | null; step: string; procedureLabel: string;
 };
 type StageFilter = Stage | "active" | "all";
@@ -159,20 +159,26 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
           sortable headers aren't shown here, so the same sort state is a select in the filters above. */}
       <div className="mt-4 space-y-2 sm:hidden">
         {sorted.map((r) => (
-          <Link key={r.id} href={`/clinic/patients/${r.id}`} className="card block min-h-11 p-3.5">
+          <Link key={r.id} href={r.href ?? `/clinic/patients/${r.id}`} className="card block min-h-11 p-3.5">
             <div className="flex items-baseline justify-between gap-3">
               <span className="min-w-0 break-words font-medium">{r.name}</span>
               <span className={`pill ${STAGE_PILL[r.stage]} shrink-0`}>{t(STAGE_LABEL[r.stage])}</span>
             </div>
             {r.procedure && <p className="mt-0.5 text-sm text-muted">{r.procedure}</p>}
-            <div className="mt-2.5 flex items-center gap-3">
-              <span className="num shrink-0 text-sm text-muted">
-                {formatDate(r.surgeryDate, lang)} · {r.daysToSurgery >= 0 ? t("({n} ימים)", { n: r.daysToSurgery }) : t("(עבר)")}
-              </span>
-              <span className="num shrink-0 text-sm font-medium">{r.readiness}%</span>
-              <div className="min-w-0 flex-1" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
-            </div>
-            <p className="mt-2 border-t border-line pt-2 text-sm">{r.step}</p>
+            {r.followUp ? (
+              <p className="mt-2 border-t border-line pt-2 text-sm text-muted">{r.step}</p>
+            ) : (
+              <>
+                <div className="mt-2.5 flex items-center gap-3">
+                  <span className="num shrink-0 text-sm text-muted">
+                    {formatDate(r.surgeryDate, lang)} · {r.daysToSurgery >= 0 ? t("({n} ימים)", { n: r.daysToSurgery }) : t("(עבר)")}
+                  </span>
+                  <span className="num shrink-0 text-sm font-medium">{r.readiness}%</span>
+                  <div className="min-w-0 flex-1" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
+                </div>
+                <p className="mt-2 border-t border-line pt-2 text-sm">{r.step}</p>
+              </>
+            )}
             {(r.hospital || r.company) && (
               <p className="mt-1 text-xs text-muted">
                 {[r.hospital, r.company].filter(Boolean).join(" · ")}
@@ -205,7 +211,7 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
           </thead>
           <tbody className="divide-y divide-line">
             {sorted.map((r) => {
-              const href = `/clinic/patients/${r.id}`;
+              const href = r.href ?? `/clinic/patients/${r.id}`;
               // Every cell is a link, so tapping anywhere on the row opens the patient.
               const link = "block px-2 py-3 min-[400px]:px-3 sm:px-4";
               return (
@@ -218,16 +224,22 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
                   </td>
                   <td>
                     <Link href={href} tabIndex={-1} className={`${link} num whitespace-nowrap text-muted`}>
-                      {formatDate(r.surgeryDate, lang)}
-                      <span className="block whitespace-nowrap text-xs min-[400px]:ms-2 min-[400px]:inline">
-                        {r.daysToSurgery >= 0 ? t("({n} ימים)", { n: r.daysToSurgery }) : t("(עבר)")}
-                      </span>
+                      {r.followUp ? "—" : formatDate(r.surgeryDate, lang)}
+                      {!r.followUp && (
+                        <span className="block whitespace-nowrap text-xs min-[400px]:ms-2 min-[400px]:inline">
+                          {r.daysToSurgery >= 0 ? t("({n} ימים)", { n: r.daysToSurgery }) : t("(עבר)")}
+                        </span>
+                      )}
                     </Link>
                   </td>
                   <td>
                     <Link href={href} tabIndex={-1} className={`${link} flex items-center gap-3`}>
-                      <span className="num w-10 shrink-0 font-medium">{r.readiness}%</span>
-                      <div className="hidden w-20 sm:block" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
+                      {r.followUp ? <span className="text-muted">—</span> : (
+                        <>
+                          <span className="num w-10 shrink-0 font-medium">{r.readiness}%</span>
+                          <div className="hidden w-20 sm:block" aria-hidden="true"><ReadinessBar value={r.readiness} state={r.readinessState} /></div>
+                        </>
+                      )}
                     </Link>
                   </td>
                   <td><Link href={href} tabIndex={-1} className={link}><span className={`pill ${STAGE_PILL[r.stage]}`}>{t(STAGE_LABEL[r.stage])}</span></Link></td>

@@ -4,7 +4,7 @@ import { useT } from "@/components/i18n-provider";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { OptionSelect } from "@/components/option-select";
 import { LANGS, type Lang } from "@/lib/prefs";
-import { STAGES, STAGE_LABEL, STAGE_PILL, type Stage } from "@/lib/journey";
+import { MANUAL_STAGES, STAGE_LABEL, STAGE_PILL, type Stage } from "@/lib/journey";
 import { HMOS, HMO_LABEL, type Hmo } from "@/lib/hmo";
 import { updatePatientDetails } from "../actions";
 
@@ -170,7 +170,7 @@ export function PatientDetails({
                       <label htmlFor="pd-stage" className="lbl">{t("סטטוס")}</label>
                       <select id="pd-stage" name="stage" className="field" defaultValue={stage ?? ""}>
                         <option value="">{t("אוטומטי לפי המסלול")} ({t(STAGE_LABEL[autoStage])})</option>
-                        {STAGES.map((s) => <option key={s} value={s}>{t(STAGE_LABEL[s])}</option>)}
+                        {MANUAL_STAGES.map((s) => <option key={s} value={s}>{t(STAGE_LABEL[s])}</option>)}
                       </select>
                     </div>
                     <div>
