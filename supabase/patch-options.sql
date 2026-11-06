@@ -18,3 +18,6 @@ create policy clinic_options_read on clinic_options for select
 -- The chosen values are stored on the patient as plain text, so removing an option never erases history.
 alter table patients add column if not exists hospital text;
 alter table patients add column if not exists company text;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-options.sql') on conflict (name) do nothing;

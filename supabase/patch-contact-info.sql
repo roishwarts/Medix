@@ -27,3 +27,6 @@ begin
 end $$;
 
 revoke execute on function save_clinic_contact_info(text, text, text, text, text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-contact-info.sql') on conflict (name) do nothing;

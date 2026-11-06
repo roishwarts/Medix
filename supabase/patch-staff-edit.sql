@@ -34,3 +34,6 @@ begin
     kind = excluded.kind, location = excluded.location, scheduled_at = excluded.scheduled_at
   where journey_tasks.journey_id = excluded.journey_id;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-staff-edit.sql') on conflict (name) do nothing;

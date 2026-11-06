@@ -44,3 +44,6 @@ begin
     (s_infra, 'גיבויים ושחזור לנקודת זמן'),
     (s_infra, 'מעבר לתוכניות בתשלום לפני עלייה לאוויר');
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-devtasks.sql') on conflict (name) do nothing;

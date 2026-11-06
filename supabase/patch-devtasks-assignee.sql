@@ -10,3 +10,6 @@ alter table dev_people enable row level security;
 -- Removing a person leaves their tasks unassigned.
 alter table dev_tasks add column if not exists assignee_id uuid references dev_people(id) on delete set null;
 create index if not exists dev_tasks_assignee on dev_tasks(assignee_id);
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-devtasks-assignee.sql') on conflict (name) do nothing;

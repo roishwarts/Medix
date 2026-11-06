@@ -17,3 +17,6 @@ begin
 end $$;
 
 revoke execute on function record_privacy_consent(text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-privacy-consent.sql') on conflict (name) do nothing;

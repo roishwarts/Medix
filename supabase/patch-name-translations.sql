@@ -23,3 +23,6 @@ begin
   update profiles set full_name_en = nullif(trim(p_name), '') where id = auth.uid();
 end $$;
 revoke execute on function save_my_full_name_en(text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-name-translations.sql') on conflict (name) do nothing;

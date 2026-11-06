@@ -3,3 +3,6 @@
 -- stage_override: when set, it replaces the status worked out from the journey.
 alter table patients add column if not exists lang text not null default 'he' check (lang in ('he', 'en', 'ru', 'ar'));
 alter table patients add column if not exists stage_override text check (stage_override in ('decided', 'preparing', 'ready', 'recovering', 'finished'));
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-lang-stage.sql') on conflict (name) do nothing;

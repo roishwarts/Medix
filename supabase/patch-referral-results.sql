@@ -60,3 +60,6 @@ create policy referral_results_select on storage.objects for select to authentic
 drop policy if exists referral_results_insert on storage.objects;
 create policy referral_results_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'referral-results' and (select referral_result_access(name)));
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-referral-results.sql') on conflict (name) do nothing;

@@ -160,3 +160,6 @@ begin
     perform _copy_template(v_src, null, true);
   end if;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-admin.sql') on conflict (name) do nothing;

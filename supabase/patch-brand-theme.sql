@@ -11,3 +11,6 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter table clinics add constraint clinics_brand_gold_check check (brand_gold is null or brand_gold ~ '^#[0-9a-fA-F]{6}$');
 exception when duplicate_object then null; end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-brand-theme.sql') on conflict (name) do nothing;

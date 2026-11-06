@@ -13,3 +13,6 @@ begin
 end $$;
 
 revoke execute on function save_clinic_address(text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-clinic-address-self.sql') on conflict (name) do nothing;

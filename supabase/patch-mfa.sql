@@ -33,3 +33,6 @@ end $$;
 drop policy if exists mfa_gate_evidence on storage.objects;
 create policy mfa_gate_evidence on storage.objects as restrictive for all to authenticated
   using (bucket_id <> 'evidence' or (select mfa_ok()));
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-mfa.sql') on conflict (name) do nothing;

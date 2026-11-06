@@ -6,3 +6,6 @@ update storage.buckets
 set file_size_limit = 10485760, -- 10MB, matches MAX_BYTES in submit-panel.tsx
     allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf']
 where id = 'evidence';
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-evidence-bucket-limits.sql') on conflict (name) do nothing;
