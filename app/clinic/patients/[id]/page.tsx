@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import { requireProfile, getClinicName } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -6,7 +7,7 @@ import { loadJourney } from "@/lib/queries";
 import { getOrigin } from "@/lib/account-links";
 import { taskReminderMessage } from "@/lib/messages";
 import { ReminderButton } from "@/components/reminder-button";
-import { ownerLabel, blockerLabel } from "@/lib/journey";
+import { ownerLabel, blockerLabel, nowTask } from "@/lib/journey";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";
@@ -212,7 +213,26 @@ export default async function PatientPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-6">
         <div className="min-w-0">
           <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
-          <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
+          {/* The procedure, the surgery date and the readiness on one line. */}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+            <span>{journey.procedure || journey.template_name}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              <span className="font-medium text-ink">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
+              <span className="text-sm">({relativeDays(journey.surgery_date, undefined, lang)})</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="text-sm">{tr("מוכנות לניתוח")}</span>
+              <span className="num font-medium text-ink">{summary.readiness}%</span>
+              <span className="inline-block w-20" aria-hidden="true"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></span>
+            </span>
+          </div>
+          {summary.topBlocker && (
+            <p className="mt-1 text-sm text-muted">
+              {tr("שלב נוכחי")}: {blockerLabel(summary.topBlocker, tr)} · {tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-sm">
           <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="text-muted hover:text-ink hover:underline">{tr("דף סיכום להדפסה")}</Link>
@@ -225,47 +245,8 @@ export default async function PatientPage({
           <CancelledBanner journeyId={journey.id} lang={lang} cancelledAt={cancelRow.cancelled_at} cancelledReason={(cancelRow.cancelled_reason ?? null) as CancelReason | null} />
         </div>
       )}
-      <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+      <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start">
       <div className="min-w-0 space-y-10">
-      <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
-      <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
-      {isDoctor && (
-        <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
-          <h2 className="eyebrow mb-2">{tr("הפניות שקיבל המטופל")}</h2>
-          <ReferralsCard
-            patientId={journey.patient_id}
-            canCreate
-            items={referrals.map((r) => ({
-              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
-              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
-            }))}
-          />
-        </section>
-      )}
-      <section className="card divide-y divide-line">
-        <div className="grid gap-x-8 gap-y-3 px-4 py-3 sm:grid-cols-2 sm:items-center">
-          <p>
-            <span className="text-sm text-muted">{tr("ניתוח:")}</span>{" "}
-            <span className="font-medium">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
-            <span className="text-sm text-muted">({relativeDays(journey.surgery_date, undefined, lang)})</span>
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="shrink-0 text-sm text-muted">{tr("מוכנות לניתוח")}</span>
-            <span className="num text-sm font-medium">{summary.readiness}%</span>
-            <div className="min-w-16 flex-1"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></div>
-          </div>
-        </div>
-        {summary.topBlocker && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <p className="min-w-0"><span className="text-sm text-muted">{tr("שלב נוכחי")}:</span> {blockerLabel(summary.topBlocker, tr)}</p>
-            <span className="shrink-0 text-sm text-muted">{tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}</span>
-          </div>
-        )}
-        {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
-      </section>
-      <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
-
-      <PromsCard journeyId={journey.id} />
       <section>
         <h2 className="mb-1 flex flex-wrap items-center gap-2 text-lg font-medium">
           {tr("כל המשימות")}
@@ -290,81 +271,112 @@ export default async function PatientPage({
             );
           })}
         </nav>
-        {visibleTasks.length === 0 && <p className="card mt-3 px-4 py-12 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
-        <div className={`card divide-y divide-line ${visibleTasks.length === 0 ? "hidden" : ""}`}>
-          {visibleTasks.map((t) => (
-            <div key={t.id} className={`px-4 ${t.state === "locked" ? "py-2.5" : "py-4"} ${t.state === "review" ? "border-s-4 border-s-warn bg-warn/5" : t.state === "rejected" || t.overdue ? "border-s-4 border-s-bad" : ""}`}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className={`break-words font-medium ${t.state === "locked" ? "text-muted" : ""}`}>{t.title}</p>
-                    {!t.mandatory && <span className="pill pill-neutral">{tr("רשות")}</span>}
-                  </div>
-                  <p className="mt-0.5 text-sm text-muted">
-                    {t.kind === "appointment" ? tr("תור") : ownerLabel(t.owner, tr)} ·{" "}
-                    {t.kind === "appointment"
-                      ? t.scheduled_at ? `${formatDate(t.eventDate, lang)} ${t.eventTime}` : tr("טרם נקבע מועד")
-                      : tr("יעד {date}", { date: formatDate(t.dueDate, lang) })}
-                    {t.state === "locked" && ` · ${tr("ממתין ל: {list}", { list: t.blockedBy.map((b) => b.title).join(", ") })}`}
-                  </p>
-                </div>
-                <LiveTaskPill taskId={t.id} state={t.state} overdue={t.overdue} />
-              </div>
-
-              {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (
-                <div className="mt-3 space-y-1 text-sm">
-                  {t.evidence_name && (
-                    <div>
-                      {urls.get(t.id) && /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(t.evidence_name) && (
-                        <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="mb-1.5 block w-fit">
-                          <img
-                            src={urls.get(t.id)}
-                            alt={tr("תמונה שהועלתה: {name}", { name: t.evidence_name })}
-                            loading="lazy"
-                            className="max-h-48 w-auto rounded-xl border border-line object-contain"
-                          />
-                        </a>
-                      )}
-                      <p className="flex items-center gap-2 break-words">
-                        <Icon name="file" />
-                        {urls.get(t.id) ? (
-                          <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center break-all underline underline-offset-4 sm:min-h-0">{t.evidence_name}</a>
-                        ) : t.evidence_name}
+        {visibleTasks.length === 0 && <p className="mt-3 px-1 py-10 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
+        {/* The journey as the patient sees it (a timeline, no boxes), with the clinic's small actions under each step. */}
+        <ol className="mt-4">
+          {visibleTasks.map((t, idx) => {
+            const nowId = nowTask(summary.tasks)?.id;
+            const isNow = t.id === nowId;
+            const showSurgeryDay = active === "all" && !t.preop && (idx === 0 || visibleTasks[idx - 1].preop);
+            const bad = t.overdue || t.state === "rejected";
+            let node: React.ReactNode;
+            if (t.state === "done") node = <span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={14} /></span>;
+            else if (isNow) node = <span className={`grid size-7 place-items-center rounded-full border-2 ${bad ? "border-bad" : "border-accent"} bg-surface`}><span className={`size-2.5 rounded-full ${bad ? "bg-bad" : "bg-accent"}`} /></span>;
+            else if (t.state === "review") node = <span className="grid size-7 place-items-center rounded-full border-2 border-warn bg-warn-soft text-warn"><Icon name="clock" size={14} /></span>;
+            else if (t.state === "locked") node = <span className="grid size-7 place-items-center rounded-full border border-dashed border-line-strong bg-paper text-muted"><Icon name="lock" size={12} /></span>;
+            else if (bad) node = <span className="grid size-7 place-items-center rounded-full border-2 border-bad bg-bad-soft text-bad"><Icon name="alert" size={14} /></span>;
+            else node = <span className="block size-7 rounded-full border-2 border-line-strong bg-surface" />;
+            return (
+              <Fragment key={t.id}>
+                {showSurgeryDay && (
+                  <li className="relative pb-6 ps-11">
+                    <span className="absolute start-0 top-0 grid size-7 place-items-center rounded-full bg-accent text-surface" aria-hidden="true"><span className="size-2 rounded-full bg-surface" /></span>
+                    <span className="absolute start-[13px] top-7 bottom-0 w-px bg-line" aria-hidden="true" />
+                    <p className="display text-lg">{tr("יום הניתוח")}</p>
+                    <p className="text-sm text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
+                  </li>
+                )}
+                <li className="relative pb-6 ps-11" aria-current={isNow ? "step" : undefined}>
+                  <span className="absolute start-0 top-0" aria-hidden="true">{node}</span>
+                  {idx < visibleTasks.length - 1 && <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />}
+                  <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className={`break-words font-medium leading-snug ${t.state === "done" || t.state === "locked" ? "text-muted" : ""}`}>{t.title}</p>
+                        {!t.mandatory && <span className="pill pill-neutral">{tr("רשות")}</span>}
+                      </div>
+                      <p className={`mt-0.5 text-sm ${bad ? "text-bad" : "text-muted"}`}>
+                        {t.kind === "appointment" ? tr("תור") : ownerLabel(t.owner, tr)} ·{" "}
+                        {t.kind === "appointment"
+                          ? t.scheduled_at ? `${formatDate(t.eventDate, lang)} ${t.eventTime}` : tr("טרם נקבע מועד")
+                          : tr("יעד {date}", { date: formatDate(t.dueDate, lang) })}
                       </p>
+                      {t.state === "locked" && (
+                        <p className="mt-0.5 text-sm text-muted">{tr("ממתין ל: {list}", { list: t.blockedBy.map((b) => b.title).join(", ") })}</p>
+                      )}
+                    </div>
+                    <LiveTaskPill taskId={t.id} state={t.state} overdue={t.overdue} />
+                  </div>
+                  {(t.patient_note || t.evidence_name || t.review_note || (t.submitted_by && cgByUser.has(t.submitted_by))) && (
+                    <div className="mt-2 space-y-1 text-sm">
+                      {t.evidence_name && (
+                        <div>
+                          {urls.get(t.id) && /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(t.evidence_name) && (
+                            <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="mb-1.5 block w-fit">
+                              <img
+                                src={urls.get(t.id)}
+                                alt={tr("תמונה שהועלתה: {name}", { name: t.evidence_name })}
+                                loading="lazy"
+                                className="max-h-48 w-auto rounded-xl border border-line object-contain"
+                              />
+                            </a>
+                          )}
+                          <p className="flex items-center gap-2 break-words">
+                            <Icon name="file" />
+                            {urls.get(t.id) ? (
+                              <a href={urls.get(t.id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center break-all underline underline-offset-4 sm:min-h-0">{t.evidence_name}</a>
+                            ) : t.evidence_name}
+                          </p>
+                        </div>
+                      )}
+                      {t.submitted_by && cgByUser.get(t.submitted_by) && (
+                        <p className="text-muted">
+                          {tr("הוגש על ידי {name} ({relation})", { name: cgByUser.get(t.submitted_by)!.full_name, relation: cgByUser.get(t.submitted_by)!.relation })}
+                        </p>
+                      )}
+                      {t.patient_note && <p className="text-muted">{tr("הערת המטופל: {note}", { note: t.patient_note })}</p>}
+                      {t.review_note && <p className="text-bad">{tr("הערת הצוות: {note}", { note: t.review_note })}</p>}
                     </div>
                   )}
-                  {t.submitted_by && cgByUser.get(t.submitted_by) && (
-                    <p className="text-muted">
-                      {tr("הוגש על ידי {name} ({relation})", { name: cgByUser.get(t.submitted_by)!.full_name, relation: cgByUser.get(t.submitted_by)!.relation })}
-                    </p>
-                  )}
-                  {t.patient_note && <p className="text-muted">{tr("הערת המטופל: {note}", { note: t.patient_note })}</p>}
-                  {t.review_note && <p className="text-bad">{tr("הערת הצוות: {note}", { note: t.review_note })}</p>}
-                </div>
-              )}
 
-              {t.kind === "appointment" && t.state !== "done" && (
-                <ScheduleControl
-                  taskId={t.id}
-                  initialLocal={t.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(t.scheduled_at)) : ""}
-                  initialLocation={t.location ?? ""}
-                />
-              )}
-              <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
-              {t.owner === "patient" && (t.state === "todo" || t.state === "rejected") && (
-                <div className="mt-2">
-                  <ReminderButton
-                    phone={journey.patient.phone}
-                    email={patientRow?.email}
-                    subject={tr("תזכורת מ{clinic}", { clinic: clinicName })}
-                    message={taskReminderMessage(journey.patient.full_name, clinicName, t.title, `${origin}/journey`, extras?.lang ?? "he")}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                  {t.kind === "appointment" && t.state !== "done" && (
+                    <ScheduleControl
+                      taskId={t.id}
+                      initialLocal={t.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(t.scheduled_at)) : ""}
+                      initialLocation={t.location ?? ""}
+                    />
+                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <TaskReview taskId={t.id} state={t.state} owner={t.owner} />
+                    {t.owner === "patient" && (t.state === "todo" || t.state === "rejected") && (
+                      <div className="mt-3">
+                        <ReminderButton
+                          phone={journey.patient.phone}
+                          email={patientRow?.email}
+                          subject={tr("תזכורת מ{clinic}", { clinic: clinicName })}
+                          message={taskReminderMessage(journey.patient.full_name, clinicName, t.title, `${origin}/journey`, extras?.lang ?? "he")}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </li>
+              </Fragment>
+            );
+          })}
+        </ol>
       </section>
+
+      <PromsCard journeyId={journey.id} />
 
       <AllDocuments items={allDocs} />
 
@@ -375,7 +387,7 @@ export default async function PatientPage({
       </section>
       </div>
 
-      <aside className="min-w-0 space-y-6 lg:sticky lg:top-20">
+      <aside className="min-w-0 space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:pb-6 lg:pe-1 [scrollbar-width:thin]">
         <section aria-label={tr("פרטי המטופל")} className="relative">
           {/* The title sits above the box, so the box starts level with the summary card. */}
           <h2 className="eyebrow absolute bottom-full mb-1">{tr("פרטי המטופל")}</h2>
@@ -386,6 +398,23 @@ export default async function PatientPage({
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
           <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
+        </section>
+        <section aria-label={tr("קליני")} className="space-y-6">
+          <h2 className="eyebrow">{tr("קליני")}</h2>
+          <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
+          <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
+          <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
+          <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
+            <h3 className="eyebrow mb-2">{tr("הפניות")}</h3>
+            <ReferralsCard
+              patientId={journey.patient_id}
+              canCreate={isDoctor}
+              items={referrals.map((r) => ({
+                id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+                resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+              }))}
+            />
+          </section>
         </section>
         <section aria-label={tr("בני משפחה")}>
           <h2 className="eyebrow mb-2">{tr("בני משפחה")}</h2>
@@ -406,17 +435,7 @@ export default async function PatientPage({
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
-        {!isDoctor && <section aria-label={tr("הפניות")}>
-          <h2 className="eyebrow mb-2">{tr("הפניות")}</h2>
-          <ReferralsCard
-            patientId={journey.patient_id}
-            canCreate={false}
-            items={referrals.map((r) => ({
-              id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
-              resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
-            }))}
-          />
-        </section>}
+        {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
       </aside>
       </div>
       {isDoctor && (
