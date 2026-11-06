@@ -8,6 +8,7 @@ import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ClinicMobileTopbar } from "@/components/clinic-mobile-topbar";
+import { ClinicSideMenu } from "@/components/clinic-side-menu";
 import { ClinicFab } from "@/components/clinic-fab";
 import { IdleLogoutModal } from "@/components/idle-logout-modal";
 import { ActivityBadge } from "./activity-badge";
@@ -41,7 +42,8 @@ export default async function ClinicLayout({ children }: { children: React.React
       <div className="print:hidden">
         <ImpersonationBanner />
         <ClinicMobileTopbar brand={clinicName} logo={profile.logo_url} />
-        <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+        <ClinicSideMenu items={items.filter((i) => i.more)} brand={clinicName} logo={profile.logo_url} userName={profile.full_name} roleLabel={profile.role === "doctor" ? t("רופא") : t("צוות")} logout={<LogoutButton />} />
+        <AppHeader phoneSheet={false} items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
       <div className="mx-auto max-w-6xl px-4 pb-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-5 sm:pb-8 md:pt-8">
         <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
