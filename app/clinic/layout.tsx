@@ -9,7 +9,6 @@ import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ClinicMobileTopbar } from "@/components/clinic-mobile-topbar";
 import { ClinicSideMenu } from "@/components/clinic-side-menu";
-import { ClinicFab } from "@/components/clinic-fab";
 import { IdleLogoutModal } from "@/components/idle-logout-modal";
 import { ActivityBadge } from "./activity-badge";
 import { QuestionsBadge } from "./questions-badge";
@@ -49,7 +48,6 @@ export default async function ClinicLayout({ children }: { children: React.React
         <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
         {children}
       </div>
-      <ClinicFab />
       <IdleLogoutModal />
     </div>
   );
