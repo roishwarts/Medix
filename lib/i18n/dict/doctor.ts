@@ -140,6 +140,7 @@ export const en: Record<string, string> = {
   "חודש קודם": "Previous month",
   "חודש הבא": "Next month",
   "הבא בתור": "Up next",
+  "קליני": "Clinical",
 };
 
 export const ru: Record<string, string> = {
@@ -282,6 +283,7 @@ export const ru: Record<string, string> = {
   "חודש קודם": "Предыдущий месяц",
   "חודש הבא": "Следующий месяц",
   "הבא בתור": "Ближайшее",
+  "קליני": "Клиническое",
 };
 
 export const ar: Record<string, string> = {
@@ -424,4 +426,5 @@ export const ar: Record<string, string> = {
   "חודש קודם": "الشهر السابق",
   "חודש הבא": "الشهر التالي",
   "הבא בתור": "القادم",
+  "קליני": "سريري",
 };
