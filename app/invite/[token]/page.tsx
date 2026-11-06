@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
 import { getT } from "@/lib/i18n/server";
 import { Icon } from "@/components/ui";
+import { oneOrNull } from "@/lib/supabase-row";
 import { AcceptForm } from "./form";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +47,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
     if (data) {
-      const one = <T,>(v: T | T[] | null) => (Array.isArray(v) ? v[0] : v) ?? null;
-      const p = one(data.patients as { full_name: string } | { full_name: string }[] | null);
+      const p = oneOrNull(data.patients as { full_name: string } | { full_name: string }[] | null);
       const { data: c } = await admin.from("clinics").select("name").eq("id", data.clinic_id).maybeSingle();
       const { data: inviterRow } = await admin.from("profiles").select("full_name").eq("id", data.created_by).maybeSingle();
       invite = {

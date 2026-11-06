@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { requireAdmin } from "@/lib/admin";
+import { countOf } from "@/lib/supabase-row";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function BaseTemplatesPage() {
         ) : (
           <ul className="card divide-y divide-line" aria-label={t("רשימת תבניות בסיס")}>
             {(templates ?? []).map((tpl) => {
-              const tasks = (tpl.template_tasks as { count: number }[])?.[0]?.count ?? 0;
+              const tasks = countOf(tpl.template_tasks as { count: number }[]);
               const tasksLabel = tasks === 1 ? t("משימה אחת") : t("{n} משימות", { n: tasks });
               const used = usedBy.get(tpl.id) ?? 0;
               const usedLabel = used === 1 ? t("בשימוש אצל מרפאה אחת") : t("בשימוש אצל {n} מרפאות", { n: used });

@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import type { T } from "@/lib/i18n";
 import type { Lang } from "@/lib/prefs";
+import { countOf } from "@/lib/supabase-row";
 import { LOCALE } from "@/lib/dates";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -60,8 +61,8 @@ export default async function TemplatesPage() {
       ) : (
         <ul className="card mt-2 divide-y divide-line" aria-label={t("רשימת תבניות")}>
           {list.map((tpl) => {
-            const tasks = (tpl.template_tasks as { count: number }[])?.[0]?.count ?? 0;
-            const used = (tpl.journeys as { count: number }[])?.[0]?.count ?? 0;
+            const tasks = countOf(tpl.template_tasks as { count: number }[]);
+            const used = countOf(tpl.journeys as { count: number }[]);
             return (
               <li key={tpl.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0">

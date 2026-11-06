@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClinicLinks, getClinicVideos } from "@/lib/clinic-content";
+import { optionalColumn } from "@/lib/supabase-row";
 import { ContactForm } from "./contact-form";
 import { LogoForm } from "./logo-form";
 import { GeneralInfoForm } from "./general-info-form";
@@ -36,7 +37,7 @@ export default async function ClinicContentPage() {
     supabase.from("clinics").select("name, name_en").eq("id", profile.clinic_id).maybeSingle()
       .then((res) => (res.error ? supabase.from("clinics").select("name").eq("id", profile.clinic_id).maybeSingle() : res)),
   ]);
-  const clinicNameEn = (clinicNameRes.data as { name_en?: string | null } | null)?.name_en ?? null;
+  const clinicNameEn = clinicNameRes.data ? optionalColumn<string>(clinicNameRes.data, "name_en") : null;
 
   const sections = [
     { id: "logo", label: t("מיתוג") },
