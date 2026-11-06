@@ -1,4 +1,7 @@
 import { hexOrNull } from "./brand";
+
+// Only real https links are ever rendered as a link.
+const httpsOrNull = (v: string | null | undefined) => (v && /^https:\/\/[^\s]+$/.test(v.trim()) ? v.trim() : null);
 import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -18,6 +21,9 @@ export type Profile = {
   contact_phone: string | null;
   emergency_phone: string | null;
   office_hours: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_youtube: string | null;
   logo_url: string | null;
   brand_color: string | null;
   brand_dark: string | null;
@@ -90,6 +96,9 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     contact_phone?: string | null;
     emergency_phone?: string | null;
     office_hours?: string | null;
+    social_facebook?: string | null;
+    social_instagram?: string | null;
+    social_youtube?: string | null;
     logo_path?: string | null;
     brand_color?: string | null;
     brand_dark?: string | null;
@@ -115,6 +124,9 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     contact_phone: clinic?.contact_phone ?? null,
     emergency_phone: clinic?.emergency_phone ?? null,
     office_hours: clinic?.office_hours ?? null,
+    social_facebook: httpsOrNull(clinic?.social_facebook),
+    social_instagram: httpsOrNull(clinic?.social_instagram),
+    social_youtube: httpsOrNull(clinic?.social_youtube),
     logo_url: logoUrl,
     brand_color: brandColor,
     brand_dark: hexOrNull(clinic?.brand_dark),

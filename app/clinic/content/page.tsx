@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClinicLinks, getClinicVideos } from "@/lib/clinic-content";
 import { ContactForm } from "./contact-form";
+import { SocialForm } from "./social-form";
 import { LogoForm } from "./logo-form";
 import { GeneralInfoForm } from "./general-info-form";
 import { RedFlagsForm } from "./red-flags-form";
@@ -81,6 +82,9 @@ export default async function ClinicContentPage() {
               address: profile.clinic_address,
             }}
           />
+        </div>
+        <div id="social" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
+          <SocialForm initial={{ facebook: profile.social_facebook, instagram: profile.social_instagram, youtube: profile.social_youtube }} />
         </div>
         <div id="general-info" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <GeneralInfoForm templates={templates ?? []} />

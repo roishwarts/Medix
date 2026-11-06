@@ -173,3 +173,28 @@ export async function removeClinicVideo(id: string): Promise<{ error?: string }>
   revalidatePath("/journey");
   return {};
 }
+
+const SOCIAL_HOSTS: Record<"facebook" | "instagram" | "youtube", RegExp> = {
+  facebook: /(^|\.)(facebook\.com|fb\.com|fb\.me)$/i,
+  instagram: /(^|\.)instagram\.com$/i,
+  youtube: /(^|\.)(youtube\.com|youtu\.be)$/i,
+};
+
+// Facebook / Instagram / YouTube pages shown to the clinic's patients. Empty clears one.
+export async function saveClinicSocial(facebook: string, instagram: string, youtube: string): Promise<{ error?: string }> {
+  const t = await getT();
+  await requireProfile(["staff", "doctor"]);
+  const values = { facebook: facebook.trim(), instagram: instagram.trim(), youtube: youtube.trim() };
+  for (const [k, v] of Object.entries(values) as ["facebook" | "instagram" | "youtube", string][]) {
+    if (!v) continue;
+    let ok = false;
+    try { const u = new URL(v); ok = u.protocol === "https:" && SOCIAL_HOSTS[k].test(u.hostname); } catch { ok = false; }
+    if (!ok) return { error: t("הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.") };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("save_clinic_social_links", { p_facebook: values.facebook, p_instagram: values.instagram, p_youtube: values.youtube });
+  if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.") };
+  revalidatePath("/clinic/content");
+  revalidatePath("/journey");
+  return {};
+}

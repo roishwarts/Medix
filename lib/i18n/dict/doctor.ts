@@ -130,6 +130,13 @@ export const en: Record<string, string> = {
   "ניתוחים בשבוע הקרוב": "Surgeries in the coming week",
   "לא מוכן": "Not ready",
   "נגישות והגדרות": "Accessibility and settings",
+  "פייסבוק": "Facebook",
+  "אינסטגרם": "Instagram",
+  "יוטיוב": "YouTube",
+  "הרשתות החברתיות של המרפאה": "The clinic's social pages",
+  "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "The link is not valid. Enter the https address of the page itself.",
+  "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "Saving failed. Make sure supabase/patch-social-links.sql was run.",
+  "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "Shown to patients at the bottom of the journey page. Can be left empty.",
 };
 
 export const ru: Record<string, string> = {
@@ -262,6 +269,13 @@ export const ru: Record<string, string> = {
   "ניתוחים בשבוע הקרוב": "Операции на ближайшей неделе",
   "לא מוכן": "Не готов",
   "נגישות והגדרות": "Доступность и настройки",
+  "פייסבוק": "Facebook",
+  "אינסטגרם": "Instagram",
+  "יוטיוב": "YouTube",
+  "הרשתות החברתיות של המרפאה": "Страницы клиники в соцсетях",
+  "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "Недопустимая ссылка. Введите https-адрес самой страницы.",
+  "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "Не удалось сохранить. Убедитесь, что выполнен supabase/patch-social-links.sql.",
+  "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "Показываются пациентам внизу страницы маршрута. Можно оставить пустым.",
 };
 
 export const ar: Record<string, string> = {
@@ -394,4 +408,11 @@ export const ar: Record<string, string> = {
   "ניתוחים בשבוע הקרוב": "عمليات في الأسبوع القادم",
   "לא מוכן": "غير جاهز",
   "נגישות והגדרות": "إمكانية الوصول والإعدادات",
+  "פייסבוק": "فيسبوك",
+  "אינסטגרם": "إنستغرام",
+  "יוטיוב": "يوتيوب",
+  "הרשתות החברתיות של המרפאה": "صفحات العيادة على مواقع التواصل",
+  "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "الرابط غير صالح. أدخل عنوان https للصفحة نفسها.",
+  "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "فشل الحفظ. تأكد من تشغيل supabase/patch-social-links.sql.",
+  "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "تظهر للمرضى أسفل صفحة المسار. يمكن تركها فارغة.",
 };

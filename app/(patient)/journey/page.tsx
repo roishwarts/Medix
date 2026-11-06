@@ -8,6 +8,7 @@ import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { Icon, ReadinessBar } from "@/components/ui";
+import { SocialLinks } from "@/components/social-links";
 import { NavigateButtons } from "@/components/navigate-buttons";
 import { resolvePlace } from "@/lib/location";
 import { getClinicLinks, getClinicVideos, signClinicVideos } from "@/lib/clinic-content";
@@ -256,6 +257,8 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
 
       {/* TIMELINE: next to the cards on a wide screen; on a phone it has its own screen (see /journey/steps) */}
       <JourneyTimeline journey={journey} t={t} lang={lang} className="mt-10 hidden min-w-0 lg:col-span-3 lg:mt-0 lg:block" />
+
+      <SocialLinks facebook={profile.social_facebook} instagram={profile.social_instagram} youtube={profile.social_youtube} className="mt-10 lg:col-span-5" />
     </main>
   );
 }
