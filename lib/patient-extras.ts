@@ -1,11 +1,11 @@
 import { createClient } from "./supabase/server";
-import { STAGES, type Stage } from "./journey";
+import { MANUAL_STAGES, type Stage } from "./journey";
 import type { Lang } from "./prefs";
 
 export type PatientExtras = { lang: Lang; stage: Stage | null };
 const LANGS_OK: Lang[] = ["he", "en", "ru", "ar"];
 const toLang = (v: unknown): Lang => (LANGS_OK.includes(v as Lang) ? (v as Lang) : "he");
-const toStage = (v: unknown): Stage | null => (STAGES.includes(v as Stage) ? (v as Stage) : null);
+const toStage = (v: unknown): Stage | null => (MANUAL_STAGES.includes(v as Stage) ? (v as Stage) : null);
 
 // Language and manual status of every patient the caller can see. Read on its own so that everything
 // else keeps working before supabase/patch-lang-stage.sql has been run.

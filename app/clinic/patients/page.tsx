@@ -41,6 +41,19 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
     step: j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : t("ההכנות הושלמו"),
     procedureLabel: j.procedure || j.template_name,
   }));
+  // Patients with no journey at all are "למעקב": under observation, no surgery date yet.
+  const withJourney = new Set(allUnfiltered.map((j) => j.patient_id));
+  const followUps = sp.template ? [] : await fetchAllRows<{ id: string; full_name: string }>((from, to) =>
+    supabase.from("patients").select("id, full_name").range(from, to),
+  ).then((all) => all.filter((p) => !withJourney.has(p.id)));
+  for (const p of followUps) {
+    rows.push({
+      id: `f-${p.id}`, href: `/clinic/patients/follow/${p.id}`, followUp: true, name: p.full_name, procedure: null, surgeryDate: "", daysToSurgery: -1,
+      readiness: 0, readinessState: "in_progress", stage: "followup",
+      hospital: placeOf.get(p.id)?.hospital ?? null, company: placeOf.get(p.id)?.company ?? null,
+      step: t("ללא ניתוח כרגע"), procedureLabel: "",
+    });
+  }
   const procedures = [...new Set(allUnfiltered.map((j) => j.procedure || j.template_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
 
   return (

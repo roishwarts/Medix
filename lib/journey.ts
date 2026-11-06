@@ -160,13 +160,16 @@ export function summarize(rows: TaskRow[], surgeryDate: string, today = getToday
 }
 
 // Where a patient is on the way, worked out from the journey itself.
-export type Stage = "decided" | "preparing" | "ready" | "recovering" | "finished" | "cancelled";
-export const STAGES: Stage[] = ["decided", "preparing", "ready", "recovering", "finished", "cancelled"];
+// "followup" is a patient with no surgery journey yet (kept under observation, the date is not known).
+export type Stage = "followup" | "decided" | "preparing" | "ready" | "recovering" | "finished" | "cancelled";
+export const STAGES: Stage[] = ["followup", "decided", "preparing", "ready", "recovering", "finished", "cancelled"];
+// The stages that can be set by hand: a follow-up patient is simply one without a journey.
+export const MANUAL_STAGES: Stage[] = STAGES.filter((s) => s !== "followup");
 export const STAGE_LABEL: Record<Stage, string> = {
-  decided: "הוחלט", preparing: "בהכנה", ready: "מוכן", recovering: "בהחלמה", finished: "הסתיים", cancelled: "בוטל",
+  followup: "למעקב", decided: "הוחלט", preparing: "בהכנה", ready: "מוכן", recovering: "בהחלמה", finished: "הסתיים", cancelled: "בוטל",
 };
 export const STAGE_PILL: Record<Stage, string> = {
-  decided: "pill-neutral", preparing: "pill-info", ready: "pill-ok", recovering: "pill-warn", finished: "pill-neutral", cancelled: "pill-bad",
+  followup: "pill-info", decided: "pill-neutral", preparing: "pill-info", ready: "pill-ok", recovering: "pill-warn", finished: "pill-neutral", cancelled: "pill-bad",
 };
 // Active = still on the journey. Finished and cancelled patients stay in the system but are listed apart.
 export const isActiveStage = (s: Stage) => s !== "finished" && s !== "cancelled";
