@@ -189,7 +189,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
         <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
         <Kpi className="max-lg:hidden" href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים בשבוע הקרוב")} value={String(thisWeek.length)} />
+        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים השבוע")} value={String(thisWeek.length)} />
         <Kpi className="max-lg:hidden" href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("מוכנים לניתוח")} value={String(soonReady)} tone={soon.length === 0 ? undefined : soonReady === soon.length ? "ok" : "warn"} />
       </section>
 
