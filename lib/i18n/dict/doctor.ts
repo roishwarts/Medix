@@ -137,6 +137,9 @@ export const en: Record<string, string> = {
   "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "The link is not valid. Enter the https address of the page itself.",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "Saving failed. Make sure supabase/patch-social-links.sql was run.",
   "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "Shown to patients at the bottom of the journey page. Can be left empty.",
+  "חודש קודם": "Previous month",
+  "חודש הבא": "Next month",
+  "הבא בתור": "Up next",
 };
 
 export const ru: Record<string, string> = {
@@ -276,6 +279,9 @@ export const ru: Record<string, string> = {
   "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "Недопустимая ссылка. Введите https-адрес самой страницы.",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "Не удалось сохранить. Убедитесь, что выполнен supabase/patch-social-links.sql.",
   "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "Показываются пациентам внизу страницы маршрута. Можно оставить пустым.",
+  "חודש קודם": "Предыдущий месяц",
+  "חודש הבא": "Следующий месяц",
+  "הבא בתור": "Ближайшее",
 };
 
 export const ar: Record<string, string> = {
@@ -415,4 +421,7 @@ export const ar: Record<string, string> = {
   "הקישור אינו תקין. יש להזין כתובת https של הדף עצמו.": "الرابط غير صالح. أدخل عنوان https للصفحة نفسها.",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-social-links.sql.": "فشل الحفظ. تأكد من تشغيل supabase/patch-social-links.sql.",
   "מוצגות למטופלים בתחתית עמוד המסלול. אפשר להשאיר ריק.": "تظهر للمرضى أسفل صفحة المسار. يمكن تركها فارغة.",
+  "חודש קודם": "الشهر السابق",
+  "חודש הבא": "الشهر التالي",
+  "הבא בתור": "القادم",
 };
