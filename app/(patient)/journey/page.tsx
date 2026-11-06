@@ -16,7 +16,7 @@ import { getClinicLinks, getClinicVideos, signClinicVideos } from "@/lib/clinic-
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage({ searchParams }: { searchParams: Promise<{ j?: string }> }) {
-  const [t, lang, profile, journeys, links, videos, sp] = await Promise.all([
+  const [t, lang, profile, journeys, allLinks, videos, sp] = await Promise.all([
     getT(),
     getLang(),
     requireProfile(["patient", "caregiver"]),
@@ -25,6 +25,16 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
     getClinicVideos(),
     searchParams,
   ]);
+  // Facebook / Instagram / YouTube have their own round buttons (below), so they are not repeated as links.
+  const socialHost = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+  const links = allLinks.filter((l) => {
+    const h = socialHost(l.url);
+    if (/(^|\.)facebook\.com$/.test(h)) return !profile.social_facebook;
+    if (/(^|\.)instagram\.com$/.test(h)) return !profile.social_instagram;
+    if (/(^|\.)(youtube\.com|youtu\.be)$/.test(h)) return !profile.social_youtube;
+    return true;
+  });
+
   if (journeys.length === 0) {
     return <p className="py-20 text-center text-muted">{t("עדיין לא הוגדר עבורך מסלול. פנה/י למרפאה.")}</p>;
   }
