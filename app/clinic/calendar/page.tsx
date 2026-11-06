@@ -17,7 +17,7 @@ export default async function ClinicCalendarPage({
   const [t, lang] = await Promise.all([getT(), getLang()]);
   const { view, d } = parseCalParams(sp);
   const notReady = sp.notReady === "1";
-  const all = await loadJourneys();
+  const all = (await loadJourneys()).filter((j) => !j.cancelled_at);
   const journeys = notReady ? all.filter((j) => j.summary.readiness < 100) : all;
 
   const toggle = new URLSearchParams({ view, d });

@@ -30,18 +30,25 @@ function endStamp(dateIso: string, time: string): string {
 }
 
 function foldLine(line: string): string {
-  // RFC 5545 §3.1: lines over 75 octets are folded with CRLF + a leading space.
-  if (line.length <= 75) return line;
-  let out = line.slice(0, 75);
-  let rest = line.slice(75);
-  while (rest.length > 0) {
-    out += "\r\n " + rest.slice(0, 74);
-    rest = rest.slice(74);
+  // RFC 5545 §3.1: lines over 75 octets are folded with CRLF + a leading space (never inside a character).
+  const enc = new TextEncoder();
+  if (enc.encode(line).length <= 75) return line;
+  const parts: string[] = [];
+  let cur = "";
+  let size = 0;
+  for (const ch of line) {
+    const n = enc.encode(ch).length;
+    const max = parts.length === 0 ? 75 : 74;
+    if (size + n > max) { parts.push(cur); cur = ""; size = 0; }
+    cur += ch; size += n;
   }
-  return out;
+  parts.push(cur);
+  return parts.join("\r\n ");
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  // ?e=<id> exports just that event (the surgery day "s-<journey id>", or one task), so each item can have its own add button.
+  const only = new URL(req.url).searchParams.get("e");
   const t = await getT();
   const profile = await requireProfile(["patient", "caregiver"]);
   const journeys = await loadJourneys();
@@ -58,7 +65,7 @@ export async function GET() {
   // More than one journey (another surgery, past or planned) all go on the same exported calendar.
   for (const journey of journeys) {
     // Surgery day: all-day event.
-    lines.push(
+    if (!only || only === `s-${journey.id}`) lines.push(
       "BEGIN:VEVENT",
       `UID:surgery-${journey.id}@calendar`,
       `DTSTAMP:${now}`,
@@ -69,7 +76,16 @@ export async function GET() {
 
     // Every appointment-kind task (pre- or post-op): a doctor visit, a test with a set time, etc.
     for (const task of journey.summary.tasks) {
-      if (task.kind !== "appointment") continue;
+      const target = only === task.id;
+      if (task.kind !== "appointment" && !target) continue;
+      if (only && !target) continue;
+      if (task.kind !== "appointment") {
+        // A task deadline (only exported on request): an all-day event on its due date.
+        lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`, `DTSTART;VALUE=DATE:${dateStamp(task.dueDate)}`, `SUMMARY:${esc(task.title)}`);
+        if (task.description) lines.push(`DESCRIPTION:${esc(task.description)}`);
+        lines.push("END:VEVENT");
+        continue;
+      }
       const place = resolvePlace(task.location, profile.clinic_address);
       lines.push("BEGIN:VEVENT", `UID:task-${task.id}@calendar`, `DTSTAMP:${now}`);
       // Floating local time (no time zone): the same clock time on any phone, with no time-zone definition needed.
@@ -85,6 +101,9 @@ export async function GET() {
       lines.push("END:VEVENT");
     }
   }
+
+  // An id that matches nothing is an error, not an empty calendar.
+  if (only && !lines.includes("BEGIN:VEVENT")) return new Response("Not found", { status: 404 });
 
   lines.push("END:VCALENDAR");
   const body = lines.map(foldLine).join("\r\n") + "\r\n";

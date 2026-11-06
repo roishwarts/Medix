@@ -79,7 +79,7 @@ export function blockerLabel(b: Blocker, t: (s: string, p?: Record<string, strin
     case "overdue": return t("{title} – באיחור ({owner})", { title, owner: ownerLabel(b.task.owner, t) });
     case "rejected": return t("{title} – הוחזר לתיקון", { title });
     case "review": return t("{title} – ממתין לבדיקה", { title });
-    case "clinic": return t("{title} – ממתין ל{owner}", { title, owner: ownerLabel(b.task.owner, t) });
+    case "clinic": return t("{title} – ממתין ל{owner}", { title, owner: ownerLabel(b.task.owner, t).replace(/^ה/, "") });
     default: return t("{title} – ממתין למטופל", { title });
   }
 }
@@ -136,7 +136,7 @@ export function summarize(rows: TaskRow[], surgeryDate: string, today = getToday
     } else if (t.state === "review") {
       blockers.push({ task: t, kind: "review", label: `${t.title} – ממתין לבדיקה` });
     } else if (t.owner !== "patient") {
-      blockers.push({ task: t, kind: "clinic", label: `${t.title} – ממתין ל${OWNER_LABEL[t.owner]}` });
+      blockers.push({ task: t, kind: "clinic", label: `${t.title} – ממתין ל${OWNER_LABEL[t.owner].replace(/^ה/, "")}` });
     } else {
       blockers.push({ task: t, kind: "todo", label: `${t.title} – ממתין למטופל` });
     }

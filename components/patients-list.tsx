@@ -6,7 +6,6 @@ import { useT, useLang } from "@/components/i18n-provider";
 import { Icon, ReadinessBar } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { STAGES, STAGE_LABEL, STAGE_PILL, isActiveStage, type Stage } from "@/lib/journey";
-import { windowLabel } from "@/lib/windows";
 import type { Readiness } from "@/lib/journey";
 
 export type PatientRow = {
@@ -14,16 +13,14 @@ export type PatientRow = {
   stage: Stage; hospital: string | null; company: string | null; step: string; procedureLabel: string;
 };
 type StageFilter = Stage | "active" | "all";
-type ReadyFilter = "all" | Readiness;
 type SortKey = "name" | "surgery" | "readiness";
-const PRESETS = [7, 14, 21, 30, 60, 90];
 
 // The patients table with its filters. Filtering happens on the page itself as the user types or chooses,
 // and the address is updated so the filtered view can still be shared or reloaded.
 export function PatientsList({ rows, hospitals, procedures, initial, title, action }: {
   title: string; action: React.ReactNode;
   rows: PatientRow[]; hospitals: string[]; procedures: string[];
-  initial: { q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter; ready: ReadyFilter };
+  initial: { q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter };
 }) {
   const t = useT();
   const lang = useLang();
@@ -31,10 +28,9 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   const [searchOpen, setSearchOpen] = useState(!!initial.q);
   const [hospital, setHospital] = useState(initial.hospital);
   const [procedure, setProcedure] = useState(initial.procedure);
-  const [days, setDays] = useState<number | null>(initial.days);
-  const [custom, setCustom] = useState(initial.days !== null && !PRESETS.includes(initial.days));
   const [stage, setStage] = useState<StageFilter>(initial.stage);
-  const [ready, setReady] = useState<ReadyFilter>(initial.ready);
+  // Set by the dashboard numbers ("surgeries in the next N days"); shown as a removable chip, no extra control.
+  const [days, setDays] = useState<number | null>(initial.days);
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
 
   // Clicking a sortable header cycles ascending → descending → back to the default (surgery-date) order.
@@ -44,19 +40,14 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   const ariaSort = (key: SortKey): React.AriaAttributes["aria-sort"] =>
     sort?.key !== key ? "none" : sort.dir === 1 ? "ascending" : "descending";
 
-  // The extra filters (date, readiness) live in a panel that is open only when one of them is in use.
-  const extraActive = (days !== null ? 1 : 0) + (ready !== "all" ? 1 : 0);
-  const [moreOpen, setMoreOpen] = useState(extraActive > 0);
-
-  const sync = (next: Partial<{ q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter; ready: ReadyFilter }>) => {
-    const v = { q, hospital, procedure, days, stage, ready, ...next };
+  const sync = (next: Partial<{ q: string; hospital: string; procedure: string; days: number | null; stage: StageFilter }>) => {
+    const v = { q, hospital, procedure, days, stage, ...next };
     const p = new URLSearchParams();
     if (v.q.trim()) p.set("q", v.q.trim());
     if (v.hospital) p.set("hospital", v.hospital);
     if (v.procedure) p.set("procedure", v.procedure);
     if (v.days) p.set("days", String(v.days));
     if (v.stage !== "active") p.set("stage", v.stage);
-    if (v.ready !== "all") p.set("ready", v.ready);
     const query = p.toString();
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   };
@@ -66,11 +57,10 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
   // still matches "דני כהן".
   const needle = q.trim().replace(/\s+/g, " ").toLowerCase();
   const base = useMemo(() => rows
-    .filter((r) => (days ? r.daysToSurgery >= 0 && r.daysToSurgery <= days : true))
     .filter((r) => (hospital ? r.hospital === hospital : true))
     .filter((r) => (procedure ? r.procedureLabel === procedure : true))
-    .filter((r) => (ready === "all" ? true : r.readinessState === ready))
-    .filter((r) => (needle ? r.name.replace(/\s+/g, " ").toLowerCase().includes(needle) : true)), [rows, days, hospital, procedure, ready, needle]);
+    .filter((r) => (days ? r.daysToSurgery >= 0 && r.daysToSurgery <= days : true))
+    .filter((r) => (needle ? r.name.replace(/\s+/g, " ").toLowerCase().includes(needle) : true)), [rows, days, hospital, procedure, needle]);
   // Memoized so toggling unrelated state (search box open/closed, "more filters" panel, …) doesn't
   // force the sort below to redo its work on every render.
   const shown = useMemo(() => base.filter((r) => inStage(r.stage, stage)), [base, stage]);
@@ -98,10 +88,10 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
 
   const sel = "field !min-h-11 w-full text-sm sm:!min-h-10 sm:w-auto sm:max-w-[13rem]";
   const stageOptions: [StageFilter, string][] = [["active", t("פעילים")], ...STAGES.map((s) => [s, t(STAGE_LABEL[s])] as [StageFilter, string]), ["all", t("הכול")]];
-  const hasFilters = !!q.trim() || !!hospital || !!procedure || stage !== "active" || extraActive > 0;
+  const hasFilters = !!q.trim() || !!hospital || !!procedure || stage !== "active" || !!days || !!sort;
   const clear = () => {
-    setQ(""); setHospital(""); setProcedure(""); setDays(null); setCustom(false); setStage("active"); setReady("all"); setSort(null);
-    setSearchOpen(false); setMoreOpen(false);
+    setQ(""); setHospital(""); setProcedure(""); setDays(null); setStage("active"); setSort(null);
+    setSearchOpen(false);
     window.history.replaceState(null, "", window.location.pathname);
   };
 
@@ -131,7 +121,7 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
         </div>
       )}
 
-      {/* The four filters: hospital, procedure, status and "more" (date, readiness). Two by two on a phone. */}
+      {/* The filters: hospital, procedure, status — and on a phone the sort too, so they sit two by two. */}
       <div role="group" aria-label={t("סינון מטופלים")} className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
         <select aria-label={t("בית חולים")} className={sel} value={hospital} onChange={(e) => { setHospital(e.target.value); sync({ hospital: e.target.value }); }}>
           <option value="">{t("כל בתי החולים")}</option>
@@ -144,78 +134,30 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
         <select aria-label={t("סטטוס המטופל")} className={sel} value={stage} onChange={(e) => { const s = e.target.value as StageFilter; setStage(s); sync({ stage: s }); }}>
           {stageOptions.map(([key, label]) => <option key={key} value={key}>{label} ({count(key)})</option>)}
         </select>
-        <button
-          type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)}
-          className={`btn min-h-11 w-full gap-2 text-sm sm:min-h-10 sm:w-auto ${extraActive > 0 ? "border-accent text-accent" : ""}`}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
-            <path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" />
-          </svg>
-          {t("סינון נוסף")}
-          {extraActive > 0 && <span className="num grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs leading-5 text-white">{extraActive}</span>}
-        </button>
-        {hasFilters && (
-          <button type="button" onClick={clear} className="btn btn-quiet col-span-2 min-h-11 text-sm sm:col-span-1 sm:min-h-10">{t("ניקוי סינון")}</button>
-        )}
-      </div>
-      {moreOpen && (
-        <div className="card mt-2 grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
-          <div>
-            <label className="lbl" htmlFor="pl-days">{t("מועד הניתוח")}</label>
-            <select
-              id="pl-days" className="field !min-h-11 text-sm sm:!min-h-10" value={custom ? "custom" : days ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "custom") { setCustom(true); return; }
-                setCustom(false); const d = v ? Number(v) : null; setDays(d); sync({ days: d });
-              }}
-            >
-              <option value="">{t("כל הניתוחים")}</option>
-              {PRESETS.map((d) => <option key={d} value={d}>{windowLabel(d, t)}</option>)}
-              <option value="custom">{t("מספר ימים אחר…")}</option>
-            </select>
-            {custom && (
-              <input
-                type="number" inputMode="numeric" min={1} max={3650} value={days ?? ""} aria-label={t("ניתוח בעוד (ימים)")} placeholder={t("ימים")}
-                onChange={(e) => { const d = e.target.value ? Math.max(1, Math.floor(Number(e.target.value))) : null; setDays(d); sync({ days: d }); }}
-                className="field num mt-2 !min-h-11 text-sm sm:!min-h-10"
-              />
-            )}
-          </div>
-          <div>
-            <label className="lbl" htmlFor="pl-ready">{t("מוכנות")}</label>
-            <select id="pl-ready" className="field !min-h-11 text-sm sm:!min-h-10" value={ready} onChange={(e) => { const r = e.target.value as ReadyFilter; setReady(r); sync({ ready: r }); }}>
-              <option value="all">{t("כל רמות המוכנות")}</option>
-              <option value="ready">{t("מוכנים")}</option>
-              <option value="in_progress">{t("בהכנה")}</option>
-              <option value="not_ready">{t("לא מוכנים")}</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
-
-      {/* A phone screen can't fit the table's extra columns even hidden behind a scrollbar, so it
-          gets its own compact card per patient with every field visible, instead of a table that
-          quietly drops hospital/company/current-step until the screen is wider. The table's
-          sortable headers aren't shown here, so the same sort state gets a plain select instead. */}
-      <div className="mt-5 flex justify-end sm:hidden">
         <select
-          aria-label={t("מיון")} className="field min-h-11 w-auto text-sm"
+          aria-label={t("מיון")} className={`${sel} sm:hidden`}
           value={sort ? `${sort.key}:${sort.dir}` : ""}
           onChange={(e) => {
             const v = e.target.value;
             setSort(v ? { key: v.split(":")[0] as SortKey, dir: Number(v.split(":")[1]) as 1 | -1 } : null);
           }}
         >
-          <option value="">{t("לפי תאריך ניתוח (ברירת מחדל)")}</option>
+          <option value="">{t("לפי תאריך ניתוח")}</option>
           <option value="name:1">{t("שם (א-ת)")}</option>
           <option value="readiness:1">{t("מוכנות (נמוך לגבוה)")}</option>
           <option value="readiness:-1">{t("מוכנות (גבוה לנמוך)")}</option>
         </select>
+        {hasFilters && (
+          <button type="button" onClick={clear} className="btn btn-quiet col-span-2 min-h-11 text-sm sm:col-span-1 sm:min-h-10">{t("ניקוי סינון")}</button>
+        )}
       </div>
-      <div className="mt-2 space-y-2 sm:hidden">
+      <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
+
+      {/* A phone screen can't fit the table's extra columns even hidden behind a scrollbar, so it
+          gets its own compact card per patient with every field visible, instead of a table that
+          quietly drops hospital/company/current-step until the screen is wider. The table's
+          sortable headers aren't shown here, so the same sort state is a select in the filters above. */}
+      <div className="mt-4 space-y-2 sm:hidden">
         {sorted.map((r) => (
           <Link key={r.id} href={`/clinic/patients/${r.id}`} className="card block min-h-11 p-3.5">
             <div className="flex items-baseline justify-between gap-3">
