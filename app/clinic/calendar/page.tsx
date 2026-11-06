@@ -38,8 +38,12 @@ export default async function ClinicCalendarPage({
 
   const sorted = (list: CalEvent[]) => [...list].sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")));
   const next = sorted(events.filter((e) => e.kind !== "deadline" && e.date >= t0))[0];
-  // Surgeries and appointments first (what the day is built around), then the deadlines, soonest first.
-  const upcoming = sorted(events.filter((e) => e.date >= t0)).sort((a, b) => Number(a.kind === "deadline") - Number(b.kind === "deadline")).slice(0, 6);
+  // In date order. On the same day: surgery, then appointments (by time), then deadlines.
+  const rank = { surgery: 0, appointment: 1, deadline: 2 } as const;
+  const upcoming = events
+    .filter((e) => e.date >= t0)
+    .sort((a, b) => a.date.localeCompare(b.date) || rank[a.kind] - rank[b.kind] || (a.time ?? "99:99").localeCompare(b.time ?? "99:99"))
+    .slice(0, 6);
   const selected = sp.sel && /^\d{4}-\d{2}-\d{2}$/.test(sp.sel) ? byDate(events).get(sp.sel) ?? [] : null;
 
   return (
