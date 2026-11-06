@@ -23,6 +23,7 @@ export type Profile = {
   brand_dark: string | null;
   brand_gold: string | null;
   onboarded_at: string | null;
+  privacy_consent_at: string | null;
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
@@ -48,17 +49,25 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const userId = await getAuthUserId();
   if (!userId) return null;
   const supabase = await createClient();
-  // onboarded_at (patch-onboarding.sql) may not exist yet: fall back to a select without it rather
-  // than failing the whole profile fetch, which would sign everyone out of every page.
+  // onboarded_at (patch-onboarding.sql) and privacy_consent_at (patch-privacy-consent.sql) may not
+  // exist yet: fall back to narrower selects rather than failing the whole profile fetch, which
+  // would sign everyone out of every page.
   let { data, error } = await supabase
     .from("profiles")
-    .select("id, clinic_id, role, full_name, full_name_en, disabled, onboarded_at, clinics(*)")
+    .select("id, clinic_id, role, full_name, full_name_en, disabled, onboarded_at, privacy_consent_at, clinics(*)")
     .eq("id", userId)
     .maybeSingle();
   if (error) {
-    ({ data } = await supabase
+    ({ data, error } = await supabase
       .from("profiles")
       // full_name_en (patch-name-translations.sql) may not exist yet.
+      .select("id, clinic_id, role, full_name, disabled, onboarded_at, privacy_consent_at, clinics(*)")
+      .eq("id", userId)
+      .maybeSingle());
+  }
+  if (error) {
+    ({ data, error } = await supabase
+      .from("profiles")
       .select("id, clinic_id, role, full_name, disabled, onboarded_at, clinics(*)")
       .eq("id", userId)
       .maybeSingle());
@@ -111,6 +120,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     brand_dark: hexOrNull(clinic?.brand_dark),
     brand_gold: hexOrNull(clinic?.brand_gold),
     onboarded_at: (data as { onboarded_at?: string | null }).onboarded_at ?? null,
+    privacy_consent_at: (data as { privacy_consent_at?: string | null }).privacy_consent_at ?? null,
   };
 });
 

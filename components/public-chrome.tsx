@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { AccessMenu } from "@/components/access-menu";
 
 // On the sign-in and invitation pages (no top bar) the accessibility button floats in the corner.
-const PUBLIC = ["/login", "/forgot", "/join/", "/invite/", "/reset/", "/accessibility"];
+const PUBLIC = ["/login", "/forgot", "/join/", "/invite/", "/reset/", "/accessibility", "/privacy"];
 
 export function PublicChrome() {
   const path = usePathname();
