@@ -14,14 +14,11 @@ export default async function NewPatientPage() {
       <p className="eyebrow">{t("מטופלים")}</p>
       <h1 className="display mt-1 text-4xl">{t("מטופל חדש")}</h1>
       <p className="mt-2 text-muted">{t("אחרי היצירה תוכל לשלוח למטופל קישור אישי, והוא יצור בעצמו משתמש וסיסמה.")}</p>
-      {templates && templates.length > 0 ? (
-        <NewPatientForm templates={templates} hospitals={options.hospitals} companies={options.companies} />
-      ) : (
-        <div className="card mt-6 px-4 py-12 text-center">
-          <p className="font-medium">{t("עדיין אין תבניות הכנה לניתוח")}</p>
-          <p className="mt-1 text-muted">{t("צרו תבנית אחת לפחות (רשימת המשימות שהמטופל יראה) לפני הוספת מטופלים.")}</p>
-          <Link href="/clinic/templates/new" className="btn btn-primary mt-4">{t("תבנית חדשה מאפס")}</Link>
-        </div>
+      <NewPatientForm templates={templates ?? []} hospitals={options.hospitals} companies={options.companies} />
+      {(!templates || templates.length === 0) && (
+        <p className="mt-4 text-sm text-muted">
+          {t("עדיין אין תבניות הכנה לניתוח. אפשר להוסיף מטופל למעקב, או ליצור קודם")} <Link href="/clinic/templates/new" className="text-accent underline-offset-4 hover:underline">{t("תבנית חדשה מאפס")}</Link>.
+        </p>
       )}
     </main>
   );

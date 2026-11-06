@@ -15,6 +15,8 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
   // Server errors make React reset the form; remember what was typed so it survives.
   const [kept, setKept] = useState<Record<string, string>>({});
   const [attempt, setAttempt] = useState(0);
+  // Surgery (template + date) or follow-up (just the person; the surgery journey can be started later).
+  const [kind, setKind] = useState<"surgery" | "followup">(templates.length > 0 ? "surgery" : "followup");
   const doneRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => { if (created) doneRef.current?.focus(); }, [created]);
@@ -48,7 +50,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href={`/clinic/patients/${created.journeyId}`} className="btn btn-primary">{t("מעבר לכרטיס המטופל")}</Link>
+          <Link href={created.journeyId ? `/clinic/patients/${created.journeyId}` : `/clinic/patients/follow/${created.patientId}`} className="btn btn-primary">{t("מעבר לכרטיס המטופל")}</Link>
           <a href="/clinic/patients/new" className="btn">{t("מטופל נוסף")}</a>
         </div>
         <p className="text-sm text-muted">{t("בכרטיס המטופל אפשר להוסיף בני משפחה ולשלוח להם הזמנה.")}</p>
@@ -72,6 +74,19 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
           <input id="email" name="email" type="email" className="field" dir="ltr" inputMode="email" autoComplete="off" defaultValue={v("email")} aria-describedby={describedBy} />
         </div>
       </div>
+      <fieldset>
+        <legend className="lbl">{t("סוג המטופל")}</legend>
+        <div className="grid grid-cols-2 gap-2 sm:max-w-sm">
+          {([["surgery", t("לניתוח")], ["followup", t("למעקב")]] as const).map(([k, label]) => (
+            <label key={k} className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border px-3 text-sm font-medium ${kind === k ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface"}`}>
+              <input type="radio" name="kind" value={k} checked={kind === k} disabled={k === "surgery" && templates.length === 0} onChange={() => setKind(k)} className="sr-only" />
+              {label}
+            </label>
+          ))}
+        </div>
+        {kind === "followup" && <p className="mt-1.5 text-xs text-muted">{t("מטופל למעקב נשמר ללא ניתוח ותאריך. כשיהיה ניתוח, מתחילים לו מסלול מכרטיס המטופל.")}</p>}
+      </fieldset>
+      {kind === "surgery" && (
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="template_id" className="lbl">{t("תבנית")}</label>
@@ -84,6 +99,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
           <input id="surgery_date" name="surgery_date" type="date" className="field" defaultValue={v("surgery_date")} aria-describedby={describedBy} required />
         </div>
       </div>
+      )}
       <div className="max-w-xs">
         <label htmlFor="lang" className="lbl">{t("שפת ההודעות והאפליקציה")}</label>
         <select key={`l${attempt}`} id="lang" name="lang" className="field" defaultValue={v("lang") || "he"}>

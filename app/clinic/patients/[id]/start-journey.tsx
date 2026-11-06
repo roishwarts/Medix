@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { startAdditionalJourney } from "../actions";
 
-export function StartJourney({ patientId, templates }: { patientId: string; templates: { id: string; name: string }[] }) {
+export function StartJourney({ patientId, templates, first }: { patientId: string; templates: { id: string; name: string }[]; first?: boolean }) {
   const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -19,15 +19,15 @@ export function StartJourney({ patientId, templates }: { patientId: string; temp
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">
-        {t("התחלת מסלול נוסף")}
+        {first ? t("התחלת מסלול ניתוח") : t("התחלת מסלול נוסף")}
       </button>
     );
   }
 
   return (
     <div className="card mt-2 space-y-3 p-4">
-      <p className="font-medium">{t("מסלול נוסף למטופל הזה")}</p>
-      <p className="text-sm text-muted">{t("לדוגמה: ניתוח בברך השנייה, או ניתוח חוזר — המטופל יראה את שני המסלולים בנפרד.")}</p>
+      <p className="font-medium">{first ? t("מסלול ניתוח למטופל הזה") : t("מסלול נוסף למטופל הזה")}</p>
+      {!first && <p className="text-sm text-muted">{t("לדוגמה: ניתוח בברך השנייה, או ניתוח חוזר — המטופל יראה את שני המסלולים בנפרד.")}</p>}
       <div>
         <label htmlFor="new-journey-template" className="lbl">{t("תבנית")}</label>
         <select id="new-journey-template" className="field" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
