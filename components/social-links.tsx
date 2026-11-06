@@ -7,6 +7,7 @@ const ICONS = {
 } as const;
 
 // The clinic's social pages: round dark buttons with gold icons (the clinic's own bar colours when set).
+// A row at the bottom of the page on a phone; on a wide screen a column floating on the left edge.
 export async function SocialLinks({ facebook, instagram, youtube, className = "" }: { facebook: string | null; instagram: string | null; youtube: string | null; className?: string }) {
   const t = await getT();
   const links = ([
@@ -16,13 +17,13 @@ export async function SocialLinks({ facebook, instagram, youtube, className = ""
   ] as const).filter((l): l is readonly [keyof typeof ICONS, string, string] => !!l[1]);
   if (links.length === 0) return null;
   return (
-    <nav aria-label={t("הרשתות החברתיות של המרפאה")} className={className}>
-      <ul className="flex items-center justify-center gap-3">
+    <nav aria-label={t("הרשתות החברתיות של המרפאה")} className={`${className} md:pointer-events-none md:fixed md:left-4 md:top-1/2 md:z-30 md:mt-0 md:-translate-y-1/2`}>
+      <ul className="flex items-center justify-center gap-3 md:flex-col">
         {links.map(([k, href, label]) => (
           <li key={k}>
             <a
               href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label}
-              className="grid size-14 place-items-center rounded-full border border-white/10 bg-[var(--bar-bg,#2e3440)] text-[var(--bar-on,#f7a801)] shadow-sm transition hover:brightness-110"
+              className="grid size-14 place-items-center md:pointer-events-auto md:size-12 rounded-full border border-white/10 bg-[var(--bar-bg,#2e3440)] text-[var(--bar-on,#f7a801)] shadow-sm transition hover:brightness-110"
             >
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONS[k]}</svg>
             </a>
