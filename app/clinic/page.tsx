@@ -17,7 +17,6 @@ import { fetchAllRows } from "@/lib/supabase/paginate";
 import { ActivityList } from "@/components/activity-list";
 import { toItems, type ActivityRow } from "@/lib/activity";
 import { requireProfile, getClinicName } from "@/lib/auth";
-import { Icon } from "@/components/ui";
 import { loadQuestions } from "@/lib/doctor-questions";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +32,6 @@ function Kpi({ href, label, value, tone, alert, noIcon, className = "" }: { clas
       className={`${className} card block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
       <p className="flex items-start gap-1.5 text-xs text-muted sm:text-sm">
-        {alert && !noIcon && <span className="hidden shrink-0 sm:inline-flex"><Icon name="alert" size={14} /></span>}
         <span>{label}</span>
       </p>
       <p className={`display num mt-1 text-3xl sm:text-4xl ${color}`}>{value}</p>

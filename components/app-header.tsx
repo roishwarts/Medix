@@ -14,9 +14,9 @@ export type NavItem = { href: string; label: string; icon: NavIconName; exact?: 
 // The top bar of every signed-in area: tabs on wide screens. On phones the navigation is a bar at the bottom
 // of the screen, with a settings button that opens a sheet (more pages, accessibility, sign out).
 export function AppHeader({
-  items, brand, logo, logout, languages = true, greeting, home,
+  items, brand, logo, logout, languages = true, greeting, home, phoneSheet = true,
 }: {
-  items: NavItem[]; brand: string; logo?: string | null; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
+  phoneSheet?: boolean; items: NavItem[]; brand: string; logo?: string | null; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
 }) {
   const t = useT();
   const path = usePathname();
@@ -82,7 +82,7 @@ export function AppHeader({
         </ul>
       </nav>
 
-      {open && (
+      {open && phoneSheet && (
         <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("הגדרות")}>
           <button type="button" aria-label={t("סגירה")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
           <div ref={sheet} id="settings-sheet" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-[var(--color-page)] shadow-2xl">

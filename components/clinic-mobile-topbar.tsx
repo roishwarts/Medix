@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useT } from "@/components/i18n-provider";
-import { NavIcon } from "@/components/nav-icons";
 import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
 
 function SearchIcon() {
@@ -23,10 +22,10 @@ export function ClinicMobileTopbar({ brand, logo }: { brand: string; logo: strin
     <header className="fixed inset-x-0 top-0 z-30 flex min-h-14 items-center justify-between gap-2 border-b border-line bg-[var(--color-page)]/90 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:hidden">
       <div className="flex min-w-0 items-center gap-1">
         <button
-          type="button" aria-label={t("תפריט")} aria-haspopup="dialog" className="btn btn-quiet btn-icon size-11 shrink-0"
+          type="button" aria-label={t("תפריט")} aria-haspopup="dialog" aria-controls="side-menu" className="btn btn-quiet btn-icon size-11 shrink-0"
           onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}
         >
-          <NavIcon name="settings" size={22} />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element

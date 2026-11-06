@@ -129,6 +129,7 @@ export const en: Record<string, string> = {
   "עוד {n} משימות": "{n} more tasks",
   "ניתוחים בשבוע הקרוב": "Surgeries in the coming week",
   "לא מוכן": "Not ready",
+  "נגישות והגדרות": "Accessibility and settings",
 };
 
 export const ru: Record<string, string> = {
@@ -260,6 +261,7 @@ export const ru: Record<string, string> = {
   "עוד {n} משימות": "Ещё задач: {n}",
   "ניתוחים בשבוע הקרוב": "Операции на ближайшей неделе",
   "לא מוכן": "Не готов",
+  "נגישות והגדרות": "Доступность и настройки",
 };
 
 export const ar: Record<string, string> = {
@@ -391,4 +393,5 @@ export const ar: Record<string, string> = {
   "עוד {n} משימות": "{n} مهام أخرى",
   "ניתוחים בשבוע הקרוב": "عمليات في الأسبوع القادم",
   "לא מוכן": "غير جاهز",
+  "נגישות והגדרות": "إمكانية الوصول والإعدادات",
 };
