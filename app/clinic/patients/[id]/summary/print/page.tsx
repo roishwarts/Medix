@@ -53,7 +53,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
         </div>
 
         <section>
-          <p className="eyebrow mb-2">{t("פרטי המטופל")}</p>
+          <h2 className="eyebrow mb-2">{t("פרטי המטופל")}</h2>
           <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
             <Field label={t("שם")} value={journey.patient.full_name} />
             <Field label={t("טלפון")} value={journey.patient.phone} />
@@ -66,7 +66,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
         </section>
 
         <section>
-          <p className="eyebrow mb-2">{t("פרטי הניתוח")}</p>
+          <h2 className="eyebrow mb-2">{t("פרטי הניתוח")}</h2>
           <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
             <Field label={t("תאריך ניתוח")} value={formatDateLong(journey.surgery_date, lang)} />
             <Field label={t("פרוצדורה")} value={journey.procedure} />
@@ -74,17 +74,21 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
         </section>
 
         <section>
-          <p className="eyebrow mb-2">{t("סטטוס הכנה לניתוח ({done}/{total})", { done, total: required.length })}</p>
-          <ul className="divide-y divide-line border-y border-line text-sm">
-            {required.map((tk) => (
-              <li key={tk.id} className="flex items-center justify-between gap-3 py-1.5">
-                <span>{tk.title}</span>
-                <span className={tk.state === "done" ? "font-medium text-ok" : "font-medium text-bad"}>
-                  {tk.state === "done" ? t("הושלם") : t("לא הושלם")}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="eyebrow mb-2">{t("סטטוס הכנה לניתוח ({done}/{total})", { done, total: required.length })}</h2>
+          {required.length === 0 ? (
+            <p className="text-muted">{t("אין משימות הכנה חובה במסלול זה.")}</p>
+          ) : (
+            <ul className="divide-y divide-line border-y border-line text-sm">
+              {required.map((tk) => (
+                <li key={tk.id} className="flex items-center justify-between gap-3 py-1.5">
+                  <span>{tk.title}</span>
+                  <span className={tk.state === "done" ? "font-medium text-ok" : "font-medium text-bad"}>
+                    {tk.state === "done" ? t("הושלם") : t("לא הושלם")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           {journey.summary.topBlocker && (
             <p className="mt-2 text-sm text-bad">{t("השלב הפתוח: {blocker}", { blocker: blockerLabel(journey.summary.topBlocker, t) })}</p>
           )}
@@ -92,7 +96,7 @@ export default async function SummaryPrintPage({ params }: { params: Promise<{ i
 
         {(profile.contact_name || profile.contact_phone || profile.emergency_phone) && (
           <section>
-            <p className="eyebrow mb-2">{t("איש קשר / חירום במרפאה")}</p>
+            <h2 className="eyebrow mb-2">{t("איש קשר / חירום במרפאה")}</h2>
             <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 gap-y-2 text-sm">
               <Field label={t("שם ותפקיד")} value={[profile.contact_name, profile.contact_role].filter(Boolean).join(" · ") || null} />
               <Field label={t("טלפון")} value={profile.contact_phone} />

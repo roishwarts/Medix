@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
 import { newTask, type EditorTask } from "./types";
 
@@ -23,8 +23,10 @@ export function TaskEditor({
   const t = useT();
   const [open, setOpen] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
+  const [announce, setAnnounce] = useState("");
   const uid = useId();
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
+  const titleRefs = useRef(new Map<string, HTMLInputElement>());
 
   useEffect(() => {
     if (!focusTask) return;
@@ -36,6 +38,19 @@ export function TaskEditor({
     return () => clearTimeout(tk);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusTask?.id, focusTask?.nonce]);
+
+  // Once the flashed task's panel has actually opened (a render after the effect above),
+  // move focus into it so keyboard/screen-reader users land on the problem field, not just
+  // a visual scroll + red ring they may never see.
+  useEffect(() => {
+    if (!focusTask || open !== focusTask.id) return;
+    titleRefs.current.get(focusTask.id)?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, focusTask?.id, focusTask?.nonce]);
+
+  // Pre-sorted once per `tasks` change instead of re-sorting a fresh copy for every task on
+  // every render (that was O(n² log n) on each keystroke) — each row then just filters itself out.
+  const sortedTasks = useMemo(() => [...tasks].sort((a, b) => b.due_offset_days - a.due_offset_days), [tasks]);
 
   const update = (id: string, patch: Partial<EditorTask>) =>
     onChange(tasks.map((tk) => (tk.id === id ? { ...tk, ...patch } : tk)));
@@ -49,6 +64,9 @@ export function TaskEditor({
     if (j < 0 || j >= next.length) return;
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
+    // No drag-and-drop here — reordering is keyboard-only via these buttons — so screen-reader
+    // users need an explicit announcement of the new position; the visual list alone won't tell them.
+    setAnnounce(t("{title} הועברה למקום {pos} מתוך {total}", { title: next[j].title || t("משימה"), pos: j + 1, total: next.length }));
   };
 
   const add = () => {
@@ -72,7 +90,7 @@ export function TaskEditor({
       <ol className="space-y-2">
         {tasks.map((tk, i) => {
           const isOpen = open === tk.id;
-          const others = [...tasks.filter((o) => o.id !== tk.id)].sort((a, b) => b.due_offset_days - a.due_offset_days);
+          const others = sortedTasks.filter((o) => o.id !== tk.id);
           const after = tk.due_offset_days < 0;
           const isFlashing = flash === tk.id;
           return (
@@ -108,13 +126,18 @@ export function TaskEditor({
                     <label className="lbl" htmlFor={`${uid}-${tk.id}-title`}>{t("כותרת")}</label>
                     <input
                       id={`${uid}-${tk.id}-title`}
+                      ref={(el) => { if (el) titleRefs.current.set(tk.id, el); else titleRefs.current.delete(tk.id); }}
                       autoComplete="off"
                       required
                       aria-invalid={isFlashing && !tk.title.trim()}
+                      aria-describedby={isFlashing && !tk.title.trim() ? `${uid}-${tk.id}-title-err` : undefined}
                       className={`field ${isFlashing && !tk.title.trim() ? "border-bad" : ""}`}
                       value={tk.title}
                       onChange={(e) => update(tk.id, { title: e.target.value })}
                     />
+                    {isFlashing && !tk.title.trim() && (
+                      <p id={`${uid}-${tk.id}-title-err`} role="alert" className="mt-1 text-sm text-bad">{t("לכל משימה צריכה להיות כותרת")}</p>
+                    )}
                   </div>
                   <div>
                     <label className="lbl" htmlFor={`${uid}-${tk.id}-desc`}>{t("הסבר למטופל")}</label>
@@ -205,6 +228,7 @@ export function TaskEditor({
         })}
       </ol>
       <button type="button" className="btn mt-3 w-full" onClick={add}><Icon name="plus" /> {t("הוספת משימה")}</button>
+      <p className="sr-only" role="status">{announce}</p>
     </div>
   );
 }

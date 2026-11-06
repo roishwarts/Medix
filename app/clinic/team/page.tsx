@@ -22,11 +22,16 @@ export default async function TeamPage() {
           <p className="font-medium">{t("עדיין אין אנשי צוות.")}</p>
         </div>
       ) : (
-        <ul className="card mt-6 divide-y divide-line" aria-label={t("אנשי צוות")}>
-          {team.map((m) => (
-            <TeamMemberRow key={m.id} id={m.id} name={m.full_name} nameEn={m.full_name_en} username={m.username} role={m.role} disabled={m.disabled} mfa={m.mfa} isSelf={m.id === profile.id} />
-          ))}
-        </ul>
+        <>
+          <ul className="card mt-6 divide-y divide-line" aria-label={t("אנשי צוות")}>
+            {team.map((m) => (
+              <TeamMemberRow key={m.id} id={m.id} name={m.full_name} nameEn={m.full_name_en} username={m.username} role={m.role} disabled={m.disabled} mfa={m.mfa} isSelf={m.id === profile.id} />
+            ))}
+          </ul>
+          {team.length === 1 && team[0].id === profile.id && (
+            <p className="mt-3 text-sm text-muted">{t("עדיין לא הוספת אנשי צוות נוספים.")}</p>
+          )}
+        </>
       )}
 
       <h2 className="mt-8 mb-2 text-lg font-medium">{t("הוספת איש צוות")}</h2>

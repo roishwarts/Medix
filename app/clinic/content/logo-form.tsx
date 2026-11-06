@@ -54,6 +54,22 @@ function ColorField({
     });
   }
 
+  // Lets the clinic go back to "no custom color" once one was set — the save button above always
+  // requires a valid 6-digit hex, so without this there was no way to clear an optional color field.
+  function clear() {
+    setError(null);
+    setSaved(false);
+    start(async () => {
+      const res = await onSave("");
+      if (res.error) setError(res.error);
+      else {
+        setColor(defaultColor);
+        setHexInput(defaultColor);
+        setSaved(true);
+      }
+    });
+  }
+
   return (
     <div>
       <label htmlFor={colorId} className="lbl">{label}</label>
@@ -82,6 +98,11 @@ function ColorField({
         <button type="button" className="btn btn-sm" onClick={save} disabled={pending}>
           {pending ? t("שומר…") : t("שמירה")}
         </button>
+        {initial && (
+          <button type="button" className="btn btn-quiet btn-sm" onClick={clear} disabled={pending}>
+            {t("איפוס לברירת מחדל")}
+          </button>
+        )}
         {saved && <span role="status" className="text-sm text-ok">{t("נשמר")}</span>}
       </div>
       {hexInput.length > 0 && !hexValid && <p className="mt-1.5 text-sm text-muted">{t("קוד צבע בפורמט הקס, למשל {example}", { example: defaultColor })}</p>}

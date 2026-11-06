@@ -10,8 +10,16 @@ import { toast } from "@/components/toast";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
+// Client-side mirror of the `accept` attribute, which is only a picker hint and is trivially
+// bypassed (drag-and-drop, "all files"). There is currently no server-side MIME/type check on the
+// evidence bucket either, so this is the only gate — see the QA report for that gap.
+function isAllowedFile(file: File) {
+  return file.type.startsWith("image/") || file.type === "application/pdf";
+}
+
 export function SubmitPanel({
   taskId,
+  journeyId,
   requiresEvidence,
   needsReview,
   resubmit = false,
@@ -37,9 +45,10 @@ export function SubmitPanel({
     setError(null);
     start(async () => {
       const file = requiresEvidence ? fileRef.current?.files?.[0] : undefined;
-      if (file && file.size > MAX_BYTES) return setError(t("הקובץ גדול מדי (עד 10MB)"));
+      if (file && file.size > MAX_BYTES) { clearFile(); return setError(t("הקובץ גדול מדי (עד 10MB)")); }
+      if (file && !isAllowedFile(file)) { clearFile(); return setError(t("סוג הקובץ לא נתמך. יש לבחור תמונה או PDF.")); }
 
-      const result = await queueOrRun({ kind: "patient_submit", taskId, note, fileBlob: file, fileName: file?.name });
+      const result = await queueOrRun({ kind: "patient_submit", taskId, journeyId, note, fileBlob: file, fileName: file?.name });
       if (result.rejected) return setError(t("השליחה נכשלה. ייתכן שהמשימה כבר טופלה אחרת — רענן/י ונסה/י שוב."));
       if (result.queued) {
         setOptimisticState(taskId, requiresEvidence || needsReview ? "review" : "done");
@@ -58,6 +67,11 @@ export function SubmitPanel({
     const file = e.target.files?.[0];
     if (file && file.size > MAX_BYTES) {
       setError(t("הקובץ גדול מדי (עד 10MB)"));
+      clearFile();
+      return;
+    }
+    if (file && !isAllowedFile(file)) {
+      setError(t("סוג הקובץ לא נתמך. יש לבחור תמונה או PDF."));
       clearFile();
       return;
     }

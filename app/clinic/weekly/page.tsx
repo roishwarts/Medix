@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 // A standalone, Sunday-morning-style snapshot: what a doctor would have gotten in a weekly email,
 // read on demand instead. See /clinic for the live, always-current version of the same data.
 export default async function WeeklySummaryPage() {
-  const [t, lang] = await Promise.all([getT(), getLang()]);
+  const [t, lang, allJourneys] = await Promise.all([getT(), getLang(), loadJourneys()]);
   // A cancelled surgery no longer needs the clinic's attention; it stays on the patient's own card.
-  const journeys = (await loadJourneys()).filter((j) => !j.cancelled_at);
+  const journeys = allJourneys.filter((j) => !j.cancelled_at);
   const t0 = today();
 
   const thisWeek = journeys

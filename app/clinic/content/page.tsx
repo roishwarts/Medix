@@ -63,11 +63,14 @@ export default async function ClinicContentPage() {
         ))}
       </nav>
 
+      {/* scroll-mt matches the fixed mobile topbar's own height (see ClinicMobileTopbar / the
+          ClinicLayout content padding that uses the same calc), so an anchor jump doesn't land
+          a section's heading underneath it. */}
       <div className="mt-5 space-y-5">
-        <div id="logo" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="logo" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <LogoForm clinicId={profile.clinic_id} logoUrl={profile.logo_url} brandColor={profile.brand_color} brandDark={profile.brand_dark} nameEn={clinicNameEn} />
         </div>
-        <div id="contact" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="contact" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <ContactForm
             initial={{
               contact_name: profile.contact_name,
@@ -79,16 +82,16 @@ export default async function ClinicContentPage() {
             }}
           />
         </div>
-        <div id="general-info" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="general-info" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <GeneralInfoForm templates={templates ?? []} />
         </div>
-        <div id="red-flags" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="red-flags" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <RedFlagsForm templates={templates ?? []} />
         </div>
-        <div id="links" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="links" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <LinksForm links={links} />
         </div>
-        <div id="videos" className="scroll-mt-4 md:scroll-mt-20">
+        <div id="videos" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <VideosForm clinicId={profile.clinic_id} videos={videos} />
         </div>
       </div>

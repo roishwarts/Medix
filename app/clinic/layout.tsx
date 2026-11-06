@@ -7,6 +7,9 @@ import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
+import { ClinicMobileTopbar } from "@/components/clinic-mobile-topbar";
+import { ClinicFab } from "@/components/clinic-fab";
+import { IdleLogoutModal } from "@/components/idle-logout-modal";
 import { ActivityBadge } from "./activity-badge";
 import { QuestionsBadge } from "./questions-badge";
 
@@ -37,12 +40,15 @@ export default async function ClinicLayout({ children }: { children: React.React
       <BrandTheme brand={{ color: profile.brand_color, dark: profile.brand_dark, gold: profile.brand_gold }} />
       <div className="print:hidden">
         <ImpersonationBanner />
+        <ClinicMobileTopbar brand={clinicName} logo={profile.logo_url} />
         <AppHeader items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
+      <div className="mx-auto max-w-6xl px-4 pb-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-5 sm:pb-8 md:pt-8">
         <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
         {children}
       </div>
+      <ClinicFab />
+      <IdleLogoutModal />
     </div>
   );
 }

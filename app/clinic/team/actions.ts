@@ -24,6 +24,7 @@ export async function addTeamMember(_: FormState, formData: FormData): Promise<F
   const password = String(formData.get("password") ?? "");
 
   if (!fullName) return { error: t("יש להזין שם") };
+  if (fullName.length > 100) return { error: t("השם ארוך מדי (מקסימום 100 תווים)") };
   if (!(ROLES as readonly string[]).includes(role)) return { error: t("תפקיד לא תקין") };
   if (!USERNAME.test(username)) return { error: t("שם משתמש: 3–30 תווים באנגלית, מספרים או . _ -") };
   if (password.length < 8) return { error: t("הסיסמה צריכה להכיל לפחות 8 תווים") };
@@ -130,6 +131,22 @@ export async function setTeamMemberDisabled(userId: string, disabled: boolean): 
   if (error) return { error: t("העדכון נכשל") };
   const { error: banErr } = await admin.auth.admin.updateUserById(userId, { ban_duration: disabled ? "876000h" : "none" });
   if (banErr) return { error: t("העדכון נכשל") };
+  // The pre-write isLastDoctor check above has a TOCTOU gap: two concurrent requests disabling two
+  // different doctors (exactly two doctors in the clinic) can both read "1 other enabled doctor"
+  // before either write lands, and both pass. Re-check with a fresh, authoritative (RLS-bypassing)
+  // count after our own write committed and undo it if the clinic would otherwise be left with no
+  // enabled doctor — see setTeamMemberRole for the matching case and fuller reasoning.
+  if (disabled && member.role === "doctor") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("clinic_id", profile.clinic_id).eq("role", "doctor").eq("disabled", false);
+    if ((count ?? 0) === 0) {
+      await admin.from("profiles").update({ disabled: false }).eq("id", userId);
+      await admin.auth.admin.updateUserById(userId, { ban_duration: "none" });
+      return { error: t("לא ניתן להשבית את הרופא היחיד במרפאה") };
+    }
+  }
   revalidatePath("/clinic/team");
   return {};
 }
@@ -149,6 +166,23 @@ export async function setTeamMemberRole(userId: string, role: "staff" | "doctor"
   if (!admin) return { error: t("חסר SUPABASE_SERVICE_ROLE_KEY בהגדרות השרת") };
   const { error } = await admin.from("profiles").update({ role }).eq("id", userId);
   if (error) return { error: t("העדכון נכשל") };
+  // TOCTOU guard: isLastDoctor above reads, then this write lands, as two separate statements with
+  // no shared lock — so two concurrent calls each demoting a *different* one of exactly two doctors
+  // can both see "the other one is still an enabled doctor" and both pass, leaving zero doctors once
+  // both writes land. Re-check with a fresh, authoritative (RLS-bypassing, post-commit) count and
+  // undo this write if it would leave the clinic with no enabled doctor. Whichever of the two racing
+  // writes lands last will observe the other's committed change here and self-revert, so the clinic
+  // always keeps at least one doctor (occasionally both revert, which just means "try again").
+  if (member.role === "doctor" && role !== "doctor") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("clinic_id", profile.clinic_id).eq("role", "doctor").eq("disabled", false);
+    if ((count ?? 0) === 0) {
+      await admin.from("profiles").update({ role: "doctor" }).eq("id", userId);
+      return { error: t("לא ניתן להשאיר מרפאה בלי אף רופא") };
+    }
+  }
   revalidatePath("/clinic/team");
   return {};
 }
@@ -190,6 +224,7 @@ export async function resetTeamMemberMfa(userId: string): Promise<{ error?: stri
 export async function saveMyFullNameEn(name: string): Promise<{ error?: string }> {
   const t = await getT();
   await requireProfile(["staff", "doctor"]);
+  if (name.trim().length > 80) return { error: t("השם ארוך מדי (מקסימום 80 תווים)") };
   const supabase = await createClient();
   const { error } = await supabase.rpc("save_my_full_name_en", { p_name: name });
   if (error) return { error: t("השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-name-translations.sql.") };

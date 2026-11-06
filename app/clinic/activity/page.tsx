@@ -10,7 +10,15 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
-type Search = { type?: string; patient?: string; actor?: string; from?: string; to?: string; before?: string };
+type Search = { type?: string; patient?: string; actor?: string; from?: string; to?: string; before?: string; beforeId?: string };
+
+// `created_at` alone isn't a safe pagination cursor: several activity_events rows written in the
+// same request/transaction can share the exact same timestamp (Postgres `now()` is constant for a
+// whole transaction), so a plain `created_at < cursor` can silently skip tied rows. `id` (a uuid,
+// unique) breaks the tie. Both pieces of the cursor come back from our own links, but they're still
+// user-editable query params, so they're validated before being spliced into a raw `.or()` filter.
+const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function ActivityPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -23,6 +31,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
     .from("activity_events")
     .select("id, kind, actor_id, actor_name, actor_role, subject, detail, created_at, patient_id, journey_id")
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(PAGE_SIZE + 1);
   if (group.kinds) query = query.in("kind", group.kinds);
   if (group.roles) query = query.in("actor_role", group.roles);
@@ -30,7 +39,12 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   if (sp.actor) query = query.eq("actor_id", sp.actor);
   if (sp.from) query = query.gte("created_at", israelLocalToIso(`${sp.from}T00:00`));
   if (sp.to) query = query.lt("created_at", israelLocalToIso(`${addDays(sp.to, 1)}T00:00`));
-  if (sp.before) query = query.lt("created_at", sp.before);
+  if (sp.before && ISO_TS_RE.test(sp.before) && sp.beforeId && UUID_RE.test(sp.beforeId)) {
+    query = query.or(`created_at.lt.${sp.before},and(created_at.eq.${sp.before},id.lt.${sp.beforeId})`);
+  } else if (sp.before && ISO_TS_RE.test(sp.before)) {
+    // Backward-compat for a link without beforeId; can still skip exact ties, but only on old links.
+    query = query.lt("created_at", sp.before);
+  }
 
   const [{ data: rows }, { data: patients }, { data: journeys }, { data: staff }, { data: seen }] = await Promise.all([
     query,
@@ -43,7 +57,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const allRows = (rows ?? []) as ActivityRow[];
   const hasMore = allRows.length > PAGE_SIZE;
   const pageRows = hasMore ? allRows.slice(0, PAGE_SIZE) : allRows;
-  const nextCursor = pageRows[pageRows.length - 1]?.created_at;
+  const nextCursor = pageRows[pageRows.length - 1];
 
   const items = toItems(pageRows, {
     t,
@@ -71,7 +85,10 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   };
   const moreHref = () => {
     const p = baseParams();
-    if (nextCursor) p.set("before", nextCursor);
+    if (nextCursor) {
+      p.set("before", nextCursor.created_at);
+      p.set("beforeId", nextCursor.id);
+    }
     return `/clinic/activity?${p.toString()}`;
   };
   const hasFilters = !!(sp.patient || sp.actor || sp.from || sp.to);

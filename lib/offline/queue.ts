@@ -17,6 +17,7 @@ export type QueuedMutation = {
   id?: number;
   kind: "patient_submit" | "staff_accept";
   taskId: string;
+  journeyId?: string;
   note?: string;
   fileBlob?: Blob;
   fileName?: string;
@@ -79,8 +80,11 @@ async function runMutation(supabase: ReturnType<typeof createClient>, m: QueuedM
       let evidence_path: string | null = null;
       let evidence_name: string | null = null;
       if (m.fileBlob && m.fileName) {
+        if (!m.journeyId) return { ok: false, permanent: true };
         const ext = (m.fileName.split(".").pop() ?? "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "bin";
-        const path = `${m.taskId}/${crypto.randomUUID()}.${ext}`;
+        // evidence_access() (schema.sql) authorizes by the path's first segment, which it expects
+        // to be the journey id, not the task id — must match that or every upload/read gets rejected.
+        const path = `${m.journeyId}/${m.taskId}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("evidence").upload(path, m.fileBlob, { contentType: m.fileBlob.type || undefined });
         if (upErr) return { ok: false };
         evidence_path = path;

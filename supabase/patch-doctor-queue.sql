@@ -53,10 +53,13 @@ language plpgsql security definer set search_path = public as $$
 begin
   if not is_doctor() then raise exception 'not allowed'; end if;
   if trim(coalesce(p_answer, '')) = '' then raise exception 'answer is required'; end if;
+  -- answered_at is null in the where clause (not just the id/clinic match) so two doctors racing
+  -- to answer the same question can't silently overwrite one another: whichever update commits
+  -- first wins, and the second gets "question not found" instead of clobbering the real answer.
   update doctor_questions
   set answer = trim(p_answer), answered_by = auth.uid(), answered_at = now()
-  where id = p_id and clinic_id = auth_clinic();
-  if not found then raise exception 'question not found'; end if;
+  where id = p_id and clinic_id = auth_clinic() and answered_at is null;
+  if not found then raise exception 'question not found or already answered'; end if;
 end $$;
 revoke execute on function answer_doctor_question(uuid, text) from public, anon;
 

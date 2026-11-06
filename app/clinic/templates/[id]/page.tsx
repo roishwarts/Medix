@@ -30,19 +30,19 @@ export default async function TemplatePage({
   let procedure = "";
   let description = "";
   let tasks: EditorTask[] = [];
-  let friction: { title: string; rejected: number; total: number }[] = [];
+  let friction: { id: string; title: string; rejected: number; total: number }[] = [];
   let usedBy = 0;
+  let promsSkipped = false;
 
   if (sourceId) {
     const supabase = await createClient();
-    const { data: tpl } = await supabase
-      .from("templates")
-      .select("name, procedure, description, journeys(count)")
-      .eq("id", sourceId)
-      .maybeSingle();
+    // Neither query depends on the other's result (both just need sourceId) — fetch together.
+    const [{ data: tpl }, { data: rows }] = await Promise.all([
+      supabase.from("templates").select("name, procedure, description, journeys(count)").eq("id", sourceId).maybeSingle(),
+      supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position"),
+    ]);
     if (!tpl) notFound();
     if (!isNew) usedBy = (tpl.journeys as { count: number }[] | null)?.[0]?.count ?? 0;
-    const { data: rows } = await supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position");
 
     // Not a copy (duplicating starts clean) and not brand new: show where real patients are currently
     // stuck on this protocol — a task a lot of people bounce off is a signal the instructions are unclear.
@@ -61,7 +61,7 @@ export default async function TemplatePage({
         byTask.set(tid, cur);
       }
       friction = rows
-        .map((r) => ({ title: r.title as string, ...(byTask.get(r.id) ?? { rejected: 0, total: 0 }) }))
+        .map((r) => ({ id: r.id as string, title: r.title as string, ...(byTask.get(r.id) ?? { rejected: 0, total: 0 }) }))
         .filter((f) => f.rejected > 0)
         .sort((a, b) => b.rejected - a.rejected);
     }
@@ -70,9 +70,16 @@ export default async function TemplatePage({
     procedure = tpl.procedure ?? "";
     description = tpl.description ?? "";
 
-    // Duplicating: give every task a fresh id and remap dependencies.
-    const idMap = new Map((rows ?? []).map((r) => [r.id as string, isNew ? crypto.randomUUID() : (r.id as string)]));
-    tasks = (rows ?? []).map((r) => ({
+    // Duplicating: give every task a fresh id and remap dependencies. PROMS questionnaire tasks
+    // carry a proms_instrument/proms_timepoint pair that neither the editor (EditorTask) nor the
+    // save payload model — they're only ever seeded via SQL onto an existing task id, never created
+    // or copied through this UI. Minting a new id for one here would save a "proms" task with no
+    // instrument attached, which patients then can't ever submit (submit_proms rejects it). Drop
+    // them from the duplicate instead of silently producing a broken task.
+    const sourceRows = isNew ? (rows ?? []).filter((r) => r.kind !== "proms") : (rows ?? []);
+    promsSkipped = isNew && (rows ?? []).some((r) => r.kind === "proms");
+    const idMap = new Map(sourceRows.map((r) => [r.id as string, isNew ? crypto.randomUUID() : (r.id as string)]));
+    tasks = sourceRows.map((r) => ({
       id: idMap.get(r.id)!,
       title: r.title,
       description: r.description ?? "",
@@ -103,6 +110,13 @@ export default async function TemplatePage({
         </p>
       )}
 
+      {isNew && from && promsSkipped && (
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted" role="note">
+          <span className="mt-0.5 shrink-0"><Icon name="alert" size={16} /></span>
+          <span>{t("שאלוני מעקב (PROMS) בתבנית המקורית לא שוכפלו — יש להוסיף אותם ידנית אם נדרש.")}</span>
+        </p>
+      )}
+
       {!isNew && (
         <p className="mt-3 flex items-start gap-1.5 text-sm text-muted" role="note">
           <span className="mt-0.5 shrink-0"><Icon name="lock" /></span>
@@ -124,7 +138,7 @@ export default async function TemplatePage({
           </p>
           <ul className="mt-3 space-y-1 text-sm">
             {friction.map((f) => (
-              <li key={f.title} className="flex items-center justify-between gap-3 text-bad">
+              <li key={f.id} className="flex items-center justify-between gap-3 text-bad">
                 <span className="min-w-0 break-words">{f.title}</span>
                 <span className="num shrink-0 font-medium">{t("{rejected} מתוך {total}", { rejected: f.rejected, total: f.total })}</span>
               </li>

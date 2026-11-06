@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const cell = (v: string | number | null) => {
   const s = v === null ? "" : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 const row = (cells: (string | number | null)[]) => cells.map(cell).join(",") + "\r\n";
 

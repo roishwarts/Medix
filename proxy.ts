@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
   const signedIn = !!data?.claims?.sub;
   const isLogin = request.nextUrl.pathname.startsWith("/login");
   const path = request.nextUrl.pathname;
-  const isPublic = isLogin || path.startsWith("/invite/") || path.startsWith("/join/") || path.startsWith("/reset/") || path.startsWith("/forgot");
+  const isPublic = isLogin || path.startsWith("/invite/") || path.startsWith("/join/") || path.startsWith("/reset/") || path.startsWith("/forgot") || path.startsWith("/accessibility") || path.startsWith("/privacy");
 
   // "View as" can be made read-only (set VIEW_AS_READ_ONLY=1 in Vercel, e.g. once real patients are using the system).
   // By default the admin can do everything the user can, to test the system from their side.

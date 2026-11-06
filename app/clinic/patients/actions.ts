@@ -57,6 +57,7 @@ export async function createPatient(_: CreatePatientState, formData: FormData): 
   const surgery_date = String(formData.get("surgery_date") ?? "");
 
   if (!full_name || !template_id || !surgery_date) return { error: t("יש למלא שם, תבנית ותאריך ניתוח") };
+  if (full_name.length > 80) return { error: t("יש להזין שם (עד 80 תווים)") };
   if (!PHONE_OK.test(phone)) return { error: t("יש להזין מספר טלפון תקין (לשליחה בוואטסאפ)") };
   if (email && !EMAIL_OK.test(email)) return { error: t("כתובת המייל לא תקינה") };
 

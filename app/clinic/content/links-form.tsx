@@ -64,7 +64,7 @@ export function LinksForm({ links }: { links: Link[] }) {
           <label htmlFor={urlId} className="sr-only">{t("כתובת")}</label>
           <input id={urlId} className="field" placeholder="https://..." dir="ltr" value={url} onChange={(e) => { setUrl(e.target.value); setAdded(false); }} autoComplete="off" />
         </div>
-        <button className="btn btn-sm min-h-11 shrink-0" disabled={pending || !label.trim() || !url.trim()}>
+        <button className="btn btn-sm shrink-0" disabled={pending || !label.trim() || !url.trim()}>
           {pending ? t("מוסיף…") : t("הוספה")}
         </button>
       </form>

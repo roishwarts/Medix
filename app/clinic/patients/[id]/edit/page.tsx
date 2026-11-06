@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { requireProfile } from "@/lib/auth";
-import { loadJourney, TASK_COLUMNS } from "@/lib/queries";
-import { createClient } from "@/lib/supabase/server";
+import { loadJourney } from "@/lib/queries";
 import type { EditorTask } from "@/components/editor/types";
-import type { TaskRow } from "@/lib/journey";
 import { israelParts } from "@/lib/dates";
 import { JourneyEditForm } from "./form";
 
@@ -13,28 +11,28 @@ export const dynamic = "force-dynamic";
 export default async function EditJourneyPage({ params }: { params: Promise<{ id: string }> }) {
   const t = await getT();
   const { id } = await params;
-  const supabase = await createClient();
-  const [, journey, { data }] = await Promise.all([
-    requireProfile(["staff", "doctor"]),
-    loadJourney(id),
-    supabase.from("journey_tasks").select(TASK_COLUMNS).eq("journey_id", id).order("position"),
-  ]);
+  const [, journey] = await Promise.all([requireProfile(["staff", "doctor"]), loadJourney(id)]);
   if (!journey) notFound();
-  const tasks: EditorTask[] = ((data ?? []) as TaskRow[]).map((r) => ({
-    id: r.id,
-    title: r.title,
-    description: r.description ?? "",
-    owner: r.owner,
-    due_offset_days: r.due_offset_days,
-    requires_evidence: r.requires_evidence,
-    requires_review: r.requires_review,
-    mandatory: r.mandatory,
-    depends_on: r.depends_on,
-    kind: r.kind,
-    location: r.location ?? "",
-    scheduled_local: r.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(r.scheduled_at)) : "",
-    status: r.status,
-  }));
+  // journey.summary.tasks already carries every journey_tasks column (loadJourney selects them
+  // nested) — fetching journey_tasks again here would be a redundant round trip. Its rows come back
+  // sorted by due date, not position, so sort by position before handing them to the editor.
+  const tasks: EditorTask[] = [...journey.summary.tasks]
+    .sort((a, b) => a.position - b.position)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description ?? "",
+      owner: r.owner,
+      due_offset_days: r.due_offset_days,
+      requires_evidence: r.requires_evidence,
+      requires_review: r.requires_review,
+      mandatory: r.mandatory,
+      depends_on: r.depends_on,
+      kind: r.kind,
+      location: r.location ?? "",
+      scheduled_local: r.scheduled_at ? (({ date, time }) => `${date}T${time}`)(israelParts(r.scheduled_at)) : "",
+      status: r.status,
+    }));
 
   return (
     <main className="max-w-3xl">

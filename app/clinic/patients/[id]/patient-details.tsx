@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { OptionSelect } from "@/components/option-select";
 import { LANGS, type Lang } from "@/lib/prefs";
 import { STAGES, STAGE_LABEL, STAGE_PILL, type Stage } from "@/lib/journey";
@@ -21,6 +21,8 @@ export function PatientDetails({
 }: Props) {
   const t = useT();
   const [editing, setEditing] = useState(false);
+  const dialogRef = useRef<HTMLFormElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
   const [state, action, pending] = useActionState(
     async (prev: Awaited<ReturnType<typeof updatePatientDetails>>, formData: FormData) => {
       const res = await updatePatientDetails(patientId, prev, formData);
@@ -30,11 +32,30 @@ export function PatientDetails({
     undefined,
   );
 
+  // Lock the page behind the modal, send focus into it, trap Tab inside it while open, and
+  // hand focus back to the button that opened it when it closes.
   useEffect(() => {
     if (!editing) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setEditing(false); };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.querySelector<HTMLElement>("input, select, textarea, button")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setEditing(false); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('input, select, textarea, button, a[href]'))
+        .filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+      openButtonRef.current?.focus();
+    };
   }, [editing]);
 
   const shown = stage ?? autoStage;
@@ -64,7 +85,7 @@ export function PatientDetails({
         </div>
         <div className={row}><span className="shrink-0 text-muted">{t("שפה")}</span><span lang={lang} className="font-medium">{LANGS.find((l) => l.code === lang)?.label}</span></div>
         <div className="flex flex-wrap gap-2 px-3 py-2">
-          <button className="btn btn-sm min-h-11 !px-3 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכת פרטים")}</button>
+          <button ref={openButtonRef} className="btn btn-sm min-h-11 !px-3 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכת פרטים")}</button>
           {journeyEdit}
         </div>
       </div>
@@ -72,6 +93,7 @@ export function PatientDetails({
       {editing && (
         <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:items-center sm:p-6" onClick={() => setEditing(false)}>
           <form
+            ref={dialogRef}
             action={action}
             role="dialog"
             aria-modal="true"

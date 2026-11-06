@@ -15,7 +15,7 @@ export function TeamForm() {
     <form action={action} className="card mt-2 grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
       <div>
         <label htmlFor="full_name" className="lbl">{t("שם מלא")}</label>
-        <input id="full_name" name="full_name" className="field" autoComplete="off" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+        <input id="full_name" name="full_name" className="field" autoComplete="off" maxLength={100} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
       </div>
       <div>
         <label htmlFor="role" className="lbl">{t("תפקיד")}</label>

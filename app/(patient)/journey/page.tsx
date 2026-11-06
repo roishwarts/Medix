@@ -15,8 +15,9 @@ import { getClinicLinks, getClinicVideos, signClinicVideos } from "@/lib/clinic-
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage({ searchParams }: { searchParams: Promise<{ j?: string }> }) {
-  const [t, lang] = await Promise.all([getT(), getLang()]);
-  const [profile, journeys, links, videos, sp] = await Promise.all([
+  const [t, lang, profile, journeys, links, videos, sp] = await Promise.all([
+    getT(),
+    getLang(),
     requireProfile(["patient", "caregiver"]),
     loadJourneys(),
     getClinicLinks(),
@@ -39,7 +40,14 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
 
   const now = nowTask(summary.tasks);
   const waiting = summary.tasks.filter((t) => t.owner === "patient" && t.state === "review");
-  const nextAppt = surgeryPassed ? undefined : summary.tasks.find((t) => t.kind === "appointment" && t.state !== "done" && t.eventDate >= t0);
+  // Tasks are sorted by dueDate, which can drift from the real appointment date once an appointment
+  // is rescheduled (scheduled_at overrides eventDate but not the sort key) — so pick the soonest
+  // upcoming appointment by eventDate, not just the first match in dueDate order.
+  const nextAppt = surgeryPassed
+    ? undefined
+    : summary.tasks
+        .filter((t) => t.kind === "appointment" && t.state !== "done" && t.eventDate >= t0)
+        .sort((a, b) => (a.eventDate < b.eventDate ? -1 : a.eventDate > b.eventDate ? 1 : 0))[0];
 
   const preopDone = preop.filter((t) => t.state === "done").length;
   const heading = surgeryPassed ? t("הניתוח הושלם") : summary.daysToSurgery === 0 ? t("הניתוח היום") : t("הניתוח {when}", { when: relativeDays(journey.surgery_date, t0, lang).toLowerCase() });

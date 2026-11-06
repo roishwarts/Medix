@@ -3,7 +3,6 @@ import { loadJourneys } from "@/lib/queries";
 import { ownerLabel, blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { KpiWindow } from "@/components/kpi-window";
-import { HomeSettingsButton } from "@/components/home-settings";
 import { HospitalFilter } from "@/components/hospital-filter";
 import { parseDays } from "@/components/patient-filters";
 import { getT } from "@/lib/i18n/server";
@@ -29,9 +28,9 @@ function Kpi({ href, label, value, tone, alert, noIcon }: { href: string; label:
       href={href}
       className={`card block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
     >
-      <p className="flex items-center gap-1.5 text-xs text-muted sm:whitespace-nowrap sm:text-sm">
-        {alert && !noIcon && <span className="hidden sm:inline-flex"><Icon name="alert" size={14} /></span>}
-        {label}
+      <p className="flex items-start gap-1.5 text-xs text-muted sm:text-sm">
+        {alert && !noIcon && <span className="hidden shrink-0 sm:inline-flex"><Icon name="alert" size={14} /></span>}
+        <span>{label}</span>
       </p>
       <p className={`display num mt-1 text-3xl sm:text-4xl ${color}`}>{value}</p>
     </Link>
@@ -126,20 +125,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <main className="space-y-8">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="order-1 flex min-w-0 flex-1 items-center gap-3">
-          {/* The branded top bar only shows from md up (phones get the bottom tab bar instead),
-              so the logo otherwise never appears on a phone at all - this is its one mobile spot. */}
-          {profile.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.logo_url} alt={profile.clinic_name} className="brand-logo h-8 w-auto max-w-[7rem] shrink-0 object-contain min-[380px]:max-w-[11rem] md:hidden" />
-          )}
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-muted sm:text-base">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
-            <h1 className="display mt-0.5 whitespace-nowrap text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
-          </div>
+        {/* The logo and a settings entry point already sit in the persistent mobile top bar
+            (app/clinic/layout.tsx) on every page, this one included - no need to repeat them here. */}
+        <div className="order-1 min-w-0 flex-1">
+          <p className="text-sm font-medium text-muted sm:text-base">{t("שלום {name}", { name: profile.full_name.split(" ")[0] })}</p>
+          <h1 className="display mt-0.5 text-2xl sm:text-4xl">{t("לוח בקרה")}</h1>
         </div>
-        <span className="order-2 md:hidden"><HomeSettingsButton home="/clinic" /></span>
-        <div className="order-3 flex min-w-0 basis-full items-center gap-3 md:order-2 md:basis-auto">
+        <div className="order-2 flex min-w-0 basis-full items-center gap-3 md:basis-auto">
           <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
         </div>
@@ -167,8 +159,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3">
         <Kpi href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} noIcon />
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : undefined} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
+        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
       </section>
 
       <section aria-label={t("תמונת מצב כללית")} className="grid grid-cols-2 gap-3">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { Icon } from "@/components/ui";
 import { EQ5D_DIMENSIONS, EQ5D_LEVELS, OKS_ITEMS, type Instrument } from "@/lib/proms";
+import { toast } from "@/components/toast";
 import { submitProms } from "../../actions";
 
 export function PromsForm({ taskId, instrument }: { taskId: string; instrument: Instrument }) {
@@ -25,6 +26,7 @@ export function PromsForm({ taskId, instrument }: { taskId: string; instrument: 
       const payload = instrument === "eq5d5l" ? { ...answers, vas } : answers;
       const res = await submitProms(taskId, payload);
       if (res.error) return setError(res.error);
+      toast(t("התשובות נשלחו ונשמרו בהצלחה"));
       router.push("/journey");
     });
   }
@@ -38,8 +40,8 @@ export function PromsForm({ taskId, instrument }: { taskId: string; instrument: 
       <fieldset disabled={pending} className="space-y-6 disabled:opacity-80">
         {instrument === "oks"
           ? OKS_ITEMS.map((item, idx) => (
-              <div key={item.key}>
-                <p className="mb-2 font-medium">{idx + 1}. {item.title}</p>
+              <fieldset key={item.key}>
+                <legend className="mb-2 font-medium">{idx + 1}. {item.title}</legend>
                 <div className="space-y-1.5">
                   {item.answers.map((a) => (
                     <label key={a.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-line px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
@@ -52,13 +54,13 @@ export function PromsForm({ taskId, instrument }: { taskId: string; instrument: 
                     </label>
                   ))}
                 </div>
-              </div>
+              </fieldset>
             ))
           : (
             <>
               {EQ5D_DIMENSIONS.map((dim, idx) => (
-                <div key={dim.key}>
-                  <p className="mb-2 font-medium">{idx + 1}. {dim.title}</p>
+                <fieldset key={dim.key}>
+                  <legend className="mb-2 font-medium">{idx + 1}. {dim.title}</legend>
                   <div className="space-y-1.5">
                     {EQ5D_LEVELS.map((label, i) => {
                       const value = i + 1;
@@ -74,7 +76,7 @@ export function PromsForm({ taskId, instrument }: { taskId: string; instrument: 
                       );
                     })}
                   </div>
-                </div>
+                </fieldset>
               ))}
               <div>
                 <label htmlFor="vas" className="mb-2 block font-medium">{t("בסולם של 0 עד 100, איך הבריאות שלך היום? (0 = הכי גרוע שאפשר לדמיין, 100 = הכי טוב שאפשר לדמיין)")}</label>

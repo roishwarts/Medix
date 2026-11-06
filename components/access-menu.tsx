@@ -105,6 +105,15 @@ export function AccessControls({ languages = true }: { languages?: boolean }) {
         </div>
       </fieldset>
     )}
+
+    <p className="mt-4 flex flex-wrap gap-x-4 border-t border-line pt-3 text-sm">
+      <a href="/accessibility" className="inline-flex min-h-11 items-center text-muted underline underline-offset-4 hover:text-ink">
+        {t("הצהרת נגישות")}
+      </a>
+      <a href="/privacy" className="inline-flex min-h-11 items-center text-muted underline underline-offset-4 hover:text-ink">
+        {t("מדיניות הפרטיות")}
+      </a>
+    </p>
     </>
   );
 }

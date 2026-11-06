@@ -16,8 +16,13 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
   const [kept, setKept] = useState<Record<string, string>>({});
   const [attempt, setAttempt] = useState(0);
   const doneRef = useRef<HTMLHeadingElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => { if (created) doneRef.current?.focus(); }, [created]);
+  // A failed submission re-renders the same form (no navigation), so move focus to the error for
+  // keyboard and screen-reader users instead of leaving focus on a button that no longer explains why.
+  useEffect(() => { if (state?.error) errorRef.current?.focus(); }, [state?.error]);
   const v = (k: string) => kept[k] ?? "";
+  const describedBy = state?.error ? "form-error" : undefined;
 
   function submit(fd: FormData) {
     const next: Record<string, string> = {};
@@ -55,28 +60,28 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
     <form action={submit} className="mt-8 space-y-5" aria-busy={pending}>
       <div>
         <label htmlFor="full_name" className="lbl">{t("שם מלא")}</label>
-        <input id="full_name" name="full_name" className="field" autoComplete="off" defaultValue={v("full_name")} aria-describedby={state?.error ? "form-error" : undefined} required />
+        <input id="full_name" name="full_name" className="field" autoComplete="off" maxLength={80} defaultValue={v("full_name")} aria-describedby={describedBy} required />
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="phone" className="lbl">{t("טלפון (לשליחה בוואטסאפ)")}</label>
-          <input id="phone" name="phone" className="field" dir="ltr" type="tel" inputMode="tel" autoComplete="off" placeholder="050-0000000" defaultValue={v("phone")} aria-describedby={state?.error ? "form-error" : undefined} required />
+          <input id="phone" name="phone" className="field" dir="ltr" type="tel" inputMode="tel" autoComplete="off" placeholder="050-0000000" pattern="[0-9+\-\s()]{8,30}" maxLength={30} defaultValue={v("phone")} aria-describedby={describedBy} required />
         </div>
         <div>
           <label htmlFor="email" className="lbl">{t("מייל (לא חובה)")}</label>
-          <input id="email" name="email" type="email" className="field" dir="ltr" inputMode="email" autoComplete="off" defaultValue={v("email")} />
+          <input id="email" name="email" type="email" className="field" dir="ltr" inputMode="email" autoComplete="off" defaultValue={v("email")} aria-describedby={describedBy} />
         </div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="template_id" className="lbl">{t("תבנית")}</label>
-          <select key={`t${attempt}`} id="template_id" name="template_id" className="field" defaultValue={v("template_id") || undefined} required>
+          <select key={`t${attempt}`} id="template_id" name="template_id" className="field" defaultValue={v("template_id") || undefined} aria-describedby={describedBy} required>
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
         <div>
           <label htmlFor="surgery_date" className="lbl">{t("תאריך ניתוח")}</label>
-          <input id="surgery_date" name="surgery_date" type="date" className="field" defaultValue={v("surgery_date")} required />
+          <input id="surgery_date" name="surgery_date" type="date" className="field" defaultValue={v("surgery_date")} aria-describedby={describedBy} required />
         </div>
       </div>
       <div className="max-w-xs">
@@ -92,7 +97,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
           <OptionSelect id="company" name="company" label={t("חברה (לא חובה)")} options={companies} current={v("company") || null} key={`c${attempt}`} />
         </div>
       )}
-      {state?.error && <p id="form-error" role="alert" className="rounded-xl border border-bad/30 bg-bad/5 px-4 py-3 text-sm text-bad">{state.error}</p>}
+      {state?.error && <p id="form-error" ref={errorRef} tabIndex={-1} role="alert" className="rounded-xl border border-bad/30 bg-bad/5 px-4 py-3 text-sm text-bad outline-none">{state.error}</p>}
       <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={pending}>{pending ? t("יוצר…") : t("יצירת מטופל והכנת הזמנה")}</button>
     </form>
   );

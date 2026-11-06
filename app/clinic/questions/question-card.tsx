@@ -37,6 +37,7 @@ export function QuestionCard({
   const router = useRouter();
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const answered = !!q.answeredAt;
 
@@ -46,14 +47,15 @@ export function QuestionCard({
     start(async () => {
       const res = await answerQuestion(q.id, answer);
       if (res.error) setError(res.error);
-      else router.refresh();
+      else { setStatus(t("התשובה נשלחה")); router.refresh(); }
     });
   }
   function withdraw() {
+    if (!confirm(t("להסיר את השאלה? לא ניתן לבטל."))) return;
     start(async () => {
       const res = await withdrawQuestion(q.id);
       if (res.error) setError(res.error);
-      else router.refresh();
+      else { setStatus(t("השאלה הוסרה")); router.refresh(); }
     });
   }
 
@@ -62,7 +64,11 @@ export function QuestionCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex flex-wrap items-center gap-2">
           {showPatient && (
-            <Link href={`/clinic/patients/${q.journeyId ?? q.patientId}`} className="font-medium underline-offset-4 hover:underline">{q.patientName}</Link>
+            q.journeyId ? (
+              <Link href={`/clinic/patients/${q.journeyId}`} className="font-medium underline-offset-4 hover:underline">{q.patientName}</Link>
+            ) : (
+              <span className="font-medium">{q.patientName}</span>
+            )
           )}
           {q.urgent && !answered && <span className="pill pill-bad">{t("דחוף")}</span>}
           {answered ? <span className="pill pill-ok">{t("נענתה")}</span> : <span className="pill pill-warn">{t("ממתינה לרופא")}</span>}
@@ -82,19 +88,21 @@ export function QuestionCard({
 
       {!answered && canAnswer && (
         <div className="mt-3 space-y-2">
-          <VoiceTextarea className="field min-h-20" placeholder={t("התשובה שלך…")} value={answer} onChange={setAnswer} />
+          <label className="sr-only" htmlFor={`answer-${q.id}`}>{t("התשובה שלך…")}</label>
+          <VoiceTextarea id={`answer-${q.id}`} className="field min-h-20" placeholder={t("התשובה שלך…")} value={answer} onChange={setAnswer} />
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className="btn btn-primary btn-sm min-h-11 sm:min-h-9" disabled={pending} onClick={send}>
               {pending ? t("שולח…") : t("שליחת תשובה")}
             </button>
-            {canWithdraw && <button type="button" className="text-sm text-bad hover:underline" disabled={pending} onClick={withdraw}>{t("הסרת השאלה")}</button>}
+            {canWithdraw && <button type="button" className="inline-flex min-h-11 items-center text-sm text-bad hover:underline sm:min-h-0" disabled={pending} onClick={withdraw}>{t("הסרת השאלה")}</button>}
           </div>
         </div>
       )}
       {!answered && !canAnswer && canWithdraw && (
-        <button type="button" className="mt-2 text-sm text-bad hover:underline" disabled={pending} onClick={withdraw}>{t("ביטול השאלה")}</button>
+        <button type="button" className="mt-2 inline-flex min-h-11 items-center text-sm text-bad hover:underline sm:min-h-0" disabled={pending} onClick={withdraw}>{t("ביטול השאלה")}</button>
       )}
       {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+      {status && <p role="status" className="sr-only">{status}</p>}
     </div>
   );
 }
