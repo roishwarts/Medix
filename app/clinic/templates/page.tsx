@@ -37,7 +37,6 @@ export default async function TemplatesPage() {
     <main>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">{t("פרוטוקולים")}</p>
           <h1 className="display mt-1 text-4xl">{t("תבניות")}</h1>
         </div>
         <Link href="/clinic/templates/new" className="btn btn-primary max-sm:w-full">{t("תבנית חדשה מאפס")}</Link>
