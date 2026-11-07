@@ -37,7 +37,8 @@ if (typeof window !== "undefined" && !(window as unknown as { __tabsWarm?: boole
   };
 }
 
-export function NavLink({ href, exact, children }: { href: string; exact?: boolean; children: React.ReactNode }) {
+// `variant="bar"` is a button of the phone's bottom bar: the same instant highlight and the same ready-ahead loading as the top tabs.
+export function NavLink({ href, exact, children, variant = "tab" }: { href: string; exact?: boolean; children: React.ReactNode; variant?: "tab" | "bar" }) {
   const path = usePathname();
   const pending = useTapped();
   const router = useRouter();
@@ -63,7 +64,7 @@ export function NavLink({ href, exact, children }: { href: string; exact?: boole
       prefetch
       onClick={() => setTapped(href)}
       aria-current={active ? "page" : undefined}
-      className={`tab my-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-[15px] sm:px-3.5 transition-colors ${active ? "tab-on" : ""}`}
+      className={variant === "bar" ? `bar-item ${active ? "bar-item-on" : ""}` : `tab my-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-[15px] sm:px-3.5 transition-colors ${active ? "tab-on" : ""}`}
     >
       {children}
     </Link>
