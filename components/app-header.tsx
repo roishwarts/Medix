@@ -74,10 +74,10 @@ export function AppHeader({
         <ul className="mx-auto flex max-w-lg items-stretch justify-around">
           {bar.map((i) => (
             <li key={i.href} className="min-w-0 flex-1">
-              <Link href={i.href} aria-current={active(i) ? "page" : undefined} className={`bar-item ${active(i) ? "bar-item-on" : ""}`}>
+              <NavLink href={i.href} exact={i.exact} variant="bar">
                 <span className="relative"><NavIcon name={i.icon} />{i.badge && <span className="absolute -top-1.5 start-3 [&>span]:ms-0 [&>span]:scale-90">{i.badge}</span>}</span>
                 <span className="max-w-full truncate">{i.label}</span>
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
