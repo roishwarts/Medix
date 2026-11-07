@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { getPlatformAdmin } from "@/lib/admin";
 import { getImpersonation } from "@/lib/impersonation";
 import { getPublicBrand } from "@/lib/brand-public";
@@ -52,7 +53,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#4b6584" }, { media: "(prefers-color-scheme: dark)", color: "#131417" }] };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [prefs, lang, admin, viewingAs] = await Promise.all([getPrefs(), getLang(), getPlatformAdmin(), getImpersonation()]);
+  // Only cookies are read here, so the page starts streaming at once. Who is an admin (a database lookup) is
+  // checked in <AdminChrome> below, off the critical path.
+  const [prefs, lang] = await Promise.all([getPrefs(), getLang()]);
   return (
     <html lang={lang} dir={dirOf(lang)} data-theme={prefs.theme} data-size={prefs.size} className={rubik.variable} suppressHydrationWarning>
       <body>
@@ -62,11 +65,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <OfflineInit />
             <OfflineBanner />
             {children}
-            {(admin || viewingAs) && <VersionBadge />}
+            <Suspense fallback={null}><AdminChrome /></Suspense>
             <Toaster />
           </I18nProvider>
         </PrefsProvider>
       </body>
     </html>
   );
+}
+
+// The version badge is only for the platform owner and for an admin who is viewing as a user. The lookup runs
+// here, in its own Suspense boundary, so it never delays the first paint of the page.
+async function AdminChrome() {
+  const [admin, viewingAs] = await Promise.all([getPlatformAdmin(), getImpersonation()]);
+  return admin || viewingAs ? <VersionBadge /> : null;
 }
