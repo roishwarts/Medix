@@ -141,7 +141,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const hourIL = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).format(new Date()));
   const firstName = profile.full_name.split(" ")[0];
   // The doctor keeps the plain "Hello"; the secretary gets a greeting that follows the time of day.
-  const greeting = profile.role === "doctor" ? t("שלום {name}", { name: firstName })
+  const greeting = profile.role === "doctor" ? t("שלום {name}", { name: profile.full_name })
     : hourIL < 12 ? t("בוקר טוב, {name}", { name: firstName })
     : hourIL < 18 ? t("צהריים טובים, {name}", { name: firstName })
     : t("ערב טוב, {name}", { name: firstName });
