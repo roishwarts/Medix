@@ -98,7 +98,6 @@ export default async function TemplatePage({
 
   return (
     <main className="max-w-3xl pb-6 sm:[&_.sticky]:mx-0 sm:[&_.sticky]:rounded-2xl sm:[&_.sticky]:border sm:[&_.sticky]:px-4">
-      <p className="eyebrow">{t("פרוטוקולים")}</p>
       <h1 className="display mt-1 text-3xl sm:text-4xl">{isNew ? (from ? t("שכפול תבנית") : t("תבנית חדשה")) : t("עריכת תבנית")}</h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         {t("הגדירו את שלבי הפרוטוקול: מי אחראי על כל משימה, מתי היא מתבצעת ביחס ליום הניתוח ומה צריך להסתיים לפניה.")}
