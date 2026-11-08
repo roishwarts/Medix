@@ -48,7 +48,6 @@ export function HomeTaskRow({
   const review = kind === "review";
   const pillTone = tone === "bad" ? "pill-bad" : tone === "warn" ? "pill-warn" : "pill-neutral";
   const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
-  const first = patientName.trim().charAt(0);
   return (
     <div className={`px-4 py-3 ${hidden ? "max-sm:hidden" : ""} ${selected && bulkPending ? "opacity-50" : ""}`}>
       <div className={`flex flex-wrap items-center gap-x-3 gap-y-2.5 ${stacked ? "" : "sm:flex-nowrap"}`}>
@@ -59,7 +58,6 @@ export function HomeTaskRow({
           </label>
         )}
         <Link href={href} className={`flex min-w-0 flex-1 items-center gap-3 ${selectable ? "max-sm:basis-[calc(100%-3rem)]" : "max-sm:basis-full"} ${stacked ? "basis-[calc(100%-3rem)]" : "sm:basis-auto"}`}>
-          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft font-semibold text-accent">{first}</span>
           <span className="min-w-0 flex-1">
             <span className="block break-words font-medium">{patientName}</span>
             <span className="block break-words text-sm text-muted">{title}{ownerPill && !stacked ? <span className="pill pill-neutral ms-2 align-middle">{ownerPill}</span> : null}</span>
