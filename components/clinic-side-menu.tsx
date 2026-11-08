@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NavIcon } from "@/components/nav-icons";
 import { Icon } from "@/components/ui";
@@ -26,11 +26,23 @@ export function ClinicSideMenu({
 }) {
   const t = useT();
   const path = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  // The page that was just tapped: it shows as chosen at once while the menu stays open until the page arrives.
+  const [tapped, setTapped] = useState<string | null>(null);
   const [a11y, setA11y] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setOpen(false); }, [path]);
+  useEffect(() => { setOpen(false); setTapped(null); }, [path]);
+  // Load the menu's pages ahead of time (the whole page, not just its outline), so opening one needs no waiting.
+  // Pages that are still fresh are not fetched twice.
+  const hrefs = items.map((i) => i.href).join("|");
+  useEffect(() => {
+    const warm = () => hrefs.split("|").forEach((h) => { if (h && h !== path) router.prefetch(h); });
+    const id = setTimeout(warm, 1200);
+    return () => clearTimeout(id);
+  }, [hrefs, path, router]);
+  useEffect(() => { if (open) hrefs.split("|").forEach((h) => { if (h && h !== path) router.prefetch(h); }); }, [open, hrefs, path, router]);
   useEffect(() => {
     const openIt = () => setOpen(true);
     window.addEventListener(OPEN_SETTINGS_EVENT, openIt);
@@ -46,10 +58,17 @@ export function ClinicSideMenu({
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", onKey); };
   }, [open]);
 
-  if (!open) return null;
+  // Always mounted (even while the menu is closed): these invisible links make the browser load each page ahead of time.
+  const warmLinks = (
+    <div className="sr-only" aria-hidden="true">
+      {items.map((i) => <Link key={i.href} href={i.href} prefetch tabIndex={-1}>{i.label}</Link>)}
+    </div>
+  );
+  if (!open) return warmLinks;
   const active = (i: NavItem) => (i.exact ? path === i.href : path === i.href || path.startsWith(i.href + "/"));
   return (
     <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("תפריט")}>
+      {warmLinks}
       <button type="button" aria-label={t("סגירה")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
       <div ref={panel} id="side-menu" className="absolute inset-y-0 start-0 flex w-[min(20rem,86vw)] flex-col bg-[var(--color-page)] shadow-2xl">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -84,8 +103,8 @@ export function ClinicSideMenu({
           <ul className="space-y-1">
             {items.map((i) => (
               <li key={i.href}>
-                <Link href={i.href} aria-current={active(i) ? "page" : undefined}
-                  className={`flex min-h-12 items-center gap-3 rounded-2xl px-3 text-base ${active(i) ? "glass-on font-medium" : "hover:bg-[var(--hover-tint)]"}`}>
+                <Link href={i.href} prefetch onClick={() => setTapped(i.href)} aria-current={active(i) ? "page" : undefined}
+                  className={`flex min-h-12 items-center gap-3 rounded-2xl px-3 text-base ${active(i) || tapped === i.href ? "glass-on font-medium" : "hover:bg-[var(--hover-tint)]"}`}>
                   <NavIcon name={i.icon} /> <span>{i.label}</span>{i.badge}
                 </Link>
               </li>

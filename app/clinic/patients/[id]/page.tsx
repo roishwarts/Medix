@@ -18,7 +18,7 @@ import { ScheduleControl } from "./schedule-control";
 import { CaregiverList } from "@/components/caregiver-list";
 import { PatientDetails } from "./patient-details";
 import { patientExtras } from "@/lib/patient-extras";
-import { stageOf } from "@/lib/journey";
+import { stageOf, STAGE_LABEL, STAGE_PILL } from "@/lib/journey";
 import { InvitationPanel } from "./invitation-panel";
 import { AddCaregiver } from "./add-caregiver";
 import { PendingInvites } from "./pending-invites";
@@ -33,7 +33,7 @@ import { AllDocuments, type DocItem } from "./all-documents";
 import { StartJourney } from "./start-journey";
 import { ClinicalSummary, type ClinicalData } from "./clinical-summary";
 import { DoctorQuestions } from "./doctor-questions";
-import { DoctorQuickBar } from "./doctor-quick-bar";
+import { PatientTabs } from "./patient-tabs";
 import { loadQuestions } from "@/lib/doctor-questions";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
@@ -55,11 +55,12 @@ export default async function PatientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; tab?: string }>;
 }) {
   const { id } = await params;
   const [tr, lang] = await Promise.all([getT(), getLang()]);
-  const { status } = await searchParams;
+  const sp = await searchParams;
+  const status = sp.status;
   const active: FilterKey = FILTERS.some(([k]) => k === status) ? (status as FilterKey) : "all";
   const supabase = await createClient();
   // Everything that does not depend on the journey is fetched together with it.
@@ -207,46 +208,82 @@ export default async function PatientPage({
   ];
 
   const autoStage = stageOf(summary, !!cancelRow?.cancelled_at);
+  const shownStage = extras?.stage ?? autoStage;
+  const tab = ["tasks", "details", "clinical"].includes(sp.tab ?? "") ? (sp.tab as string) : "tasks";
+  const bk = summary.topBlocker;
+  const blockerBad = !!bk && (bk.kind === "overdue" || bk.kind === "rejected");
+  const blockerStatus = !bk ? "" :
+    bk.kind === "overdue" ? `${tr("באיחור")} · ${tr("אצל {owner}", { owner: ownerLabel(bk.task.owner, tr) })}`
+    : bk.kind === "rejected" ? tr("הוחזר לתיקון")
+    : bk.kind === "review" ? tr("ממתין לבדיקה")
+    : tr("אצל {owner}", { owner: ownerLabel(bk.task.owner, tr) });
 
   return (
     <main>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-6">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
-          {/* The procedure, the surgery date and the readiness on one line. */}
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
-            <span>{journey.procedure || journey.template_name}</span>
-            <span aria-hidden="true">·</span>
-            <span>
-              <span className="font-medium text-ink">{formatDateLong(journey.surgery_date, lang)}</span>{" "}
-              <span className="text-sm">({relativeDays(journey.surgery_date, undefined, lang)})</span>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="text-sm">{tr("מוכנות לניתוח")}</span>
-              <span className="num font-medium text-ink">{summary.readiness}%</span>
-              <span className="inline-block w-20" aria-hidden="true"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></span>
-            </span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="display text-3xl sm:text-4xl">{journey.patient.full_name}</h1>
+            <span className={`pill ${STAGE_PILL[shownStage]}`}>{tr(STAGE_LABEL[shownStage])}</span>
           </div>
-          {summary.topBlocker && (
-            <p className="mt-1 text-sm text-muted">
-              {tr("שלב נוכחי")}: {blockerLabel(summary.topBlocker, tr)} · {tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}
-            </p>
+          <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
+        </div>
+        {/* Rare actions live in a small menu so they do not crowd the header. */}
+        <details className="relative shrink-0">
+          <summary className="btn btn-quiet btn-icon size-11 min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden" aria-label={tr("פעולות")}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+          </summary>
+          <div className="card absolute end-0 top-full z-20 mt-1 w-56 divide-y divide-line overflow-hidden p-0 shadow-lg">
+            <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="link-row block px-4 py-3 text-sm">{tr("דף סיכום להדפסה")}</Link>
+            {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="link-row block px-4 py-3 text-sm">{tr("ייצוא כל הנתונים")}</Link>}
+          </div>
+        </details>
+      </div>
+
+      {/* The situation at a glance: when, how ready, and what the next step is waiting for. */}
+      <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-line py-4 sm:grid-cols-3">
+        <div>
+          <dt className="text-sm text-muted">{tr("ניתוח")}</dt>
+          <dd className="mt-0.5 font-semibold">{formatDate(journey.surgery_date, lang)}</dd>
+          <dd className="text-sm text-muted">{relativeDays(journey.surgery_date, undefined, lang)}</dd>
+        </div>
+        <div>
+          <dt className="text-sm text-muted">{tr("מוכנות לניתוח")}</dt>
+          <dd className="num mt-0.5 text-2xl font-semibold leading-tight">{summary.readiness}%</dd>
+          <dd className="mt-1.5" aria-hidden="true"><ReadinessBar value={summary.readiness} state={summary.readinessState} /></dd>
+        </div>
+        <div className="col-span-2 sm:col-span-1">
+          <dt className="text-sm text-muted">{tr("שלב נוכחי")}</dt>
+          {summary.topBlocker ? (
+            <>
+              <dd className="mt-0.5 break-words font-semibold">{summary.topBlocker.task.title}</dd>
+              <dd className={`text-sm ${blockerBad ? "text-bad" : "text-muted"}`}>
+                {blockerStatus} · {tr("יעד {date}", { date: formatDate(summary.topBlocker.task.dueDate, lang) })}
+              </dd>
+            </>
+          ) : (
+            <dd className="mt-0.5 font-semibold text-ok">{tr("ההכנות הושלמו")}</dd>
           )}
         </div>
-        <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-sm">
-          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="text-muted hover:text-ink hover:underline">{tr("דף סיכום להדפסה")}</Link>
-          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="text-muted hover:text-ink hover:underline">{tr("ייצוא כל הנתונים")}</Link>}
-        </div>
-      </div>
+      </dl>
 
       {cancelRow?.cancelled_at && (
         <div className="mt-6">
           <CancelledBanner journeyId={journey.id} lang={lang} cancelledAt={cancelRow.cancelled_at} cancelledReason={(cancelRow.cancelled_reason ?? null) as CancelReason | null} />
         </div>
       )}
-      <div className="mt-6 grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-start">
-      <div className="min-w-0 space-y-10">
+
+      <div className="mt-2">
+        <PatientTabs
+          initial={tab}
+          tabs={[
+            { id: "tasks", label: tr("משימות"), badge: needsAttention, badgeTone: "bad" },
+            { id: "details", label: tr("פרטי המטופל") },
+            { id: "clinical", label: tr("קליני"), badge: questions.filter((q) => !q.answeredAt).length, badgeTone: "accent" },
+          ]}
+          panels={{
+            tasks: (
+              <div className="max-w-3xl space-y-10">
       <section>
         <h2 className="mb-1 flex flex-wrap items-center gap-2 text-lg font-medium">
           {tr("כל המשימות")}
@@ -379,18 +416,12 @@ export default async function PatientPage({
       <PromsCard journeyId={journey.id} />
 
       <AllDocuments items={allDocs} />
-
-      <section>
-        <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
-        <ActivityList items={history} showPatient={false} />
-        {(historyRows ?? []).length >= 20 && <p className="mt-2 text-xs text-muted">{tr("מוצגות 20 הפעולות האחרונות בלבד.")}</p>}
-      </section>
-      </div>
-
-      <aside className="min-w-0 space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:pb-6 lg:pe-1 [scrollbar-width:thin]">
-        <section aria-label={tr("פרטי המטופל")} className="relative">
-          {/* The title sits above the box, so the box starts level with the summary card. */}
-          <h2 className="eyebrow absolute bottom-full mb-1">{tr("פרטי המטופל")}</h2>
+              </div>
+            ),
+            details: (
+              <div className="space-y-10 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:space-y-0">
+                <div className="min-w-0 space-y-6">
+        <section aria-label={tr("פרטי המטופל")}>
           <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""}
             nationalId={medicalInfo?.national_id ?? ""} hmo={medicalInfo?.hmo ?? ""} insuranceCompany={medicalInfo?.insurance_company ?? ""} insurancePolicyNumber={medicalInfo?.insurance_policy_number ?? ""} insurancePhone={medicalInfo?.insurance_phone ?? ""}
             hospitals={options.hospitals} companies={options.companies}
@@ -399,23 +430,8 @@ export default async function PatientPage({
           <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         </section>
-        <section aria-label={tr("קליני")} className="space-y-6">
-          <h2 className="eyebrow">{tr("קליני")}</h2>
-          <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
-          <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
-          <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
-          <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
-            <h3 className="eyebrow mb-2">{tr("הפניות")}</h3>
-            <ReferralsCard
-              patientId={journey.patient_id}
-              canCreate={isDoctor}
-              items={referrals.map((r) => ({
-                id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
-                resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
-              }))}
-            />
-          </section>
-        </section>
+                </div>
+                <div className="min-w-0 space-y-6">
         <section aria-label={tr("בני משפחה")}>
           <h2 className="eyebrow mb-2">{tr("בני משפחה")}</h2>
           <CaregiverList
@@ -436,14 +452,41 @@ export default async function PatientPage({
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
         {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
-      </aside>
+                </div>
+                <div className="min-w-0 lg:col-span-2">
+      <section>
+        <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
+        <ActivityList items={history} showPatient={false} />
+        {(historyRows ?? []).length >= 20 && <p className="mt-2 text-xs text-muted">{tr("מוצגות 20 הפעולות האחרונות בלבד.")}</p>}
+      </section>
+                </div>
+              </div>
+            ),
+            clinical: (
+              <div className="space-y-10 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:space-y-0">
+                <div className="min-w-0 space-y-10">
+          <ClinicalSummary journeyId={journey.id} procedure={journey.procedure || journey.template_name} hospital={placement?.hospital ?? ""} data={clinical} canEdit={isDoctor} available={clinicalAvailable} />
+          <DoctorQuestions patientId={journey.patient_id} journeyId={journey.id} items={questions} isDoctor={isDoctor} myId={profile.id} available={questionsAvailable} />
+                </div>
+                <div className="min-w-0 space-y-10">
+          <MeetingSummaries patientId={journey.patient_id} items={summaries} appointments={appointmentOptions} />
+          <section id="referrals" aria-label={tr("הפניות")} className="scroll-mt-4">
+            <h3 className="eyebrow mb-2">{tr("הפניות")}</h3>
+            <ReferralsCard
+              patientId={journey.patient_id}
+              canCreate={isDoctor}
+              items={referrals.map((r) => ({
+                id: r.id, recipient: r.recipient, reason: r.reason, createdAt: r.created_at,
+                resultStatus: r.result_status ?? "pending", resultName: r.result_name ?? null, resultUrl: resultUrls.get(r.id) ?? null,
+              }))}
+            />
+          </section>
+                </div>
+              </div>
+            ),
+          }}
+        />
       </div>
-      {isDoctor && (
-        <>
-          <div aria-hidden className="h-16 md:hidden" />
-          <DoctorQuickBar patientId={journey.patient_id} phone={journey.patient.phone ?? ""} openQuestions={questions.filter((q) => !q.answeredAt).length} />
-        </>
-      )}
     </main>
   );
 }

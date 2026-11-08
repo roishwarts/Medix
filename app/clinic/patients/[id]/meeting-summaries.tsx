@@ -6,7 +6,8 @@ import { useT } from "@/components/i18n-provider";
 import { VoiceTextarea } from "@/components/voice-input";
 import { israelParts } from "@/lib/dates";
 import { saveMeetingSummary, deleteMeetingSummary } from "./notes-actions";
-import { NEW_SUMMARY_EVENT } from "./doctor-quick-bar";
+// Fired by the side-menu shortcut "new meeting summary" (see lib/new-summary-event).
+import { NEW_SUMMARY_EVENT } from "@/lib/new-summary-event";
 
 export type SummaryItem = {
   id: string;
