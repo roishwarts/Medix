@@ -243,7 +243,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       kind={i.kind}
                       patientName={i.patientName}
                       title={i.task.title}
-                      urgent={i.kind === "overdue" || i.kind === "rejected"}
+                      tone={i.kind === "overdue" || i.kind === "rejected" ? "bad" : "warn"}
+                      owner={i.task.owner}
                       status={i.kind === "rejected" ? t("הוחזר לתיקון") : i.kind === "review" ? t("ממתין לבדיקה") : t("באיחור · {when}", { when: relativeDays(i.task.dueDate, t0, lang) })}
                       phone={phoneOf.get(i.patientId) ?? null}
                       reminderHref={reminderHref(i)}
