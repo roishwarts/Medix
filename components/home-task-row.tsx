@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { queueOrRun } from "@/lib/offline/queue";
 import { toast } from "@/components/toast";
 import { Icon } from "@/components/ui";
-import type { ActionKind } from "@/lib/journey";
+import { deselectTask, isBulkPending, isTaskSelected, subscribeSelection, toggleTaskSelected } from "@/lib/task-selection";
+import type { ActionKind, Owner } from "@/lib/journey";
 
 const SVG = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 
@@ -15,16 +16,21 @@ const SVG = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke:
 // Phone: icon-only reminder and call + "done"; desktop: text buttons. Waiting-for-review rows get
 // approve / return (returning needs a note, so it opens the patient's card).
 export function HomeTaskRow({
-  taskId, href, kind, patientName, title, status, urgent, phone, reminderHref, hidden,
+  taskId, href, kind, patientName, title, status, tone, owner, ownerPill, phone, reminderHref, hidden, selectable, stacked,
 }: {
-  taskId: string; href: string; kind: ActionKind; patientName: string; title: string; status: string; urgent: boolean;
-  phone: string | null; reminderHref: string | null; hidden?: boolean;
+  taskId: string; href: string; kind: ActionKind; patientName: string; title: string; status: string; tone: "bad" | "warn" | "neutral";
+  owner?: Owner; ownerPill?: string | null; phone: string | null; reminderHref: string | null; hidden?: boolean;
+  // The tasks page lets several rows be picked for the bulk bar. `stacked`: the status sits under the text and the
+  // actions on their own line (narrow columns), instead of everything on one line.
+  selectable?: boolean; stacked?: boolean;
 }) {
   const t = useT();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selected = useSyncExternalStore(subscribeSelection, () => isTaskSelected(taskId), () => false);
+  const bulkPending = useSyncExternalStore(subscribeSelection, isBulkPending, () => false);
   if (done) return null;
 
   function accept() {
@@ -33,29 +39,43 @@ export function HomeTaskRow({
       const result = await queueOrRun({ kind: "staff_accept", taskId });
       if (result.rejected) { setError(t("הפעולה נכשלה. ייתכן שהמשימה כבר טופלה אחרת — רענן/י ונסה/י שוב.")); return; }
       if (result.queued) toast(t("אין חיבור לרגע — השמירה בוצעה במכשיר ותישלח אוטומטית כשהחיבור יחזור."));
+      deselectTask(taskId);
       setDone(true);
       router.refresh();
     });
   }
 
   const review = kind === "review";
+  const pillTone = tone === "bad" ? "pill-bad" : tone === "warn" ? "pill-warn" : "pill-neutral";
   const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
   const first = patientName.trim().charAt(0);
   return (
-    <div className={`px-4 py-3 ${hidden ? "max-sm:hidden" : ""}`}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 sm:flex-nowrap">
-        <Link href={href} className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
+    <div className={`px-4 py-3 ${hidden ? "max-sm:hidden" : ""} ${selected && bulkPending ? "opacity-50" : ""}`}>
+      <div className={`flex flex-wrap items-center gap-x-3 gap-y-2.5 ${stacked ? "" : "sm:flex-nowrap"}`}>
+        {selectable && (
+          <label className="-ms-2 flex size-11 shrink-0 cursor-pointer items-center justify-center max-sm:order-none">
+            <span className="sr-only">{t("בחירת המשימה לאישור קבוצתי")}</span>
+            <input type="checkbox" className="size-[18px] accent-[var(--color-accent)]" checked={selected} disabled={bulkPending} onChange={() => toggleTaskSelected(taskId)} />
+          </label>
+        )}
+        <Link href={href} className={`flex min-w-0 flex-1 items-center gap-3 ${selectable ? "max-sm:basis-[calc(100%-3rem)]" : "max-sm:basis-full"} ${stacked ? "basis-[calc(100%-3rem)]" : "sm:basis-auto"}`}>
           <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft font-semibold text-accent">{first}</span>
           <span className="min-w-0 flex-1">
             <span className="block break-words font-medium">{patientName}</span>
-            <span className="block break-words text-sm text-muted">{title}</span>
+            <span className="block break-words text-sm text-muted">{title}{ownerPill && !stacked ? <span className="pill pill-neutral ms-2 align-middle">{ownerPill}</span> : null}</span>
+            {stacked && (
+              <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className={`pill ${pillTone}`}>{status}</span>
+                {ownerPill ? <span className="pill pill-neutral">{ownerPill}</span> : null}
+              </span>
+            )}
           </span>
-          <span className={`pill shrink-0 ${urgent ? "pill-bad" : "pill-warn"}`}>{status}</span>
+          {!stacked && <span className={`pill shrink-0 ${pillTone}`}>{status}</span>}
         </Link>
-        <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+        <div className={`flex w-full items-center gap-2 ${stacked ? "" : "sm:w-auto sm:shrink-0"}`}>
           {review ? (
             <>
-              <button type="button" onClick={accept} disabled={pending} className="btn btn-primary btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
+              <button type="button" onClick={accept} disabled={pending} className={`btn btn-primary btn-sm min-h-11 flex-1 sm:min-h-9 ${stacked ? "sm:flex-1" : "sm:flex-none"}`}>
                 {pending ? t("שומר…") : t("אישור")}
               </button>
               <Link href={href} className="btn btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
@@ -75,9 +95,9 @@ export function HomeTaskRow({
                   <svg {...SVG}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
                 </a>
               )}
-              <button type="button" onClick={accept} disabled={pending} className="btn btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
+              <button type="button" onClick={accept} disabled={pending || bulkPending} className="btn btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
                 <span className="sm:hidden inline-flex items-center gap-1.5"><svg {...SVG} width={16} height={16}><path d="m5 12 5 5 9-10" /></svg>{pending ? t("שומר…") : t("בוצע")}</span>
-                <span className="max-sm:hidden">{pending ? t("שומר…") : t("סימון כבוצע")}</span>
+                <span className="max-sm:hidden">{pending ? t("שומר…") : owner === "patient" ? t("סימון כהושלם ידנית") : t("סימון כבוצע")}</span>
               </button>
             </>
           )}
