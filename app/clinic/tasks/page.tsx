@@ -68,19 +68,20 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const emailByPatient = new Map((emailRows ?? []).map((p) => [p.id as string, p.email as string | null]));
   const reminderLink = `${origin}/journey`;
 
+  const filterOptions = TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }));
+
   return (
     <main className="space-y-10">
       <header>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-          <div className="flex min-w-0 flex-1 justify-end">
-            <TasksFilter
-              value={active}
-              options={TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }))}
-            />
+          <div className="flex min-w-0 flex-1 justify-end max-sm:hidden">
+            <TasksFilter variant="select" value={active} options={filterOptions} />
           </div>
         </div>
       </header>
+      {/* On a phone: tabs under the title. */}
+      <div className="-mt-6 sm:hidden"><TasksFilter variant="tabs" value={active} options={filterOptions} /></div>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
           id: r.id,
