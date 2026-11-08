@@ -30,6 +30,8 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic/calendar", label: t("יומן"), icon: "calendar" },
     { href: "/clinic/activity", label: t("עדכונים"), icon: "updates", badge: <Suspense fallback={null}><ActivityBadge /></Suspense> },
     { href: "/clinic/questions", label: t("שאלות לרופא"), icon: "question", more: true, badge: <Suspense fallback={null}><QuestionsBadge /></Suspense> },
+    ...(profile.role === "doctor" ? [{ href: "/clinic/summaries", label: t("סיכומי פגישות"), icon: "notes" as const, more: true }] : []),
+    ...(profile.role === "doctor" ? [{ href: "/clinic/referrals", label: t("הפניות"), icon: "referral" as const, more: true }] : []),
     { href: "/clinic/insights", label: t("תובנות ניהול"), icon: "insights", more: true },
     ...(profile.role === "doctor" ? [{ href: "/clinic/templates", label: t("תבניות"), icon: "templates" as const, more: true }] : []),
     ...(profile.role === "doctor" ? [{ href: "/clinic/team", label: t("הצוות שלי"), icon: "users" as const, more: true }] : []),
