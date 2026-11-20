@@ -72,3 +72,8 @@ Usernames map to `<username>@medix.local` in Supabase Auth.
 - A **template** is a baseline protocol. Starting a journey **copies** it for the patient, so per-patient edits never touch the template.
 - A task is `locked` until all tasks it depends on are `accepted`. Upload alone is not completion: staff must accept.
 - Readiness = accepted mandatory tasks / all mandatory tasks due on or before surgery.
+
+## Tests
+
+- `npm run typecheck`, `npm run lint` and `npm run build` run in CI on every push (`.github/workflows/ci.yml`).
+- **Row-level-security tests** (`tests/rls/`): `tests/rls/run.sh` builds a throwaway Postgres from `supabase/schema.sql` plus every patch in the order listed above, then checks that two clinics cannot see or change each other's data, that a patient only sees their own journey, and that anonymous visitors see nothing. Run it locally with any Postgres: `PGHOST=localhost PGUSER=postgres tests/rls/run.sh`. When you add a table with `clinic_id`, add a seed row for clinic B in `tests/rls/isolation.test.sql` so the check is not empty. New patches must also be listed in the README order above, or the tests will not apply them.

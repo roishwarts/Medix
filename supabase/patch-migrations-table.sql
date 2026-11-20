@@ -12,5 +12,10 @@ create table if not exists _migrations (
   applied_at timestamptz not null default now()
 );
 
+-- Closed to everyone except the database owner and the service role: this lives in the public schema, which
+-- the API exposes, so without this anyone holding the public anon key could read (or write) the list.
+alter table _migrations enable row level security;
+revoke all on _migrations from anon, authenticated;
+
 -- Records that this patch ran, for _migrations-table.sql's applied-patches query.
 insert into _migrations (name) values ('patch-migrations-table.sql') on conflict (name) do nothing;
