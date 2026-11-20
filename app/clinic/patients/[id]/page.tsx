@@ -414,7 +414,7 @@ export default async function PatientPage({
         </ol>
       </section>
 
-      <PromsCard journeyId={journey.id} />
+      {profile.proms_enabled && <PromsCard journeyId={journey.id} />}
 
       <AllDocuments items={allDocs} />
               </div>

@@ -91,9 +91,11 @@ export default async function ClinicContentPage() {
         <div id="general-info" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <GeneralInfoForm templates={templates ?? []} />
         </div>
-        <div id="red-flags" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
-          <RedFlagsForm templates={templates ?? []} />
-        </div>
+        {profile.red_flags_enabled && (
+          <div id="red-flags" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
+            <RedFlagsForm templates={templates ?? []} />
+          </div>
+        )}
         <div id="links" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <LinksForm links={links} />
         </div>

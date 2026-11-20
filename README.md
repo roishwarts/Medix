@@ -48,6 +48,7 @@ Hebrew-only, RTL. Stack: Next.js (App Router) + Supabase (Auth, Postgres + RLS, 
    38. `patch-evidence-bucket-limits.sql` — enforces the evidence upload's 10MB/image-or-PDF limits at the storage-bucket level too, not just client-side.
    39. `patch-meeting-summaries.sql` — upgrades the doctor-only visit note into a shared "סיכום פגישה": any staff member can write one, optionally linked to an appointment, and anyone on staff can edit it later.
    40. `patch-social-links.sql` — social media links (Facebook, Instagram, YouTube) shown to patients, one set per clinic.
+   41. `patch-feature-flags.sql` — per-clinic on/off switches for the PROMS questionnaires and the red-flags list (a platform admin flips them on the clinic's admin page). Both default to on.
 
    Once every patch above is applied, run `patch-performance.sql` **last** — it adds indexes on every foreign key, rewrites every RLS policy to evaluate its function calls once per query instead of once per row, and schedules cleanup of two log tables (requires the `pg_cron` extension — enable it in Dashboard → Database → Extensions if it isn't already).
 

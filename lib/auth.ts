@@ -23,6 +23,8 @@ export type Profile = {
   emergency_phone: string | null;
   office_hours: string | null;
   social_facebook: string | null;
+  proms_enabled: boolean;
+  red_flags_enabled: boolean;
   social_instagram: string | null;
   social_youtube: string | null;
   logo_url: string | null;
@@ -49,6 +51,8 @@ type ClinicJoinRow = {
   emergency_phone?: string | null;
   office_hours?: string | null;
   social_facebook?: string | null;
+  proms_enabled?: boolean | null;
+  red_flags_enabled?: boolean | null;
   social_instagram?: string | null;
   social_youtube?: string | null;
   logo_path?: string | null;
@@ -130,6 +134,8 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     contact_phone: clinic?.contact_phone ?? null,
     emergency_phone: clinic?.emergency_phone ?? null,
     office_hours: clinic?.office_hours ?? null,
+    proms_enabled: clinic?.proms_enabled !== false,
+    red_flags_enabled: clinic?.red_flags_enabled !== false,
     social_facebook: httpsOrNull(clinic?.social_facebook),
     social_instagram: httpsOrNull(clinic?.social_instagram),
     social_youtube: httpsOrNull(clinic?.social_youtube),
