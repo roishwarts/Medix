@@ -1,4 +1,5 @@
 import { getT } from "@/lib/i18n/server";
+import { L } from "@/lib/legal";
 
 // Required by Israel's Equal Rights for Persons with Disabilities (Accessibility to Services)
 // Regulations 5773-2013 and Standard 5568 (WCAG 2.0): every service provider's digital properties
@@ -19,9 +20,9 @@ export default async function AccessibilityPage() {
         <section>
           <h2 className="text-lg font-medium">{t("מחויבותנו לנגישות")}</h2>
           <p className="mt-2">
-            {t(
+            {L(t(
               "[להשלים: שם החברה המפעילה] מחויבת להנגיש את השירותים הדיגיטליים שלה לאנשים עם מוגבלות, בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), תשע״ג-2013, ולתקן הישראלי ת״י 5568 המבוסס על הנחיות WCAG 2.0 בסטנדרט AA.",
-            )}
+            ), "companyName")}
           </p>
         </section>
 
@@ -49,7 +50,7 @@ export default async function AccessibilityPage() {
         <section>
           <h2 className="text-lg font-medium">{t("מגבלות ידועות")}</h2>
           <p className="mt-2">
-            {t("[להשלים אם רלוונטי: רכיבים או עמודים שעדיין לא עברו בדיקת נגישות מלאה, למשל גרפים/דוחות מסוימים.]")}
+            {L(t("[להשלים אם רלוונטי: רכיבים או עמודים שעדיין לא עברו בדיקת נגישות מלאה, למשל גרפים/דוחות מסוימים.]"), "accessibilityKnownGaps")}
           </p>
         </section>
 
@@ -58,13 +59,13 @@ export default async function AccessibilityPage() {
           <p className="mt-2">{t("נתקלתם בבעיית נגישות? נשמח שתפנו לרכז הנגישות שלנו:")}</p>
           <p className="mt-2">
             {t("רכז נגישות: ")}
-            {t("[להשלים: שם]")}
+            {L(t("[להשלים: שם]"), "accessibilityCoordinatorName")}
             <br />
             {t("טלפון: ")}
-            {t("[להשלים: מספר טלפון]")}
+            {L(t("[להשלים: מספר טלפון]"), "accessibilityCoordinatorPhone")}
             <br />
             {t("דוא״ל: ")}
-            {t("[להשלים: כתובת אימייל]")}
+            {L(t("[להשלים: כתובת אימייל]"), "accessibilityCoordinatorEmail")}
           </p>
           <p className="mt-2">
             {t("אם לא קיבלתם מענה הולם לפנייתכם, ניתן לפנות לנציבות שוויון זכויות לאנשים עם מוגבלות במשרד המשפטים.")}

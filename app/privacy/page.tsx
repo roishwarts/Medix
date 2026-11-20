@@ -1,4 +1,5 @@
 import { getT } from "@/lib/i18n/server";
+import { L } from "@/lib/legal";
 
 // Required before any patient's personal/medical data is collected: the privacy policy a patient
 // consents to during onboarding (app/onboarding/onboarding-flow.tsx) links here. Public (see
@@ -19,9 +20,9 @@ export default async function PrivacyPage() {
         <section>
           <h2 className="text-lg font-medium">{t("מי אנחנו ועל מה חלה המדיניות")}</h2>
           <p className="mt-2">
-            {t(
+            {L(t(
               'אפליקציה זו ("האפליקציה") מופעלת ע״י [להשלים: שם החברה המפעילה] ("אנחנו"), המספקת למרפאות מערכת לניהול מסלול ההכנה והטיפול של מטופליהן. המרפאה שבה אתם מטופלים היא בעלת המידע שלכם ("בעלת המאגר"); אנחנו מעבדים אותו מטעמה, כפי שמוסכם בינינו בהסכם כתוב, ובהתאם למדיניות זו.',
-            )}
+            ), "companyName")}
           </p>
         </section>
 
@@ -60,9 +61,9 @@ export default async function PrivacyPage() {
         <section>
           <h2 className="text-lg font-medium">{t("ספקי משנה ואחסון המידע")}</h2>
           <p className="mt-2">
-            {t(
+            {L(t(
               "האפליקציה פועלת על גבי ספקי תשתית חיצוניים (בסיס נתונים ואחסון קבצים, ואחסון קוד האפליקציה), הכפופים להסכמי עיבוד מידע מולנו. [להשלים: מיקום גיאוגרפי של השרתים/אזור האחסון].",
-            )}
+            ), "dataLocation")}
           </p>
         </section>
 
@@ -78,7 +79,7 @@ export default async function PrivacyPage() {
         <section>
           <h2 className="text-lg font-medium">{t("תקופת השמירה")}</h2>
           <p className="mt-2">
-            {t("[להשלים: תקופת שמירת המידע הרפואי/האישי, ומה קורה למידע כשהטיפול מסתיים או כשמטופל מבקש להימחק]")}
+            {L(t("[להשלים: תקופת שמירת המידע הרפואי/האישי, ומה קורה למידע כשהטיפול מסתיים או כשמטופל מבקש להימחק]"), "retention")}
           </p>
         </section>
 
@@ -101,10 +102,10 @@ export default async function PrivacyPage() {
           <p className="mt-2">
             {t("שאלות או בקשות בנושא פרטיות המידע שלכם ניתן להפנות אל:")}
             <br />
-            {t("[להשלים: שם איש קשר/ממונה אבטחת מידע]")}
+            {L(t("[להשלים: שם איש קשר/ממונה אבטחת מידע]"), "securityContactName")}
             <br />
             {t("דוא״ל: ")}
-            {t("[להשלים: כתובת אימייל]")}
+            {L(t("[להשלים: כתובת אימייל]"), "securityContactEmail")}
           </p>
         </section>
       </div>
