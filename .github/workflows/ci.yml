@@ -16,6 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       # Placeholder values: this only needs to prove the app compiles and builds, not that it can
       # actually reach Supabase - real secrets stay in Vercel's own environment variables.
       - run: npm run build

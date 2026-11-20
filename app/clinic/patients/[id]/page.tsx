@@ -7,7 +7,7 @@ import { loadJourney } from "@/lib/queries";
 import { getOrigin } from "@/lib/account-links";
 import { taskReminderMessage } from "@/lib/messages";
 import { ReminderButton } from "@/components/reminder-button";
-import { ownerLabel, blockerLabel, nowTask } from "@/lib/journey";
+import { ownerLabel, nowTask } from "@/lib/journey";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
 import { formatDate, formatDateLong, israelParts, relativeDays } from "@/lib/dates";

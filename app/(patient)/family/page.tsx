@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { israelParts } from "@/lib/dates";
 import { CaregiverList } from "@/components/caregiver-list";
 import { getT } from "@/lib/i18n/server";
-import { getLang } from "@/lib/prefs-server";
 import { InviteForm } from "./invite-form";
 import { InviteRow } from "./invite-row";
 
@@ -11,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function FamilyPage() {
   await requireProfile(["patient"]);
-  const [t, lang] = await Promise.all([getT(), getLang()]);
+  const t = await getT();
   const supabase = await createClient();
   const [{ data: caregivers }, { data: invites }] = await Promise.all([
     supabase.from("patient_caregivers").select("id, full_name, relation, can_act, created_at").order("created_at"),

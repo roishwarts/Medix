@@ -6,9 +6,9 @@ import type { T } from "@/lib/i18n";
 import type { Lang } from "@/lib/prefs";
 
 const CELL: Record<string, string> = {
-  surgery: "bg-[#f7a801] font-bold text-[#171e29]",
-  appointment: "bg-[#e3f1f4] font-semibold text-[#17606f]",
-  deadline: "bg-[#fff3dc] font-semibold text-[#8a5300]",
+  surgery: "bg-[var(--cal-surgery-bg)] font-bold text-[var(--cal-surgery-fg)]",
+  appointment: "bg-[var(--cal-appt-bg)] font-semibold text-[var(--cal-appt-fg)]",
+  deadline: "bg-[var(--cal-deadline-bg)] font-semibold text-[var(--cal-deadline-fg)]",
 };
 const PRIORITY = ["surgery", "appointment", "deadline"];
 
@@ -52,9 +52,9 @@ export function MonthCard({
         })}
       </div>
       <ul className="mt-3.5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted" aria-label={t("מקרא צבעים")}>
-        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] bg-[#f7a801]" />{t("יום הניתוח")}</li>
-        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] border border-[#9ccbd6] bg-[#e3f1f4]" />{t("תור")}</li>
-        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] border border-[#e8c98a] bg-[#fff3dc]" />{t("מועד יעד")}</li>
+        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] bg-[var(--cal-surgery-bg)]" />{t("יום הניתוח")}</li>
+        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] border border-[var(--cal-appt-line)] bg-[var(--cal-appt-bg)]" />{t("תור")}</li>
+        <li className="flex items-center gap-1.5"><i aria-hidden className="size-2.5 rounded-[3px] border border-[var(--cal-deadline-line)] bg-[var(--cal-deadline-bg)]" />{t("מועד יעד")}</li>
       </ul>
     </div>
   );
@@ -65,7 +65,7 @@ export function UpcomingList({ events, lang, t, googleOnly, showPatient }: { eve
   return (
     <ul className="card divide-y divide-line">
       {events.map((e) => {
-        const box = e.kind === "surgery" ? "bg-[#f7a801] text-[#171e29]" : e.kind === "appointment" ? "bg-[#e3f1f4] text-[#17606f]" : "bg-[#fff3dc] text-[#8a5300]";
+        const box = e.kind === "surgery" ? "bg-[var(--cal-surgery-bg)] text-[var(--cal-surgery-fg)]" : e.kind === "appointment" ? "bg-[var(--cal-appt-bg)] text-[var(--cal-appt-fg)]" : "bg-[var(--cal-deadline-bg)] text-[var(--cal-deadline-fg)]";
         const day = e.date.slice(8, 10).replace(/^0/, "");
         const month = new Date(`${e.date}T12:00:00`).toLocaleDateString(LOCALE[lang], { month: "short" });
         return (

@@ -12,7 +12,6 @@ const NEXT: Record<DevStatus, DevStatus> = { todo: "doing", doing: "done", done:
 const LABEL: Record<DevStatus, string> = { todo: "לביצוע", doing: "בתהליך", done: "הושלם" };
 
 function StatusDot({ status }: { status: DevStatus }) {
-  const t = useT();
   if (status === "done") return <span className="grid size-6 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={13} /></span>;
   if (status === "doing") return <span className="grid size-6 place-items-center rounded-full border-2 border-accent"><span className="size-2.5 rounded-full bg-accent" /></span>;
   return <span className="block size-6 rounded-full border-2 border-line-strong" />;

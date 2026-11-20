@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
-import { ownerLabel, blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
+import { blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
 import { getClinicOptions } from "@/lib/clinic-options";
 import { HomeTaskRow } from "@/components/home-task-row";
 import { getOrigin } from "@/lib/account-links";
@@ -11,7 +11,7 @@ import { HospitalFilter } from "@/components/hospital-filter";
 import { parseDays } from "@/components/patient-filters";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import { diffDays, formatDate, relativeDays, today, LOCALE } from "@/lib/dates";
+import { diffDays, relativeDays, today, LOCALE } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/supabase/paginate";
 import { ActivityList } from "@/components/activity-list";
@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 const DEFAULT_READY_DAYS = 14;
 
-function Kpi({ href, label, value, tone, alert, noIcon, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean; noIcon?: boolean }) {
+function Kpi({ href, label, value, tone, alert, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean }) {
   const color = tone === "bad" ? "text-bad" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-ink";
   return (
     <Link
