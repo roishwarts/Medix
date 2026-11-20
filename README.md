@@ -38,15 +38,16 @@ Hebrew-only, RTL. Stack: Next.js (App Router) + Supabase (Auth, Postgres + RLS, 
    28. `patch-referrals.sql` — doctor-written referral letters, printed on the clinic's own letterhead instead of a stamped paper form.
    29. `patch-outcomes.sql` — surgery cancellations with a reason, and when prep first reached 100% — both feed the managers dashboard at `/clinic/insights`.
    30. `patch-doctor-queue.sql` — "questions for the doctor" queue and the per-journey clinical summary. Run after `patch-outcomes.sql`.
-   31. `patch-medical-info.sql` — per-patient national ID, HMO and private-insurance details, shown on the patient's own card.
-   32. `patch-lang-stage.sql` — the patient's message language (for WhatsApp/email) and a manual status override.
-   33. `patch-stage-cancelled.sql` — lets the manual status override be "cancelled" too. Run after `patch-lang-stage.sql`.
-   34. `patch-proms.sql` — PROMs: a general-health and a knee-specific questionnaire, collected before surgery and again at 3 months and 1 year after — knee templates only for now; see the file header on question-wording licensing before relying on these for real research.
-   35. `patch-multi-journey.sql` — lets a patient have more than one journey — another surgery, in parallel or later.
-   36. `patch-referral-results.sql` — closes the loop on a referral: staff marks that the result came back and attaches the file.
-   37. `patch-evidence-bucket-limits.sql` — enforces the evidence upload's 10MB/image-or-PDF limits at the storage-bucket level too, not just client-side.
-   38. `patch-meeting-summaries.sql` — upgrades the doctor-only visit note into a shared "סיכום פגישה": any staff member can write one, optionally linked to an appointment, and anyone on staff can edit it later.
-   39. `patch-social-links.sql` — social media links (Facebook, Instagram, YouTube) shown to patients, one set per clinic.
+   31. `patch-clinical-summary-concurrency.sql` — adds optimistic-concurrency to the clinical summary save, so two doctors editing it at once get a clear conflict error instead of one silently overwriting the other. **Changes `save_clinical_summary()`'s call signature — run this before deploying app code that calls it with the new parameter**, or saving a clinical summary will error until this patch runs (the app falls back gracefully, but the conflict check won't be active until it does). Run after `patch-doctor-queue.sql`.
+   32. `patch-medical-info.sql` — per-patient national ID, HMO and private-insurance details, shown on the patient's own card.
+   33. `patch-lang-stage.sql` — the patient's message language (for WhatsApp/email) and a manual status override.
+   34. `patch-stage-cancelled.sql` — lets the manual status override be "cancelled" too. Run after `patch-lang-stage.sql`.
+   35. `patch-proms.sql` — PROMs: a general-health and a knee-specific questionnaire, collected before surgery and again at 3 months and 1 year after — knee templates only for now; see the file header on question-wording licensing before relying on these for real research.
+   36. `patch-multi-journey.sql` — lets a patient have more than one journey — another surgery, in parallel or later.
+   37. `patch-referral-results.sql` — closes the loop on a referral: staff marks that the result came back and attaches the file.
+   38. `patch-evidence-bucket-limits.sql` — enforces the evidence upload's 10MB/image-or-PDF limits at the storage-bucket level too, not just client-side.
+   39. `patch-meeting-summaries.sql` — upgrades the doctor-only visit note into a shared "סיכום פגישה": any staff member can write one, optionally linked to an appointment, and anyone on staff can edit it later.
+   40. `patch-social-links.sql` — social media links (Facebook, Instagram, YouTube) shown to patients, one set per clinic.
 
    Once every patch above is applied, run `patch-performance.sql` **last** — it adds indexes on every foreign key, rewrites every RLS policy to evaluate its function calls once per query instead of once per row, and schedules cleanup of two log tables (requires the `pg_cron` extension — enable it in Dashboard → Database → Extensions if it isn't already).
 
@@ -60,6 +61,7 @@ Hebrew-only, RTL. Stack: Next.js (App Router) + Supabase (Auth, Postgres + RLS, 
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server only; needed so staff can create patient logins)
    - `NEXT_PUBLIC_LOGIN_DOMAIN` (optional, default `medix.local`; not required, so not checked at startup)
+   - `IMPERSONATION_SECRET` (optional but recommended: a long random value, e.g. `openssl rand -hex 32`, used to sign the admin "view as" cookie. Without it, that cookie is signed with `SUPABASE_SERVICE_ROLE_KEY` instead — works, but means rotating either secret affects the other. Set this to decouple them.)
 3. `npm install && npm run dev`
 
 ## Demo logins (password `Medix2026!`)

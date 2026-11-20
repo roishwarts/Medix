@@ -31,10 +31,15 @@ export function DoctorQuestions({
     if (!question.trim()) { setError(t("יש לכתוב את השאלה")); return; }
     setError(null);
     start(async () => {
-      const res = await askDoctor({ patientId, journeyId, question, urgent });
-      if (res.error) { setError(res.error); return; }
-      setQuestion(""); setUrgent(false); setOpen(false);
-      router.refresh();
+      try {
+        const res = await askDoctor({ patientId, journeyId, question, urgent });
+        if (res.error) { setError(res.error); return; }
+        setQuestion(""); setUrgent(false); setOpen(false);
+        router.refresh();
+      } catch {
+        // A thrown error must not leave the question silently un-sent with no sign anything went wrong.
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 

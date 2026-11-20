@@ -45,17 +45,27 @@ export function QuestionCard({
     if (!answer.trim()) { setError(t("יש לכתוב תשובה")); return; }
     setError(null);
     start(async () => {
-      const res = await answerQuestion(q.id, answer);
-      if (res.error) setError(res.error);
-      else { setStatus(t("התשובה נשלחה")); router.refresh(); }
+      try {
+        const res = await answerQuestion(q.id, answer);
+        if (res.error) setError(res.error);
+        else { setStatus(t("התשובה נשלחה")); router.refresh(); }
+      } catch {
+        // An answer the doctor believes was sent but that actually threw (session expired, dropped
+        // connection) must show an error — never fail silently on something another staff member is waiting on.
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
   function withdraw() {
     if (!confirm(t("להסיר את השאלה? לא ניתן לבטל."))) return;
     start(async () => {
-      const res = await withdrawQuestion(q.id);
-      if (res.error) setError(res.error);
-      else { setStatus(t("השאלה הוסרה")); router.refresh(); }
+      try {
+        const res = await withdrawQuestion(q.id);
+        if (res.error) setError(res.error);
+        else { setStatus(t("השאלה הוסרה")); router.refresh(); }
+      } catch {
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 

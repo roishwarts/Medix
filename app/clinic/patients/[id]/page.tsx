@@ -148,7 +148,7 @@ export default async function PatientPage({
   ]);
   // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
   const [clinicalRes, questions, questionsAvailabilityRes] = await Promise.all([
-    supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes").eq("journey_id", journey.id).maybeSingle(),
+    supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes, updated_at").eq("journey_id", journey.id).maybeSingle(),
     loadQuestions({ patientId: journey.patient_id, limit: 50 }),
     supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1),
   ]);
@@ -157,6 +157,7 @@ export default async function PatientPage({
     ? {
         diagnosis: clinicalRes.data.diagnosis, side: clinicalRes.data.side as ClinicalData["side"], allergies: clinicalRes.data.allergies,
         medications: clinicalRes.data.medications, medicalHistory: clinicalRes.data.medical_history, notes: clinicalRes.data.notes,
+        updatedAt: clinicalRes.data.updated_at,
       }
     : null;
   const questionsAvailable = !questionsAvailabilityRes.error;

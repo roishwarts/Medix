@@ -43,6 +43,7 @@ export default async function ClinicContentPage() {
   const sections = [
     { id: "logo", label: t("מיתוג") },
     { id: "contact", label: t("הצוות שלי") },
+    { id: "social", label: t("רשתות חברתיות") },
     { id: "general-info", label: t("מידע כללי לניתוח") },
     { id: "red-flags", label: t("דגלים אדומים") },
     { id: "links", label: t("קישורים") },

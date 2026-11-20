@@ -47,7 +47,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
     if (data) {
-      const p = oneOrNull(data.patients as { full_name: string } | { full_name: string }[] | null);
+      const p = oneOrNull<{ full_name: string }>(data.patients);
       const { data: c } = await admin.from("clinics").select("name").eq("id", data.clinic_id).maybeSingle();
       const { data: inviterRow } = await admin.from("profiles").select("full_name").eq("id", data.created_by).maybeSingle();
       invite = {

@@ -92,6 +92,12 @@ function SummaryForm({
   const router = useRouter();
   const [occurredAt, setOccurredAt] = useState(existing ? toLocalInput(existing.occurredAt) : toLocalInput(new Date().toISOString()));
   const [apptId, setApptId] = useState(existing?.journeyTaskId ?? "");
+  // The appointment this summary was linked to may since have been removed from the live list
+  // (template edited, task deleted). Without this, the <select> can't show it as selected — it
+  // silently renders as "none" even though the link is still there, and an edit+save that never
+  // touches this field would otherwise look fine while actually dropping the original link the
+  // moment the user does touch the dropdown without noticing it already looked unlinked.
+  const linkedMissing = !!existing?.journeyTaskId && !appointments.some((a) => a.id === existing.journeyTaskId);
   const [note, setNote] = useState(existing?.note ?? "");
   const [followUp, setFollowUp] = useState(existing?.followUp ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -101,16 +107,22 @@ function SummaryForm({
     if (!note.trim()) { setError(t("יש לכתוב מה נדון בפגישה")); return; }
     setError(null);
     start(async () => {
-      const res = await saveMeetingSummary({
-        id: existing?.id,
-        patientId,
-        journeyTaskId: apptId || null,
-        occurredAt: new Date(occurredAt).toISOString(),
-        note,
-        followUp,
-      });
-      if (res.error) setError(res.error);
-      else { onClose(); router.refresh(); }
+      try {
+        const res = await saveMeetingSummary({
+          id: existing?.id,
+          patientId,
+          journeyTaskId: apptId || null,
+          occurredAt: new Date(occurredAt).toISOString(),
+          note,
+          followUp,
+        });
+        if (res.error) setError(res.error);
+        else { onClose(); router.refresh(); }
+      } catch {
+        // Without this, a thrown error (dropped connection, expired session) leaves the form just
+        // sitting there with no feedback — the doctor/secretary has no way to know the note was lost.
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 
@@ -118,9 +130,13 @@ function SummaryForm({
     if (!existing) return;
     if (!confirm(t("למחוק את הסיכום הזה?"))) return;
     start(async () => {
-      const res = await deleteMeetingSummary(existing.id);
-      if (res.error) setError(res.error);
-      else { onClose(); router.refresh(); }
+      try {
+        const res = await deleteMeetingSummary(existing.id);
+        if (res.error) setError(res.error);
+        else { onClose(); router.refresh(); }
+      } catch {
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 
@@ -131,11 +147,14 @@ function SummaryForm({
           <label className="lbl" htmlFor="sum-when">{t("מועד הפגישה")}</label>
           <input id="sum-when" type="datetime-local" dir="ltr" className="field num" value={occurredAt} onChange={(e) => setOccurredAt(e.target.value)} />
         </div>
-        {appointments.length > 0 && (
+        {(appointments.length > 0 || linkedMissing) && (
           <div>
             <label className="lbl" htmlFor="sum-appt">{t("קשור לתור (לא חובה)")}</label>
             <select id="sum-appt" className="field" value={apptId} onChange={(e) => setApptId(e.target.value)}>
               <option value="">{t("ללא")}</option>
+              {linkedMissing && (
+                <option value={existing!.journeyTaskId!}>{existing!.linkedTitle ?? t("תור שנמחק")}</option>
+              )}
               {appointments.map((a) => <option key={a.id} value={a.id}>{a.title}</option>)}
             </select>
           </div>

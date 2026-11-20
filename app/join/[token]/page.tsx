@@ -29,8 +29,8 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
       .is("used_at", null)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
-    const patient = oneOrNull(data?.patients) as { full_name: string; user_id: string | null } | null;
-    const clinic = oneOrNull(data?.clinics) as { name: string } | null;
+    const patient = oneOrNull<{ full_name: string; user_id: string | null }>(data?.patients);
+    const clinic = oneOrNull<{ name: string }>(data?.clinics);
     if (patient && !patient.user_id) info = { firstName: patient.full_name.split(" ")[0], clinic: clinic?.name ?? "" };
   }
 

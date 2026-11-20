@@ -21,7 +21,6 @@ import { loadQuestions } from "@/lib/doctor-questions";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_SURGERY_DAYS = 7;
 const DEFAULT_READY_DAYS = 14;
 
 function Kpi({ href, label, value, tone, alert, noIcon, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean; noIcon?: boolean }) {
@@ -51,11 +50,11 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
   );
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; kd?: string; rd?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ hospital?: string; rd?: string }> }) {
   const sp = await searchParams;
   const supabase = await createClient();
   const [t, lang, profile] = await Promise.all([getT(), getLang(), requireProfile(["staff", "doctor"])]);
-  const [allJourneysRaw, resetRes, eventsRes, placements, options, templatesRes, clinicName, origin, extras, emailRes] = await Promise.all([
+  const [allJourneysRaw, resetRes, eventsRes, placements, options, templatesRes, clinicName, origin, extras, emailRes, seenRes] = await Promise.all([
     loadJourneys(),
     supabase.from("password_reset_requests").select("id", { count: "exact", head: true }).is("handled_at", null),
     supabase
@@ -74,6 +73,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     loadPatientExtras(),
     // The reminder falls back to email when a patient has no phone.
     supabase.from("patients").select("id, email"),
+    // Same "new" marker the full updates page uses, so the preview here agrees with it instead of
+    // always showing everything as new (or, with "now", never).
+    supabase.from("activity_seen").select("seen_at").eq("user_id", profile.id).maybeSingle(),
   ]);
   const templateCount = templatesRes.count ?? 0;
   // A cancelled surgery no longer needs the clinic's attention; it stays on the patient's own card.
@@ -95,11 +97,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const overdueCount = items.filter((i) => i.kind === "overdue").length;
   const rejectedCount = items.filter((i) => i.kind === "rejected").length;
 
-  const surgeryDays = parseDays(sp.kd) ?? DEFAULT_SURGERY_DAYS;
   const readyDays = parseDays(sp.rd) ?? DEFAULT_READY_DAYS;
   const upcoming = journeys.filter((j) => diffDays(j.surgery_date, t0) >= 0);
   const thisWeek = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= 7);
-  const kpiSurgeries = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= surgeryDays);
   const soon = upcoming.filter((j) => diffDays(j.surgery_date, t0) <= readyDays);
   const soonReady = soon.filter((j) => j.summary.readiness === 100).length;
 
@@ -134,8 +134,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     t,
     patientNames: new Map(journeys.map((j) => [j.patient_id, j.patient.full_name])),
     journeyByPatient,
-    me: "",
-    seenAt: new Date().toISOString(),
+    me: profile.id,
+    seenAt: seenRes.data?.seen_at ?? null,
   });
 
   const hourIL = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).format(new Date()));
