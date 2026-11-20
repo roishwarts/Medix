@@ -1,17 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useT } from "@/components/i18n-provider";
 import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
-
-function SearchIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-      <circle cx="7" cy="7" r="4.5" />
-      <path d="M13 13l-2.5-2.5" />
-    </svg>
-  );
-}
 
 // A persistent header on phones, reachable from every /clinic page - previously there was no top
 // chrome at all on mobile (only the bottom tab bar), so settings and quick search were only
@@ -34,11 +24,6 @@ export function ClinicMobileTopbar({ brand, logo }: { brand: string; logo: strin
           <span className="truncate text-sm font-medium">{brand}</span>
         )}
       </div>
-      <Link
-        href="/clinic/patients" aria-label={t("חיפוש מטופל")} className="btn btn-quiet btn-icon size-11 shrink-0"
-      >
-        <SearchIcon />
-      </Link>
     </header>
   );
 }

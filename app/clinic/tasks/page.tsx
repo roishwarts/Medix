@@ -9,9 +9,9 @@ import { getOrigin } from "@/lib/account-links";
 import { loadPatientExtras } from "@/lib/patient-extras";
 import { taskReminderMessage } from "@/lib/messages";
 import { TasksFilter } from "@/components/tasks-filter";
-import { TaskQueueRow } from "@/components/task-queue-row";
+import { HomeTaskRow } from "@/components/home-task-row";
+import { mailtoUrl, whatsAppUrl } from "@/lib/phone";
 import { BulkTaskBar } from "@/components/bulk-task-bar";
-import { ReminderButton } from "@/components/reminder-button";
 import { ResetRequests } from "../reset-requests";
 
 export const dynamic = "force-dynamic";
@@ -68,19 +68,20 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const emailByPatient = new Map((emailRows ?? []).map((p) => [p.id as string, p.email as string | null]));
   const reminderLink = `${origin}/journey`;
 
+  const filterOptions = TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }));
+
   return (
     <main className="space-y-10">
       <header>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <h1 className="display text-3xl sm:text-4xl">{t("משימות")}</h1>
-          <div className="flex min-w-0 flex-1 justify-end">
-            <TasksFilter
-              value={active}
-              options={TABS.map(([key, label]) => ({ key, label: t(label), count: key === "all" ? items.length : items.filter((i) => i.kind === key).length }))}
-            />
+          <div className="flex min-w-0 flex-1 justify-end max-sm:hidden">
+            <TasksFilter variant="select" value={active} options={filterOptions} />
           </div>
         </div>
       </header>
+      {/* On a phone: tabs under the title. */}
+      <div className="-mt-6 sm:hidden"><TasksFilter variant="tabs" value={active} options={filterOptions} /></div>
       <ResetRequests
         items={(resetRequests ?? []).map((r) => ({
           id: r.id,
@@ -114,39 +115,33 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               </h2>
             )}
             <div className="card divide-y divide-line">
-              {list.map((i) => (
-                <TaskQueueRow
-                  key={i.task.id}
-                  taskId={i.task.id}
-                  href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
-                  kind={i.kind}
-                  owner={i.task.owner}
-                  patientName={i.patientName}
-                  reminder={
-                    i.task.owner === "patient" && i.kind !== "review" ? (
-                      <ReminderButton
-                        phone={phoneByPatient.get(i.patientId)}
-                        email={emailByPatient.get(i.patientId)}
-                        subject={t("תזכורת מ{clinic}", { clinic: clinicName })}
-                        message={taskReminderMessage(i.patientName, clinicName, i.task.title, reminderLink, patientExtras.get(i.patientId)?.lang ?? "he")}
-                      />
-                    ) : undefined
-                  }
-                >
-                  <span className="flex flex-col gap-0.5">
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                      <span className={`shrink-0 text-xs ${i.kind === "overdue" || i.kind === "rejected" ? "font-medium text-bad" : "text-muted"}`}>
-                        {i.kind === "review" ? t("ניתוח {date}", { date: formatDate(i.surgeryDate, lang) }) : `${formatDate(i.task.dueDate, lang)} · ${relativeDays(i.task.dueDate, t0, lang)}`}
-                      </span>
-                    </span>
-                    <span className="min-w-0 break-words text-sm text-muted">
-                      {i.task.title}
-                      {(i.kind === "overdue" || i.kind === "rejected") && <span className="pill pill-neutral ms-2 align-middle">{t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) })}</span>}
-                    </span>
-                  </span>
-                </TaskQueueRow>
-              ))}
+              {list.map((i) => {
+                const phone = phoneByPatient.get(i.patientId) ?? null;
+                const email = emailByPatient.get(i.patientId);
+                const canRemind = i.task.owner === "patient" && i.kind !== "review" && (phone || email);
+                const msg = canRemind ? taskReminderMessage(i.patientName, clinicName, i.task.title, reminderLink, patientExtras.get(i.patientId)?.lang ?? "he") : "";
+                const rel = relativeDays(i.task.dueDate, t0, lang);
+                const status = i.kind === "rejected" ? t("הוחזר לתיקון") : i.kind === "review" ? t("ממתין לבדיקה")
+                  : i.kind === "overdue" ? t("באיחור · {when}", { when: rel }) : `${formatDate(i.task.dueDate, lang)} · ${rel}`;
+                return (
+                  <HomeTaskRow
+                    key={i.task.id}
+                    taskId={i.task.id}
+                    href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`}
+                    kind={i.kind}
+                    owner={i.task.owner}
+                    patientName={i.patientName}
+                    title={i.task.title}
+                    status={status}
+                    tone={i.kind === "rejected" || i.kind === "overdue" ? "bad" : i.kind === "review" ? "warn" : "neutral"}
+                    ownerPill={i.kind === "overdue" || i.kind === "rejected" ? t("אצל {owner}", { owner: ownerLabel(i.task.owner, t) }) : null}
+                    phone={phone}
+                    reminderHref={canRemind ? (phone ? whatsAppUrl(phone, msg) : mailtoUrl(email, t("תזכורת מ{clinic}", { clinic: clinicName }), msg)) : null}
+                    selectable
+                    stacked
+                  />
+                );
+              })}
             </div>
           </section>
         );

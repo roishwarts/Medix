@@ -19,7 +19,7 @@ export function Icon({ name, size = 16 }: { name: "check" | "lock" | "clock" | "
 }
 
 export function ReadinessBar({ value, state }: { value: number; state: Readiness }) {
-  const color = state === "ready" ? "bg-ok" : state === "not_ready" ? "bg-bad" : "bg-accent";
+  const color = state === "ready" ? "bg-ok" : state === "not_ready" ? "bg-bad" : "bg-gradient-to-r from-accent to-[#2bc4b4]";
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
       <div className={`h-full ${color}`} style={{ width: `${value}%` }} />

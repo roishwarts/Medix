@@ -6,16 +6,16 @@ import { googleCalendarUrl, type CalendarEvent } from "@/lib/calendar-links";
 
 // An icon that adds ONE event to the person's calendar: on iPhone and Mac the calendar opens straight from the
 // .ics link; other phones open Google Calendar with the event already filled in.
-export function AddEventButton({ id, event }: { id: string; event: CalendarEvent }) {
+export function AddEventButton({ id, event, googleOnly }: { id: string; event: CalendarEvent; googleOnly?: boolean }) {
   const t = useT();
   const [apple, setApple] = useState<boolean | null>(null);
   useEffect(() => { setApple(/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)); }, []);
   const label = t("הוספה ליומן: {title}", { title: event.title });
   return (
     <a
-      href={apple === false ? googleCalendarUrl(event) : `/api/calendar/ics?e=${encodeURIComponent(id)}`}
-      target={apple === false ? "_blank" : undefined}
-      rel={apple === false ? "noopener noreferrer" : undefined}
+      href={apple === false || googleOnly ? googleCalendarUrl(event) : `/api/calendar/ics?e=${encodeURIComponent(id)}`}
+      target={apple === false || googleOnly ? "_blank" : undefined}
+      rel={apple === false || googleOnly ? "noopener noreferrer" : undefined}
       aria-label={label}
       title={t("הוספה ליומן")}
       className="btn btn-icon size-11 min-h-11 shrink-0"

@@ -8,6 +8,10 @@ import type { Brand } from "@/lib/brand";
 //  - gold: the highlight (primary buttons, the selected tab).
 // With only `color` the app keeps its light look and just changes its accent.
 export function BrandTheme({ brand }: { brand: Brand }) {
+  // The whole product now uses one palette (see app/globals.css, the "Patient: home" design), so a clinic's own
+  // colours are no longer applied. Set this to true to bring per-clinic colours back.
+  const USE_CLINIC_COLORS = false;
+  if (!USE_CLINIC_COLORS) return null;
   const { color, dark, gold } = brand;
   if (!color && !dark && !gold) return null;
   let css = "";

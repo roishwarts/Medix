@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  /* page + surfaces are pure white; "paper" is only a faint fill for hover and inactive areas */
-  --color-page: #faf9f5;
-  --color-paper: #f3f1ea;
+  /* The palette of the "Patient: home" design: soft blue-green page, navy text, teal accent, navy bars. */
+  --color-page: #e6f3f6;
+  --color-paper: #eaf4f7;
   --color-surface: #ffffff;
-  --color-glass: rgb(255 255 255 / 0.72);
-  --glass-shadow: inset 0 1px 0 var(--hl), 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 18px -8px rgb(0 0 0 / 0.16);
-  --color-ink: #111827;
-  --color-muted: #667085;
-  --color-line: #e8e5dd;
-  --color-line-strong: #cfd4da;
-  --color-accent: #4b6584;
-  --color-accent-soft: #e9eef4;
-  --color-accent-line: #c9d4e1;
-  --color-ok: #0e6b4d;
-  --color-ok-soft: #e6f4ee;
-  --color-warn: #9a5107;
-  --color-warn-soft: #fdf1de;
-  --color-bad: #b02f26;
-  --color-bad-soft: #fbe8e6;
+  --color-glass: #ffffff;
+  --glass-shadow: 0 1px 2px rgb(11 37 64 / 0.06), 0 6px 14px -8px rgb(11 114 133 / 0.22);
+  --color-ink: #0b2540;
+  --color-muted: #4a6073;
+  --color-line: #d4e6ed;
+  --color-line-strong: #c4dde6;
+  --color-accent: #0b7285;
+  --color-accent-soft: #dff1f6;
+  --color-accent-line: #b5dbe5;
+  --color-ok: #1b6b3a;
+  --color-ok-soft: #e4f4ea;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fff3dc;
+  --color-bad: #b42318;
+  --color-bad-soft: #fdecea;
   --font-sans: var(--font-rubik), system-ui, sans-serif;
   --font-display: var(--font-rubik), system-ui, sans-serif;
 }
@@ -30,18 +30,38 @@ a, button, summary, label, input, select, textarea, [role="button"], [role="swit
 /* Theme helpers: light by default; dark when the person picks it (or their phone is in dark mode and they chose "system"). */
 :root {
   --hl: rgb(255 255 255 / 0.95);
-  --edge: rgb(0 0 0 / 0.14);
-  --edge-soft: rgb(0 0 0 / 0.1);
-  --edge-strong: rgb(0 0 0 / 0.28);
-  --surface-hi: #fff;
-  --btn-a: rgb(255 255 255 / 0.95);
-  --btn-b: rgb(255 255 255 / 0.6);
-  --on-a: rgb(255 255 255 / 0.98);
-  --on-b: rgb(255 255 255 / 0.7);
-  --field-bg: rgb(255 255 255 / 0.85);
-  --hover-tint: rgb(0 0 0 / 0.04);
-  --topbar-bg: rgb(250 249 245 / 0.8);
-  --pill-neutral: #efece4;
+  --edge: #c4dde6;
+  --edge-soft: #d4e6ed;
+  --edge-strong: #8fb9c7;
+  --surface-hi: #f4fafc;
+  --btn-a: #ffffff;
+  --btn-b: #ffffff;
+  --on-a: #ffffff;
+  --on-b: #ffffff;
+  --field-bg: #ffffff;
+  --hover-tint: rgb(11 114 133 / 0.07);
+  --topbar-bg: rgb(230 243 246 / 0.9);
+  --pill-neutral: #e3edf1;
+  --page-bg: linear-gradient(180deg, #d3edf4 0, #e6f3f6 34%, #e6f3f6 100%);
+  /* Primary buttons: solid teal with white text. */
+  --btn-p-a: #0b7285;
+  --btn-p-b: #0b7285;
+  --btn-p-border: #0b7285;
+  --btn-p-fg: #ffffff;
+  /* Top bar and phone bar: navy, the selected item is a teal pill. */
+  --tb-bg: #171e29;
+  --tb-fg: #ffffff;
+  --tb-muted: rgb(255 255 255 / 0.78);
+  --tb-line: transparent;
+  --tb-hover: rgb(255 255 255 / 0.1);
+  --tb-bw: 0px;
+  --bar-bg: #171e29;
+  --tab-on-bg: #17606f;
+  --tab-on-fg: #ffffff;
+  --tab-on-border: transparent;
+  --tab-on-shadow: none;
+  --bar-on: #ffffff;
+  --bar-on-bg: #17606f;
   color-scheme: light;
 }
 html[data-theme="dark"] {
@@ -76,6 +96,9 @@ html[data-theme="dark"] {
   --hover-tint: rgb(255 255 255 / 0.07);
   --topbar-bg: rgb(19 20 23 / 0.82);
   --pill-neutral: #2a2d33;
+  --page-bg: var(--color-page);
+  --btn-p-a: #0b7285;
+  --btn-p-b: #0b7285;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -111,6 +134,9 @@ html[data-theme="dark"] {
     --hover-tint: rgb(255 255 255 / 0.07);
     --topbar-bg: rgb(19 20 23 / 0.82);
     --pill-neutral: #2a2d33;
+    --page-bg: var(--color-page);
+    --btn-p-a: #0b7285;
+    --btn-p-b: #0b7285;
     color-scheme: dark;
   }
 }
@@ -123,7 +149,9 @@ html[data-size="3"] { font-size: 125%; }
 html[data-size="4"] { font-size: 150%; }
 
 html {
-  background: var(--color-page);
+  background-color: var(--color-page);
+  background-image: var(--page-bg);
+  background-repeat: no-repeat;
   color: var(--color-ink);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -157,9 +185,9 @@ p { text-wrap: pretty; }
     background: var(--color-glass);
     -webkit-backdrop-filter: saturate(180%) blur(16px);
     backdrop-filter: saturate(180%) blur(16px);
-    border: 1px solid var(--edge-soft);
+    border: 1px solid var(--color-line);
     border-radius: 22px;
-    box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--hover-tint), 0 10px 24px -14px var(--edge);
+    box-shadow: 0 1px 2px rgb(11 37 64 / 0.04), 0 8px 22px rgb(11 114 133 / 0.07);
   }
   .topbar {
     position: sticky;
@@ -219,11 +247,12 @@ p { text-wrap: pretty; }
     padding-bottom: env(safe-area-inset-bottom);
   }
   .bar-item {
+    margin: 0.3rem 0.2rem;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     min-height: 3.5rem; padding: 0.4rem 0.25rem; font-size: 0.6875rem; line-height: 1.1;
     color: var(--tb-muted, var(--color-muted)); background: none; border: 0;
   }
-  .bar-item-on { color: var(--bar-on, var(--color-accent)); font-weight: 600; }
+  .bar-item-on { color: var(--bar-on, var(--color-accent)); background: var(--bar-on-bg, transparent); border-radius: 1rem; font-weight: 600; }
   .btn {
     max-width: 100%;
     white-space: normal;
@@ -404,3 +433,6 @@ p { text-wrap: pretty; }
 /* A logo drawn for a white page sits on a light tile in dark mode, so it stays readable. */
 html[data-theme="dark"] .brand-logo { background: #fff; border-radius: 0.6rem; padding: 0.15rem 0.5rem; }
 @media (prefers-color-scheme: dark) { html[data-theme="system"] .brand-logo { background: #fff; border-radius: 0.6rem; padding: 0.15rem 0.5rem; } }
+
+/* The clinic logo on the navy top bar sits on a white tile. */
+.topbar .brand-logo { background: #fff; border-radius: 0.6rem; padding: 0.15rem 0.5rem; }

@@ -141,7 +141,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const hourIL = Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).format(new Date()));
   const firstName = profile.full_name.split(" ")[0];
   // The doctor keeps the plain "Hello"; the secretary gets a greeting that follows the time of day.
-  const greeting = profile.role === "doctor" ? t("שלום {name}", { name: firstName })
+  const greeting = profile.role === "doctor" ? t("שלום {name}", { name: profile.full_name })
     : hourIL < 12 ? t("בוקר טוב, {name}", { name: firstName })
     : hourIL < 18 ? t("צהריים טובים, {name}", { name: firstName })
     : t("ערב טוב, {name}", { name: firstName });
@@ -189,7 +189,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
         <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
         <Kpi className="max-lg:hidden" href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים בשבוע הקרוב")} value={String(thisWeek.length)} />
+        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים השבוע")} value={String(thisWeek.length)} />
         <Kpi className="max-lg:hidden" href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("מוכנים לניתוח")} value={String(soonReady)} tone={soon.length === 0 ? undefined : soonReady === soon.length ? "ok" : "warn"} />
       </section>
 
@@ -243,7 +243,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       kind={i.kind}
                       patientName={i.patientName}
                       title={i.task.title}
-                      urgent={i.kind === "overdue" || i.kind === "rejected"}
+                      tone={i.kind === "overdue" || i.kind === "rejected" ? "bad" : "warn"}
+                      owner={i.task.owner}
                       status={i.kind === "rejected" ? t("הוחזר לתיקון") : i.kind === "review" ? t("ממתין לבדיקה") : t("באיחור · {when}", { when: relativeDays(i.task.dueDate, t0, lang) })}
                       phone={phoneOf.get(i.patientId) ?? null}
                       reminderHref={reminderHref(i)}
