@@ -5,10 +5,12 @@ import { NewPatientForm } from "./form";
 import { getClinicOptions } from "@/lib/clinic-options";
 
 export default async function NewPatientPage() {
-  const t = await getT();
   const supabase = await createClient();
-  const { data: templates } = await supabase.from("templates").select("id, name").order("name");
-  const options = await getClinicOptions();
+  const [t, { data: templates }, options] = await Promise.all([
+    getT(),
+    supabase.from("templates").select("id, name").order("name"),
+    getClinicOptions(),
+  ]);
   return (
     <main className="max-w-xl">
       <p className="eyebrow">{t("מטופלים")}</p>

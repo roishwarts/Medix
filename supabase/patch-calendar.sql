@@ -213,3 +213,6 @@ begin
     end loop;
   end loop;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-calendar.sql') on conflict (name) do nothing;

@@ -217,3 +217,6 @@ select cron.schedule(
   '0 3 * * *',
   $$ delete from public.password_reset_requests where handled_at is not null and handled_at < now() - interval '90 days' $$
 );
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-performance.sql') on conflict (name) do nothing;

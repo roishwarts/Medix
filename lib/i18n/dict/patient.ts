@@ -269,6 +269,7 @@ export const en: Record<string, string> = {
   "מדיניות הפרטיות": "Privacy Policy",
   "אישור והתחלה": "Agree & continue",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-privacy-consent.sql, ונסו שוב.": "Saving failed. Make sure the supabase/patch-privacy-consent.sql patch was run, and try again.",
+  "יש לבחור קובץ לפני השליחה": "Please choose a file before submitting",
 };
 export const ru: Record<string, string> = {
   "מוצגים רק מטופלים שעדיין לא מוכנים ({n} מתוך {total})": "Показаны только пациенты, которые ещё не готовы ({n} из {total})",
@@ -540,6 +541,7 @@ export const ru: Record<string, string> = {
   "מדיניות הפרטיות": "Политикой конфиденциальности",
   "אישור והתחלה": "Согласиться и продолжить",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-privacy-consent.sql, ונסו שוב.": "Сохранение не удалось. Убедитесь, что патч supabase/patch-privacy-consent.sql был выполнен, и попробуйте снова.",
+  "יש לבחור קובץ לפני השליחה": "Пожалуйста, выберите файл перед отправкой",
 };
 export const ar: Record<string, string> = {
   "מוצגים רק מטופלים שעדיין לא מוכנים ({n} מתוך {total})": "يظهر فقط المرضى الذين لم يجهزوا بعد ({n} من {total})",
@@ -811,4 +813,5 @@ export const ar: Record<string, string> = {
   "מדיניות הפרטיות": "سياسة الخصوصية",
   "אישור והתחלה": "أوافق وأستمر",
   "השמירה נכשלה. ודאו שהורצה התוספת supabase/patch-privacy-consent.sql, ונסו שוב.": "فشل الحفظ. تأكدوا من تشغيل supabase/patch-privacy-consent.sql، وحاولوا مرة أخرى.",
+  "יש לבחור קובץ לפני השליחה": "يرجى اختيار ملف قبل الإرسال",
 };

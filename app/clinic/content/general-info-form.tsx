@@ -10,6 +10,9 @@ export function GeneralInfoForm({ templates }: { templates: Template[] }) {
   const t = useT();
   const [selected, setSelected] = useState(templates[0]?.id ?? "");
   const [text, setText] = useState(templates[0]?.patient_info ?? "");
+  // Last-saved text for the selected template, so switching templates with unsaved edits can warn
+  // instead of silently discarding them.
+  const [baseline, setBaseline] = useState(templates[0]?.patient_info ?? "");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -17,8 +20,11 @@ export function GeneralInfoForm({ templates }: { templates: Template[] }) {
   const textId = useId();
 
   function pick(id: string) {
+    if (text !== baseline && !confirm(t("יש שינויים שלא נשמרו בתבנית הנוכחית. לעבור בלי לשמור?"))) return;
+    const next = templates.find((t) => t.id === id)?.patient_info ?? "";
     setSelected(id);
-    setText(templates.find((t) => t.id === id)?.patient_info ?? "");
+    setText(next);
+    setBaseline(next);
     setSaved(false);
     setError(null);
   }
@@ -29,7 +35,7 @@ export function GeneralInfoForm({ templates }: { templates: Template[] }) {
     start(async () => {
       const res = await saveTemplatePatientInfo(selected, text);
       if (res.error) setError(res.error);
-      else setSaved(true);
+      else { setBaseline(text); setSaved(true); }
     });
   }
 

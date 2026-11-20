@@ -23,3 +23,6 @@ update clinics set
   social_instagram = 'https://www.instagram.com/prof.drexler',
   social_youtube = 'https://www.youtube.com/channel/UCcT61HIwu4fJISfgWZytwnw/videos?view_as=subscriber'
 where name like '%דרקסלר%' and social_facebook is null and social_instagram is null and social_youtube is null;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-social-links.sql') on conflict (name) do nothing;

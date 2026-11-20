@@ -21,3 +21,6 @@ begin
 end $$;
 
 revoke execute on function admin_copy_base_template(uuid, uuid) from public, anon, authenticated;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-template-provenance.sql') on conflict (name) do nothing;

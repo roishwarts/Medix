@@ -132,3 +132,6 @@ begin
   new.submitted_by := auth.uid();
   return new;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-caregivers.sql') on conflict (name) do nothing;

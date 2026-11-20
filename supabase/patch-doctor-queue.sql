@@ -116,3 +116,6 @@ begin
     updated_by = auth.uid(), updated_at = now();
 end $$;
 revoke execute on function save_clinical_summary(uuid, text, text, text, text, text, text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-doctor-queue.sql') on conflict (name) do nothing;

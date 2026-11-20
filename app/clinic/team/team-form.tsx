@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/components/i18n-provider";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { PasswordField } from "@/components/password-field";
 import { addTeamMember } from "./actions";
 
@@ -11,6 +11,12 @@ export function TeamForm() {
   // Controlled so a failed submit keeps what was typed (React resets uncontrolled fields after a form action).
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  // On success, clear the form instead of leaving the just-created name/username/password sitting on
+  // screen - otherwise a doctor adding several people in a row could resubmit the same temporary
+  // password for the next account by mistake. PasswordField is remounted (its own state is internal).
+  useEffect(() => {
+    if (state?.ok) { setFullName(""); setUsername(""); }
+  }, [state]);
   return (
     <form action={action} className="card mt-2 grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
       <div>
@@ -30,7 +36,7 @@ export function TeamForm() {
         <p id="team-username-hint" className="mt-1 text-sm text-muted">{t("3–30 תווים באנגלית, מספרים או")} <bdi dir="ltr">. _ -</bdi></p>
       </div>
       <div>
-        <PasswordField label={t("סיסמה זמנית")} />
+        <PasswordField key={state?.ok ?? "pw"} label={t("סיסמה זמנית")} />
         <p className="mt-1 text-sm text-muted">{t("לפחות 8 תווים")}</p>
       </div>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">

@@ -18,3 +18,6 @@ begin
 end $$;
 
 revoke execute on function save_clinic_brand_color(text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-brand-color.sql') on conflict (name) do nothing;

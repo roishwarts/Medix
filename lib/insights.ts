@@ -17,6 +17,9 @@ export const REASON_LABEL: Record<string, string> = {
 const REASON_ORDER = Object.keys(REASON_LABEL);
 
 type JourneyRow = { id: string; surgery_date: string; created_at: string; cancelled_at: string | null; cancelled_reason: string | null; prep_completed_at: string | null };
+type OksRow = { journey_id: string; timepoint: string; score: number | null };
+type ReviewedTaskRow = { reviewed_by: string; status: string; submitted_at: string; reviewed_at: string };
+type StaffProfileRow = { id: string; full_name: string };
 
 export type StaffThroughput = { staffId: string; name: string; accepted: number; rejected: number; avgHours: number | null };
 
@@ -94,7 +97,7 @@ export async function loadInsights(supabase: Supabase, range: RangeKey): Promise
           .select("journey_id, timepoint, score")
           .eq("instrument", "oks")
           .in("journey_id", active.map((r) => r.id))
-      : Promise.resolve({ data: null as { journey_id: string; timepoint: string; score: number | null }[] | null }),
+      : Promise.resolve({ data: null as OksRow[] | null }),
     // Staff workload: only tasks a patient actually submitted and a staff/doctor then reviewed -
     // a task someone marks done on their own (no submission) isn't "review work", so it's excluded.
     supabase
@@ -108,7 +111,7 @@ export async function loadInsights(supabase: Supabase, range: RangeKey): Promise
   ]);
   if (oks) {
     const byJourney = new Map<string, Partial<Record<"baseline" | "month3", number>>>();
-    for (const r of oks as { journey_id: string; timepoint: string; score: number | null }[]) {
+    for (const r of oks as OksRow[]) {
       if (r.score === null || (r.timepoint !== "baseline" && r.timepoint !== "month3")) continue;
       byJourney.set(r.journey_id, { ...byJourney.get(r.journey_id), [r.timepoint]: r.score });
     }
@@ -121,7 +124,7 @@ export async function loadInsights(supabase: Supabase, range: RangeKey): Promise
   }
 
   const byStaff = new Map<string, { accepted: number; rejected: number; hours: number[] }>();
-  for (const r of (reviewed ?? []) as { reviewed_by: string; status: string; submitted_at: string; reviewed_at: string }[]) {
+  for (const r of (reviewed ?? []) as ReviewedTaskRow[]) {
     const entry = byStaff.get(r.reviewed_by) ?? { accepted: 0, rejected: 0, hours: [] };
     if (r.status === "accepted") entry.accepted++;
     else entry.rejected++;
@@ -131,7 +134,7 @@ export async function loadInsights(supabase: Supabase, range: RangeKey): Promise
   const staffIds = [...byStaff.keys()];
   const { data: staffProfiles } = staffIds.length
     ? await supabase.from("profiles").select("id, full_name").in("id", staffIds)
-    : { data: [] as { id: string; full_name: string }[] };
+    : { data: [] as StaffProfileRow[] };
   const nameById = new Map((staffProfiles ?? []).map((p) => [p.id, p.full_name]));
   const staff: StaffThroughput[] = staffIds
     .map((id) => {

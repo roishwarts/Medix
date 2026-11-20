@@ -56,3 +56,6 @@ begin
 end $$;
 
 revoke execute on function save_template_red_flags(uuid, text) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-red-flags.sql') on conflict (name) do nothing;

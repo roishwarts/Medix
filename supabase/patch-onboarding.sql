@@ -13,3 +13,6 @@ begin
 end $$;
 
 revoke execute on function mark_onboarded() from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-onboarding.sql') on conflict (name) do nothing;

@@ -13,9 +13,10 @@ export type ClinicalData = {
   medications: string | null;
   medicalHistory: string | null;
   notes: string | null;
+  updatedAt: string | null;
 };
 
-const EMPTY: ClinicalData = { diagnosis: null, side: null, allergies: null, medications: null, medicalHistory: null, notes: null };
+const EMPTY: ClinicalData = { diagnosis: null, side: null, allergies: null, medications: null, medicalHistory: null, notes: null, updatedAt: null };
 
 // The first thing on the patient card: what is being operated on and what the surgeon must not miss.
 // Everyone on staff reads it; only the doctor edits it.
@@ -101,9 +102,18 @@ function ClinicalForm({ journeyId, initial, onClose }: { journeyId: string; init
   function save() {
     setError(null);
     start(async () => {
-      const res = await saveClinicalSummary({ journeyId, diagnosis, side, allergies, medications, medicalHistory, notes });
-      if (res.error) setError(res.error);
-      else { onClose(); router.refresh(); }
+      try {
+        const res = await saveClinicalSummary({
+          journeyId, diagnosis, side, allergies, medications, medicalHistory, notes,
+          expectedUpdatedAt: initial.updatedAt,
+        });
+        if (res.error) setError(res.error);
+        else { onClose(); router.refresh(); }
+      } catch {
+        // A clinical note is worth nothing if a dropped connection makes it vanish silently —
+        // the doctor must see a save failure here, not a form that just quietly stops "saving…".
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 

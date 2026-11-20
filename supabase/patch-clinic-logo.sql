@@ -40,3 +40,6 @@ create policy clinic_logos_delete on storage.objects for delete to authenticated
 
 -- No select policy needed: the bucket is public, so GET /storage/v1/object/public/clinic-logos/...
 -- is served directly without evaluating RLS.
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-clinic-logo.sql') on conflict (name) do nothing;

@@ -145,3 +145,6 @@ begin
     create policy mfa_gate on public.clinic_videos as restrictive for all to authenticated using ((select mfa_ok()));
   end if;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-patient-content.sql') on conflict (name) do nothing;

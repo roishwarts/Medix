@@ -64,20 +64,30 @@ export function TemplateForm({
     }
 
     start(async () => {
-      const res = await saveAction({ id: templateId, name, procedure, description, tasks });
-      if (res.error) return setError(res.error);
-      setDirty(false);
-      if (!templateId && res.id) router.replace(`${basePath}/${res.id}`);
-      else { setSaved(true); router.refresh(); }
+      try {
+        const res = await saveAction({ id: templateId, name, procedure, description, tasks });
+        if (res.error) return setError(res.error);
+        setDirty(false);
+        if (!templateId && res.id) router.replace(`${basePath}/${res.id}`);
+        else { setSaved(true); router.refresh(); }
+      } catch {
+        // A thrown server error (network drop, expired session) must still surface as an error —
+        // otherwise the button just goes idle again and the doctor has no idea the template wasn't saved.
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 
   function remove() {
     if (!templateId || !confirm(t("למחוק את התבנית? מטופלים קיימים לא יושפעו."))) return;
     start(async () => {
-      const res = await deleteAction(templateId);
-      if (res.error) setError(res.error);
-      else router.replace(basePath);
+      try {
+        const res = await deleteAction(templateId);
+        if (res.error) setError(res.error);
+        else router.replace(basePath);
+      } catch {
+        setError(t("הפעולה נכשלה. נסו שוב."));
+      }
     });
   }
 
@@ -108,7 +118,7 @@ export function TemplateForm({
         </div>
       </div>
 
-      <TaskEditor tasks={tasks} onChange={(t) => { setTasks(t); markDirty(); }} focusTask={focusTask} />
+      <TaskEditor tasks={tasks} onChange={(next) => { setTasks(next); markDirty(); }} focusTask={focusTask} />
 
       <div className="sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-4 py-3 sm:-mx-5 sm:px-5 md:bottom-0 md:py-4 backdrop-blur">
         <button className="btn btn-primary" onClick={save} disabled={pending} aria-busy={pending}>{pending ? t("שומר…") : t("שמירת תבנית")}</button>

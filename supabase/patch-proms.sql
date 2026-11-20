@@ -272,3 +272,6 @@ begin
         'patient', -365, false, false, false, v_max_pos + 6, 'proms', 'oks', 'year1');
   end loop;
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-proms.sql') on conflict (name) do nothing;

@@ -9,3 +9,6 @@ create table if not exists admin_audit (
 );
 create index if not exists admin_audit_created on admin_audit(created_at desc);
 alter table admin_audit enable row level security;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-audit.sql') on conflict (name) do nothing;

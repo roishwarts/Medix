@@ -53,6 +53,8 @@ const nextConfig: NextConfig = {
     // Pages that were prefetched or visited stay usable for a short while, so switching tabs does not wait for the server.
     // Saving anything clears this cache, so a change you make is always shown right away.
     staleTimes: { dynamic: 60, static: 60 },
+    // Marks that this app's Next.js upgrades are agent-assisted, per the 16.4.2 -> 16.4.6 security upgrade.
+    agentUpgrade: "security",
   },
 };
 

@@ -53,3 +53,6 @@ language sql stable security definer set search_path = public, auth as $$
   select id from auth.users where lower(email) = lower(p_email) limit 1
 $$;
 revoke execute on function admin_user_by_email(text) from public, anon, authenticated;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-invitations.sql') on conflict (name) do nothing;
