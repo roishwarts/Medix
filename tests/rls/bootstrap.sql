@@ -20,12 +20,13 @@ create table if not exists auth.users (
   raw_app_meta_data jsonb default '{}'::jsonb,
   raw_user_meta_data jsonb default '{}'::jsonb,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  confirmation_token text, email_change text, email_change_token_new text, recovery_token text
 );
 create table if not exists auth.identities (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
-  provider text, provider_id text, identity_data jsonb,
+  provider text, provider_id text, identity_data jsonb, last_sign_in_at timestamptz,
   created_at timestamptz default now(), updated_at timestamptz default now()
 );
 create or replace function auth.uid() returns uuid language sql stable as
