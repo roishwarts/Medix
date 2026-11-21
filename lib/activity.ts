@@ -53,9 +53,11 @@ export const GROUPS: { key: GroupKey; label: string; kinds?: string[]; roles?: s
 ];
 
 export function describe(e: ActivityRow, t: T): string {
-  const who = e.actor_name ?? t("מישהו");
-  const subject = e.subject ?? "";
-  const detail = e.detail ?? "";
+  // Names and titles are isolated so a Hebrew name inside an English sentence (or the other way round) does not scramble it.
+  const iso = (s: string) => (s ? `\u2068${s}\u2069` : s);
+  const who = iso(e.actor_name ?? t("מישהו"));
+  const subject = iso(e.subject ?? "");
+  const detail = iso(e.detail ?? "");
   switch (e.kind) {
     case "task_submitted": return t("{who} שלח/ה \"{subject}\" לבדיקה", { who, subject });
     case "task_completed": return t("{who} סימן/ה \"{subject}\" כבוצע", { who, subject });
@@ -67,10 +69,10 @@ export function describe(e: ActivityRow, t: T): string {
     case "patient_created": return t("{who} פתח/ה מטופל חדש", { who });
     case "patient_joined": return t("{who} יצר/ה משתמש והצטרף/ה", { who });
     case "caregiver_joined": return t("{who} הצטרף/ה כבן משפחה", { who }) + (detail ? ` (${detail})` : "");
-    case "caregiver_invited": return t("{who} הזמין/ה את {name}", { who, name: e.subject ?? t("בן משפחה") }) + (detail ? ` (${detail})` : "");
+    case "caregiver_invited": return t("{who} הזמין/ה את {name}", { who, name: iso(e.subject ?? t("בן משפחה")) }) + (detail ? ` (${detail})` : "");
     case "caregiver_removed": return t("הוסר בן משפחה: {name}", { name: subject }) + (detail ? ` (${detail})` : "");
     case "reset_requested": return t("{who} ביקש/ה איפוס סיסמה", { who });
-    case "reset_link_sent": return t("{who} יצר/ה קישור לאיפוס סיסמה ל{name}", { who, name: e.subject ?? t("משתמש") });
+    case "reset_link_sent": return t("{who} יצר/ה קישור לאיפוס סיסמה ל{name}", { who, name: iso(e.subject ?? t("משתמש")) });
     default: return who;
   }
 }

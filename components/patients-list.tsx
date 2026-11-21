@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useT, useLang } from "@/components/i18n-provider";
 import { Icon, ReadinessBar } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
+import { windowLabel } from "@/lib/windows";
 import { STAGES, STAGE_LABEL, STAGE_PILL, isActiveStage, type Stage } from "@/lib/journey";
 import type { Readiness } from "@/lib/journey";
 
@@ -151,6 +152,19 @@ export function PatientsList({ rows, hospitals, procedures, initial, title, acti
           <button type="button" onClick={clear} className="btn btn-quiet col-span-2 min-h-11 text-sm sm:col-span-1 sm:min-h-10">{t("ניקוי סינון")}</button>
         )}
       </div>
+      {days && (
+        // Set by the dashboard numbers (surgeries within N days): shown so it is clear why the list is shorter.
+        <div className="mt-3">
+          <button
+            type="button" className="btn btn-sm gap-2 bg-accent-soft text-accent"
+            onClick={() => { setDays(null); sync({ days: null }); }}
+          >
+            {t("ניתוחים")}: {windowLabel(days, t)}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            <span className="sr-only">{t("הסרת הסינון")}</span>
+          </button>
+        </div>
+      )}
       <p className="sr-only" role="status">{t("מוצגים {n} מתוך {total} מטופלים", { n: shown.length, total: rows.length })}</p>
 
       {/* A phone screen can't fit the table's extra columns even hidden behind a scrollbar, so it

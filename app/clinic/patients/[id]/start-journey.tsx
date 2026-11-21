@@ -18,7 +18,7 @@ export function StartJourney({ patientId, templates, first }: { patientId: strin
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-sm mt-3 min-h-11 !px-3 sm:min-h-9">
         {first ? t("התחלת מסלול ניתוח") : t("התחלת מסלול נוסף")}
       </button>
     );

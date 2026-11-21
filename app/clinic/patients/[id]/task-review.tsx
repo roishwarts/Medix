@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useT } from "@/components/i18n-provider";
 import { reviewTask } from "../actions";
 import type { Owner, TaskState } from "@/lib/journey";
@@ -10,6 +11,7 @@ import { toast } from "@/components/toast";
 
 export function TaskReview({ taskId, state: serverState, owner }: { taskId: string; state: TaskState; owner: Owner }) {
   const t = useT();
+  const router = useRouter();
   const state = useTaskState(taskId, serverState);
   const [rejecting, setRejecting] = useState(false);
   const [note, setNote] = useState("");
@@ -35,6 +37,8 @@ export function TaskReview({ taskId, state: serverState, owner }: { taskId: stri
         const result = await queueOrRun({ kind: "staff_accept", taskId });
         if (result.rejected) { setOptimisticState(taskId, null); setError(t("הפעולה נכשלה. ייתכן שהמשימה כבר טופלה אחרת — רענן/י ונסה/י שוב.")); }
         else if (result.queued) toast(t("אין חיבור לרגע — השמירה בוצעה במכשיר ותישלח אוטומטית כשהחיבור יחזור."));
+        // Counts, readiness, the current step and the tasks this one unlocks all change: load the page again.
+        else router.refresh();
       });
       return;
     }

@@ -75,7 +75,7 @@ export function QuestionCard({
         <p className="flex flex-wrap items-center gap-2">
           {showPatient && (
             q.journeyId ? (
-              <Link href={`/clinic/patients/${q.journeyId}`} className="font-medium underline-offset-4 hover:underline">{q.patientName}</Link>
+              <Link href={`/clinic/patients/${q.journeyId}`} className="inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline sm:min-h-0">{q.patientName}</Link>
             ) : (
               <span className="font-medium">{q.patientName}</span>
             )

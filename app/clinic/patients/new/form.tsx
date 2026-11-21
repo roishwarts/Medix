@@ -67,7 +67,7 @@ export function NewPatientForm({ templates, hospitals, companies }: { templates:
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="phone" className="lbl">{t("טלפון (לשליחה בוואטסאפ)")}</label>
-          <input id="phone" name="phone" className="field" dir="ltr" type="tel" inputMode="tel" autoComplete="off" placeholder="050-0000000" pattern="[0-9+\-\s()]{8,30}" maxLength={30} defaultValue={v("phone")} aria-describedby={describedBy} required />
+          <input id="phone" name="phone" className="field" dir="ltr" type="tel" inputMode="tel" autoComplete="off" placeholder="050-0000000" pattern="[0-9+\-\s\(\)]{8,30}" maxLength={30} defaultValue={v("phone")} aria-describedby={describedBy} required />
         </div>
         <div>
           <label htmlFor="email" className="lbl">{t("מייל (לא חובה)")}</label>

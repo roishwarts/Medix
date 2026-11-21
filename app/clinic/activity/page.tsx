@@ -108,7 +108,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
         <div>
           <h1 className="display text-4xl">{t("עדכונים")}</h1>
         </div>
-        <Link href={myWeekHref} className="text-sm text-muted hover:text-ink hover:underline">{t("מה עשיתי השבוע")}</Link>
+        <Link href={myWeekHref} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink hover:underline">{t("מה עשיתי השבוע")}</Link>
       </header>
 
       <form className="mt-6 flex flex-wrap items-end gap-2" action="/clinic/activity" role="search" aria-label={t("סינון עדכונים")}>

@@ -155,6 +155,7 @@ export const en: Record<string, string> = {
   "כשהן כבויות, הרשימה לא מוצגת למטופלים ולא ניתן לערוך אותה בעמוד התוכן.": "When off, the list is not shown to patients and cannot be edited on the content page.",
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "Hide this feature from the clinic's patients and staff? The saved data stays.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "The update failed. Make sure supabase/patch-feature-flags.sql was run.",
+  "הסרת הסינון": "Remove the filter",
 };
 
 export const ru: Record<string, string> = {
@@ -312,6 +313,7 @@ export const ru: Record<string, string> = {
   "כשהן כבויות, הרשימה לא מוצגת למטופלים ולא ניתן לערוך אותה בעמוד התוכן.": "Когда отключено, список не показывается пациентам и не редактируется на странице контента.",
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "Скрыть эту функцию от пациентов и персонала клиники? Сохранённые данные останутся.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "Не удалось обновить. Убедитесь, что выполнен supabase/patch-feature-flags.sql.",
+  "הסרת הסינון": "Убрать фильтр",
 };
 
 export const ar: Record<string, string> = {
@@ -469,4 +471,5 @@ export const ar: Record<string, string> = {
   "כשהן כבויות, הרשימה לא מוצגת למטופלים ולא ניתן לערוך אותה בעמוד התוכן.": "عند الإيقاف، لا تُعرض القائمة للمرضى ولا يمكن تعديلها في صفحة المحتوى.",
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "إخفاء هذه الميزة عن مرضى العيادة وطاقمها؟ تبقى البيانات المحفوظة.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "فشل التحديث. تأكد من تشغيل supabase/patch-feature-flags.sql.",
+  "הסרת הסינון": "إزالة التصفية",
 };

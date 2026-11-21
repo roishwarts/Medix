@@ -45,7 +45,7 @@ function SectionTitle({ id, children, count, href, linkLabel }: { id: string; ch
         {children}
         {count !== undefined && <span className="num text-sm text-muted">{count}</span>}
       </h2>
-      {href && <Link href={href} className="inline-flex min-h-11 items-center text-sm text-accent underline-offset-4 hover:underline">{linkLabel}</Link>}
+      {href && <Link href={href} className="inline-flex min-h-11 min-w-11 items-center justify-center text-sm text-accent underline-offset-4 hover:underline">{linkLabel}</Link>}
     </div>
   );
 }

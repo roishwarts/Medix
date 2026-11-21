@@ -68,7 +68,7 @@ export default async function ClinicCalendarPage({
           <p className="text-sm font-semibold text-accent">{t("הבא בתור")}</p>
           {next ? (
             <>
-              <Link href={next.href} className="mt-0.5 block text-[17px] font-medium">{next.title}</Link>
+              <Link href={next.href} className="mt-0.5 block min-h-11 py-2 text-[17px] font-medium">{next.title}</Link>
               <p className="text-sm text-muted">
                 {formatDateLong(next.date, lang)}{next.time ? <> · <span className="num" dir="ltr">{next.time}</span></> : null}
                 {next.sub ? ` · ${next.sub}` : ""} ({relativeDays(next.date, t0, lang)})

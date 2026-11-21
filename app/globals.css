@@ -326,6 +326,7 @@ p { text-wrap: pretty; }
     background-repeat: no-repeat;
     background-position: left 0.85rem center;
   }
+  html[dir="ltr"] select.field { background-position: right 0.85rem center; }
   textarea.field { min-height: 88px; resize: vertical; }
   /* iOS Safari gives date/time inputs a native width that ignores width:100% and spills out of the box. */
   input.field[type="date"],
@@ -448,3 +449,8 @@ html[data-theme="dark"] .brand-logo { background: #fff; border-radius: 0.6rem; p
 
 /* The clinic logo on the navy top bar sits on a white tile. */
 .topbar .brand-logo { background: #fff; border-radius: 0.6rem; padding: 0.15rem 0.5rem; }
+
+/* Dark mode: a solid accent background that carries white text (badges, date tiles, the selected day) needs a
+   deeper teal than the light accent used for text, or the contrast is below 4.5:1. */
+html[data-theme="dark"] .bg-accent { background-color: #2f7a8c; }
+@media (prefers-color-scheme: dark) { html[data-theme="system"] .bg-accent { background-color: #2f7a8c; } }
