@@ -9,7 +9,7 @@ import { AccessMenu, AccessControls } from "@/components/access-menu";
 import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
 import { useT } from "@/components/i18n-provider";
 
-export type NavItem = { href: string; label: string; icon: NavIconName; exact?: boolean; badge?: React.ReactNode; more?: boolean };
+export type NavItem = { href: string; label: string; icon: NavIconName; exact?: boolean; badge?: React.ReactNode; more?: boolean; pin?: boolean };
 
 // The top bar of every signed-in area: tabs on wide screens. On phones the navigation is a bar at the bottom
 // of the screen, with a settings button that opens a sheet (more pages, accessibility, sign out).
@@ -53,9 +53,13 @@ export function AppHeader({
       <header className="topbar hidden md:block">
         <div className="mx-auto flex max-w-6xl items-center gap-1.5 px-3 py-1 sm:px-5">
           {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
-          <nav aria-label={t("ניווט ראשי")} className="hidden min-w-0 flex-1 gap-1 overflow-x-auto whitespace-nowrap md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {items.map((i) => <NavLink key={i.href} href={i.href} exact={i.exact}>{i.label}{i.badge}</NavLink>)}
-          </nav>
+          <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
+            <nav aria-label={t("ניווט ראשי")} className="flex min-w-0 gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {items.filter((i) => !i.more || i.pin).map((i) => <NavLink key={i.href} href={i.href} exact={i.exact}>{i.label}{i.badge}</NavLink>)}
+            </nav>
+            {/* The pages that are not in the tab row (insights, templates, team...) sit behind one "more" menu, so nothing is cut off. */}
+            <DesktopMore items={items.filter((i) => i.more && !i.pin)} label={t("עוד")} />
+          </div>
           <div className="flex min-h-11 min-w-0 flex-1 items-center gap-1 md:ms-0 md:flex-none">
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -123,5 +127,42 @@ export function AppHeader({
         </div>
       )}
     </>
+  );
+}
+
+// The "more" dropdown of the desktop top bar. Every page in it is also loaded ahead of time, like the tabs.
+function DesktopMore({ items, label }: { items: NavItem[]; label: string }) {
+  const path = usePathname();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { setOpen(false); }, [path]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  if (items.length === 0) return null;
+  const inMore = items.some((i) => path === i.href || path.startsWith(i.href + "/"));
+  return (
+    <div ref={box} className="relative shrink-0">
+      <button
+        type="button" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((v) => !v)}
+        className={`tab my-1.5 shrink-0 rounded-full px-2.5 py-1.5 text-[15px] sm:px-3.5 ${inMore ? "tab-on" : ""}`}
+      >
+        {label} <span aria-hidden="true" className="text-xs">▾</span>
+      </button>
+      {open && (
+        <div role="menu" className="card absolute end-0 top-full z-30 mt-1 w-56 overflow-hidden p-1 shadow-lg">
+          {items.map((i) => (
+            <Link key={i.href} href={i.href} role="menuitem" prefetch className="flex min-h-11 items-center justify-between gap-2 rounded-xl px-3 text-sm hover:bg-[var(--hover-tint)]">
+              <span>{i.label}</span>{i.badge}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

@@ -60,7 +60,7 @@ export function DoctorQuestions({
               <VoiceTextarea id="ask-q" className="field min-h-20" placeholder={t("מה צריך להחליט או לבדוק?")} value={question} onChange={setQuestion} />
             </div>
             <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="size-4" />
+              <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
               {t("דחוף")}
             </label>
             <div className="flex flex-wrap items-center gap-3">

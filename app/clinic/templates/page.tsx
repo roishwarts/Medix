@@ -68,7 +68,7 @@ export default async function TemplatesPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/clinic/templates/${tpl.id}`}
-                      className="inline-block min-h-6 break-words font-medium hover:underline"
+                      className="inline-flex min-h-11 items-center break-words font-medium hover:underline sm:min-h-6"
                     >
                       {tpl.name}
                     </Link>
@@ -77,7 +77,7 @@ export default async function TemplatesPage() {
                   <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
                     <span>{tasksLabel(tasks, t)}</span>
                     {used > 0 ? (
-                      <Link href={`/clinic/patients?template=${tpl.id}`} className="font-medium text-accent hover:underline">{usedLabel(used, t)}</Link>
+                      <Link href={`/clinic/patients?template=${tpl.id}`} className="inline-flex min-h-11 items-center font-medium text-accent hover:underline sm:min-h-0">{usedLabel(used, t)}</Link>
                     ) : (
                       <span>{usedLabel(used, t)}</span>
                     )}

@@ -156,6 +156,17 @@ export const en: Record<string, string> = {
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "Hide this feature from the clinic's patients and staff? The saved data stays.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "The update failed. Make sure supabase/patch-feature-flags.sql was run.",
   "הסרת הסינון": "Remove the filter",
+  "איש קשר / חירום במרפאה": "Clinic contact / emergency",
+  "ביטוח פרטי": "Private insurance",
+  "דף סיכום ליום הניתוח": "Surgery day summary",
+  "הודפס: {date}": "Printed: {date}",
+  "השלב הפתוח: {blocker}": "Open step: {blocker}",
+  "טלפון חירום": "Emergency phone",
+  "לא הושלם": "Not completed",
+  "סטטוס הכנה לניתוח ({done}/{total})": "Surgery preparation status ({done}/{total})",
+  "פרטי הניתוח": "Surgery details",
+  "שם ותפקיד": "Name and role",
+  "עוד": "More",
 };
 
 export const ru: Record<string, string> = {
@@ -314,6 +325,17 @@ export const ru: Record<string, string> = {
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "Скрыть эту функцию от пациентов и персонала клиники? Сохранённые данные останутся.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "Не удалось обновить. Убедитесь, что выполнен supabase/patch-feature-flags.sql.",
   "הסרת הסינון": "Убрать фильтр",
+  "איש קשר / חירום במרפאה": "Контакт клиники / экстренный",
+  "ביטוח פרטי": "Частная страховка",
+  "דף סיכום ליום הניתוח": "Сводка ко дню операции",
+  "הודפס: {date}": "Напечатано: {date}",
+  "השלב הפתוח: {blocker}": "Открытый этап: {blocker}",
+  "טלפון חירום": "Экстренный телефон",
+  "לא הושלם": "Не завершено",
+  "סטטוס הכנה לניתוח ({done}/{total})": "Статус подготовки к операции ({done}/{total})",
+  "פרטי הניתוח": "Данные операции",
+  "שם ותפקיד": "Имя и должность",
+  "עוד": "Ещё",
 };
 
 export const ar: Record<string, string> = {
@@ -472,4 +494,15 @@ export const ar: Record<string, string> = {
   "להסתיר את התכונה הזו מהמטופלים והצוות של המרפאה? המידע השמור נשאר.": "إخفاء هذه الميزة عن مرضى العيادة وطاقمها؟ تبقى البيانات المحفوظة.",
   "העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.": "فشل التحديث. تأكد من تشغيل supabase/patch-feature-flags.sql.",
   "הסרת הסינון": "إزالة التصفية",
+  "איש קשר / חירום במרפאה": "جهة اتصال العيادة / الطوارئ",
+  "ביטוח פרטי": "تأمين خاص",
+  "דף סיכום ליום הניתוח": "ملخص يوم العملية",
+  "הודפס: {date}": "طُبع: {date}",
+  "השלב הפתוח: {blocker}": "المرحلة المفتوحة: {blocker}",
+  "טלפון חירום": "هاتف الطوارئ",
+  "לא הושלם": "غير مكتمل",
+  "סטטוס הכנה לניתוח ({done}/{total})": "حالة التحضير للعملية ({done}/{total})",
+  "פרטי הניתוח": "تفاصيل العملية",
+  "שם ותפקיד": "الاسم والوظيفة",
+  "עוד": "المزيد",
 };

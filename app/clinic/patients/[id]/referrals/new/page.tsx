@@ -25,7 +25,7 @@ export default async function NewReferralPage({ params }: { params: Promise<{ id
       <p className="eyebrow">{patient.full_name}</p>
       <h1 className="display mt-1 text-3xl">{t("הפניה חדשה")}</h1>
       <ReferralForm patientId={id} />
-      <Link href={`/clinic/patients/${id}`} className="mt-3 inline-block text-sm text-muted hover:underline">{t("ביטול וחזרה לכרטיס המטופל")}</Link>
+      <Link href={`/clinic/patients/${id}`} className="mt-3 inline-flex min-h-11 items-center text-sm text-muted hover:underline">{t("ביטול וחזרה לכרטיס המטופל")}</Link>
     </main>
   );
 }

@@ -334,7 +334,7 @@ export default async function PatientPage({
                     <p className="text-sm text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
                   </li>
                 )}
-                <li className="relative pb-6 ps-11" aria-current={isNow ? "step" : undefined}>
+                <li id={`task-${t.id}`} className="relative scroll-mt-32 pb-6 ps-11" aria-current={isNow ? "step" : undefined}>
                   <span className="absolute start-0 top-0" aria-hidden="true">{node}</span>
                   {idx < visibleTasks.length - 1 && <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />}
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">

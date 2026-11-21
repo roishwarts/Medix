@@ -76,7 +76,7 @@ export function HomeTaskRow({
               <button type="button" onClick={accept} disabled={pending} className={`btn btn-primary btn-sm min-h-11 flex-1 sm:min-h-9 ${stacked ? "sm:flex-1" : "sm:flex-none"}`}>
                 {pending ? t("שומר…") : t("אישור")}
               </button>
-              <Link href={href} className="btn btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
+              <Link href={`${href}#task-${taskId}`} className="btn btn-sm min-h-11 flex-1 sm:min-h-9 sm:flex-none">
                 <span className="sm:hidden">{t("החזרה לתיקון")}</span><span className="max-sm:hidden">{t("החזרה")}</span>
               </Link>
             </>

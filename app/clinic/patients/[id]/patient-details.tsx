@@ -66,7 +66,7 @@ export function PatientDetails({
     <>
       <div className="card divide-y divide-line text-sm">
         <div className={row}><span className="shrink-0 text-muted">{t("שם")}</span><span className="min-w-0 break-words font-medium">{name}</span></div>
-        <div className={row}><span className="shrink-0 text-muted">{t("טלפון")}</span>{phone ? <a href={`tel:${phone}`} dir="ltr" className="num font-medium">{phone}</a> : none}</div>
+        <div className={row}><span className="shrink-0 text-muted">{t("טלפון")}</span>{phone ? <a href={`tel:${phone}`} dir="ltr" className="num inline-flex min-h-11 items-center font-medium sm:min-h-0">{phone}</a> : none}</div>
         <div className={row}><span className="shrink-0 text-muted">{t("מייל")}</span>{email ? <a href={`mailto:${email}`} dir="ltr" className="min-w-0 break-all font-medium">{email}</a> : none}</div>
         <div className={row}><span className="shrink-0 text-muted">{t("בית חולים")}</span>{hospital ? <span className="font-medium">{hospital}</span> : <span className="text-muted">{t("לא נבחר")}</span>}</div>
         <div className={row}><span className="shrink-0 text-muted">{t("חברה")}</span>{company ? <span className="font-medium">{company}</span> : <span className="text-muted">{t("לא נבחר")}</span>}</div>

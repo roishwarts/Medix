@@ -127,11 +127,11 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
             {(staff ?? []).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
           </select>
         </div>
-        <div className="min-w-0 flex-1 sm:flex-none">
+        <div className="min-w-[9.5rem] flex-1 sm:flex-none">
           <label htmlFor="from" className="lbl">{t("מתאריך")}</label>
           <input id="from" type="date" name="from" defaultValue={sp.from ?? ""} className="field w-full sm:w-40" />
         </div>
-        <div className="min-w-0 flex-1 sm:flex-none">
+        <div className="min-w-[9.5rem] flex-1 sm:flex-none">
           <label htmlFor="to" className="lbl">{t("עד תאריך")}</label>
           <input id="to" type="date" name="to" defaultValue={sp.to ?? ""} className="field w-full sm:w-40" />
         </div>

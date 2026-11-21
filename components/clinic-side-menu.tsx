@@ -34,6 +34,8 @@ export function ClinicSideMenu({
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setOpen(false); setTapped(null); }, [path]);
+  // The accessibility panel opens at the bottom of the list: bring it into view.
+  useEffect(() => { if (a11y) setTimeout(() => document.getElementById("side-menu-a11y")?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50); }, [a11y]);
   // Load the menu's pages ahead of time (the whole page, not just its outline), so opening one needs no waiting.
   // Pages that are still fresh are not fetched twice.
   const hrefs = items.map((i) => i.href).join("|");
