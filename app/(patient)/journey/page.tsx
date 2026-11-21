@@ -188,11 +188,11 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
             )}
             {profile.office_hours && <p className="mt-2 text-sm text-muted">{t("שעות מענה")}: {profile.office_hours}</p>}
             {profile.emergency_phone && (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-bad-soft px-3 py-2">
-                <span className="flex items-center gap-1.5 text-sm font-medium text-bad">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl bg-bad-soft px-3 py-2">
+                <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-medium text-bad">
                   <Icon name="alert" size={14} /> {t("למקרה חירום")}
                 </span>
-                <a href={`tel:${profile.emergency_phone.replace(/[^\d+]/g, "")}`} dir="ltr" className="num font-medium text-bad hover:underline">
+                <a href={`tel:${profile.emergency_phone.replace(/[^\d+]/g, "")}`} dir="ltr" className="num whitespace-nowrap font-medium text-bad hover:underline">
                   {profile.emergency_phone}
                 </a>
               </div>

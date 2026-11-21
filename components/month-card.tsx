@@ -32,9 +32,9 @@ export function MonthCard({
   return (
     <div className="card p-3.5 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
-        <Link href={navHref(addMonths(d, -1))} aria-label={t("חודש קודם")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><span aria-hidden>›</span></Link>
+        <Link href={navHref(addMonths(d, -1))} aria-label={t("חודש קודם")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m15 6-6 6 6 6" /></svg></Link>
         <h2 className="display text-base font-semibold sm:text-lg">{monthTitle(d, lang)}</h2>
-        <Link href={navHref(addMonths(d, 1))} aria-label={t("חודש הבא")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><span aria-hidden>‹</span></Link>
+        <Link href={navHref(addMonths(d, 1))} aria-label={t("חודש הבא")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m9 6 6 6-6 6" /></svg></Link>
       </div>
       <div role="grid" aria-label={monthTitle(d, lang)} className="grid grid-cols-7 gap-1 text-center sm:gap-1.5">
         {names.map((n, i) => <span key={i} className="py-1 text-xs text-muted">{n}</span>)}

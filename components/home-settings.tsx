@@ -21,3 +21,20 @@ export function HomeSettingsButton({ home }: { home: string }) {
     </button>
   );
 }
+
+// On every other page of the patient app (calendar, family, steps, a task) the settings, language, text size and
+// sign out are reached from this small button at the top corner, phones only. The main page has its own, on the title row.
+export function FloatingSettingsButton({ hideOn }: { hideOn: string }) {
+  const t = useT();
+  const path = usePathname();
+  if (path === hideOn) return null;
+  return (
+    <button
+      type="button" aria-label={t("הגדרות")} title={t("הגדרות")} aria-haspopup="dialog"
+      className="btn btn-icon fixed end-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 size-11 md:hidden"
+      onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}
+    >
+      <NavIcon name="settings" size={22} />
+    </button>
+  );
+}

@@ -16,16 +16,21 @@ const WINDOW_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 8;
 const MAX_TRACKED_KEYS = 5000;
 
-function tooManyAttempts(key: string): boolean {
+// Only wrong passwords count: a successful sign-in clears the counter, so people sharing one connection
+// (a clinic, a hospital) and signing in and out are never locked out by their own correct logins.
+function isLocked(key: string): boolean {
+  const entry = ATTEMPTS.get(key);
+  return !!entry && entry.resetAt >= Date.now() && entry.count >= MAX_ATTEMPTS;
+}
+function recordFailure(key: string) {
   const now = Date.now();
   const entry = ATTEMPTS.get(key);
   if (!entry || entry.resetAt < now) {
     if (ATTEMPTS.size >= MAX_TRACKED_KEYS) ATTEMPTS.clear();
     ATTEMPTS.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
+  } else {
+    entry.count += 1;
   }
-  entry.count += 1;
-  return entry.count > MAX_ATTEMPTS;
 }
 
 export async function login(_: { error?: string } | undefined, formData: FormData) {
@@ -37,7 +42,8 @@ export async function login(_: { error?: string } | undefined, formData: FormDat
   // Keyed by username + caller IP, so one slow typist on one connection never blocks someone else,
   // but a script trying many passwords against one account (or many accounts from one IP) does.
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (tooManyAttempts(`${username}:${ip}`)) {
+  const bruteKey = `${username}:${ip}`;
+  if (isLocked(bruteKey)) {
     return { error: t("יותר מדי ניסיונות כניסה. נסה/י שוב בעוד כמה דקות.") };
   }
 
@@ -47,8 +53,10 @@ export async function login(_: { error?: string } | undefined, formData: FormDat
     password,
   });
   if (error) {
+    recordFailure(bruteKey);
     return { error: /banned/i.test(error.message) ? t("החשבון הושבת. יש לפנות למנהל.") : t("שם משתמש או סיסמה שגויים") };
   }
+  ATTEMPTS.delete(bruteKey);
   (await cookies()).delete("medix_view_as");
   redirect("/");
 }
