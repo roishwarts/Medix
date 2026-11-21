@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "./supabase/server";
 import { summarize, type JourneySummary, type TaskRow } from "./journey";
 
@@ -45,7 +46,16 @@ type JourneyRow = {
   journey_tasks: TaskRow[] | null;
 };
 
-function toJourney(j: JourneyRow): PatientJourney {
+// The clinic's feature switches (patch-feature-flags.sql). Both default to on, also when the columns do not exist yet.
+export type ClinicFlags = { proms: boolean; redFlags: boolean };
+export const getClinicFlags = cache(async (): Promise<ClinicFlags> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("clinics").select("proms_enabled, red_flags_enabled").limit(1).maybeSingle();
+  if (error || !data) return { proms: true, redFlags: true };
+  return { proms: data.proms_enabled !== false, redFlags: data.red_flags_enabled !== false };
+});
+
+function toJourney(j: JourneyRow, flags: ClinicFlags = { proms: true, redFlags: true }): PatientJourney {
   const patient = (Array.isArray(j.patients) ? j.patients[0] : j.patients) as JourneyInfo["patient"];
   return {
     id: j.id,
@@ -55,10 +65,11 @@ function toJourney(j: JourneyRow): PatientJourney {
     template_id: j.template_id,
     procedure: (Array.isArray(j.templates) ? j.templates[0] : j.templates)?.procedure ?? null,
     patient_info: j.patient_info ?? null,
-    red_flags: j.red_flags ?? null,
+    red_flags: flags.redFlags ? j.red_flags ?? null : null,
     cancelled_at: j.cancelled_at ?? null,
     patient,
-    summary: summarize(j.journey_tasks ?? [], j.surgery_date),
+    // With the questionnaires switched off for the clinic, their tasks are left out everywhere (and out of readiness).
+    summary: summarize((j.journey_tasks ?? []).filter((t) => flags.proms || !t.proms_instrument), j.surgery_date),
   };
 }
 
@@ -99,11 +110,12 @@ export async function loadJourneys(): Promise<PatientJourney[]> {
     if (more.length < PAGE) break;
   }
 
-  return rows.map(toJourney);
+  const flags = await getClinicFlags();
+  return rows.map((r) => toJourney(r, flags));
 }
 
 export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {
   const supabase = await createClient();
   const data = await runJourneysQuery((select) => supabase.from("journeys").select(select).eq("id", journeyId).maybeSingle());
-  return data ? toJourney(data as unknown as JourneyRow) : null;
+  return data ? toJourney(data as unknown as JourneyRow, await getClinicFlags()) : null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createInvite } from "./actions";
 import { ShareLink } from "@/components/share-link";
 import { Icon } from "@/components/ui";
@@ -17,6 +17,16 @@ export function InviteForm() {
   const [canAct, setCanAct] = useState(true);
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // aria-invalid only lands in the DOM after this render commits, so focusing the first invalid
+  // field has to happen in an effect — doing it inline in the submit handler would still see last
+  // render's attributes and could focus a field that has no error at all.
+  useEffect(() => {
+    if (!errors.name && !errors.relation && !errors.consent) return;
+    const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    first?.focus();
+  }, [errors]);
 
   if (state?.link) {
     const text = t("היי {name}, הוזמנת לעקוב אחרי התהליך הרפואי שלי. ההזמנה תקפה ל־7 ימים: {link}", { name: state.name ?? "", link: state.link });
@@ -40,13 +50,11 @@ export function InviteForm() {
     setErrors(next);
     if (Object.keys(next).length) {
       e.preventDefault();
-      const first = e.currentTarget.querySelector<HTMLElement>('[aria-invalid="true"]');
-      (first ?? e.currentTarget.querySelector<HTMLElement>("input"))?.focus();
     }
   }
 
   return (
-    <form action={action} onSubmit={validate} noValidate className="card space-y-5 p-4 sm:p-5">
+    <form ref={formRef} action={action} onSubmit={validate} noValidate className="card space-y-5 p-4 sm:p-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="invitee_name" className="lbl">{t("שם")}</label>

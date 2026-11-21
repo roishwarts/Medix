@@ -64,7 +64,7 @@ export default async function ClinicCalendarPage({
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-x-8">
-        <div className="card border-[#9ccbd6] px-[18px] py-4 lg:col-start-2 lg:row-start-1">
+        <div className="card border-[var(--cal-appt-line)] px-[18px] py-4 lg:col-start-2 lg:row-start-1">
           <p className="text-sm font-semibold text-accent">{t("הבא בתור")}</p>
           {next ? (
             <>

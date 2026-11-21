@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
 import { getLang } from "./prefs-server";
+import { oneOrNull, optionalColumn } from "./supabase-row";
 
 export type Profile = {
   id: string;
@@ -22,6 +23,8 @@ export type Profile = {
   emergency_phone: string | null;
   office_hours: string | null;
   social_facebook: string | null;
+  proms_enabled: boolean;
+  red_flags_enabled: boolean;
   social_instagram: string | null;
   social_youtube: string | null;
   logo_url: string | null;
@@ -33,6 +36,30 @@ export type Profile = {
 };
 
 export const LOGIN_DOMAIN = process.env.NEXT_PUBLIC_LOGIN_DOMAIN ?? "medix.local";
+
+// The shape of a joined `clinics(*)` row. Supabase's untyped client can't infer whether a to-one
+// join comes back as an object or a one-element array, so callers normalize that first; this just
+// names the fields actually read off it, since several of them were added by later, optional patches.
+type ClinicJoinRow = {
+  name: string;
+  name_en?: string | null;
+  mfa_required?: boolean;
+  address?: string | null;
+  contact_name?: string | null;
+  contact_role?: string | null;
+  contact_phone?: string | null;
+  emergency_phone?: string | null;
+  office_hours?: string | null;
+  social_facebook?: string | null;
+  proms_enabled?: boolean | null;
+  red_flags_enabled?: boolean | null;
+  social_instagram?: string | null;
+  social_youtube?: string | null;
+  logo_path?: string | null;
+  brand_color?: string | null;
+  brand_dark?: string | null;
+  brand_gold?: string | null;
+};
 
 // The verified session claims, read once per request. With asymmetric signing keys this needs no network call.
 const getClaimsOnce = cache(async () => {
@@ -86,31 +113,14 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
       .maybeSingle());
   }
   if (!data || data.disabled) return null;
-  const clinic = (Array.isArray(data.clinics) ? data.clinics[0] : data.clinics) as {
-    name: string;
-    name_en?: string | null;
-    mfa_required?: boolean;
-    address?: string | null;
-    contact_name?: string | null;
-    contact_role?: string | null;
-    contact_phone?: string | null;
-    emergency_phone?: string | null;
-    office_hours?: string | null;
-    social_facebook?: string | null;
-    social_instagram?: string | null;
-    social_youtube?: string | null;
-    logo_path?: string | null;
-    brand_color?: string | null;
-    brand_dark?: string | null;
-    brand_gold?: string | null;
-  } | null;
+  const clinic = oneOrNull(data.clinics) as ClinicJoinRow | null;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const logoUrl = clinic?.logo_path ? (/^https:\/\//.test(clinic.logo_path) ? clinic.logo_path : supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/clinic-logos/${clinic.logo_path}` : null) : null;
   const brandColor = clinic?.brand_color && /^#[0-9a-fA-F]{6}$/.test(clinic.brand_color) ? clinic.brand_color : null;
   // Hebrew is always shown in Hebrew; any other language shows the Latin-letter name when one was
   // given, falling back to the Hebrew spelling (which still reads fine in a Latin-script UI).
   const lang = await getLang();
-  const fullNameEn = (data as { full_name_en?: string | null }).full_name_en;
+  const fullNameEn = optionalColumn<string>(data, "full_name_en");
   return {
     id: data.id,
     clinic_id: data.clinic_id,
@@ -124,6 +134,8 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     contact_phone: clinic?.contact_phone ?? null,
     emergency_phone: clinic?.emergency_phone ?? null,
     office_hours: clinic?.office_hours ?? null,
+    proms_enabled: clinic?.proms_enabled !== false,
+    red_flags_enabled: clinic?.red_flags_enabled !== false,
     social_facebook: httpsOrNull(clinic?.social_facebook),
     social_instagram: httpsOrNull(clinic?.social_instagram),
     social_youtube: httpsOrNull(clinic?.social_youtube),
@@ -131,8 +143,8 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     brand_color: brandColor,
     brand_dark: hexOrNull(clinic?.brand_dark),
     brand_gold: hexOrNull(clinic?.brand_gold),
-    onboarded_at: (data as { onboarded_at?: string | null }).onboarded_at ?? null,
-    privacy_consent_at: (data as { privacy_consent_at?: string | null }).privacy_consent_at ?? null,
+    onboarded_at: optionalColumn<string>(data, "onboarded_at"),
+    privacy_consent_at: optionalColumn<string>(data, "privacy_consent_at"),
   };
 });
 

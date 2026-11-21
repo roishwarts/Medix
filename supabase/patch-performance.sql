@@ -36,7 +36,14 @@ create index if not exists referrals_doctor on referrals(doctor_id);
 
 create index if not exists visit_notes_patient on visit_notes(patient_id);
 create index if not exists visit_notes_clinic on visit_notes(clinic_id);
-create index if not exists visit_notes_doctor on visit_notes(doctor_id);
+-- patch-meeting-summaries.sql replaced visit_notes.doctor_id with author_id, so index whichever column exists.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'visit_notes' and column_name = 'doctor_id') then
+    create index if not exists visit_notes_doctor on visit_notes(doctor_id);
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'visit_notes' and column_name = 'author_id') then
+    create index if not exists visit_notes_author on visit_notes(author_id);
+  end if;
+end $$;
 
 create index if not exists profiles_clinic on profiles(clinic_id);
 create index if not exists patients_clinic on patients(clinic_id);
@@ -217,3 +224,6 @@ select cron.schedule(
   '0 3 * * *',
   $$ delete from public.password_reset_requests where handled_at is not null and handled_at < now() - interval '90 days' $$
 );
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-performance.sql') on conflict (name) do nothing;

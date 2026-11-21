@@ -212,3 +212,6 @@ begin
 
   perform _log_activity(v_clinic, v_patient, p_journey, null, 'journey_edited', auth.uid(), null, null);
 end $$;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-activity.sql') on conflict (name) do nothing;

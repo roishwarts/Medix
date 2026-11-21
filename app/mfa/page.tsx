@@ -41,6 +41,14 @@ export default async function MfaPage() {
             : t("המרפאה דורשת אימות דו-שלבי. מחברים פעם אחת אפליקציית אימות, ובכל כניסה מזינים קוד קצר.")}
         </p>
         <MfaForm factorId={factor?.id ?? null} />
+        {factor && (
+          <p className="mt-5 text-center text-sm text-muted">
+            {t("איבדת את הטלפון או את האפליקציה?")}{" "}
+            {profile.contact_phone
+              ? t("צרו קשר עם המרפאה כדי לאפס את האימות הדו-שלבי.")
+              : t("צרו קשר עם מנהל המערכת כדי לאפס את האימות הדו-שלבי.")}
+          </p>
+        )}
       </div>
       <div className="mt-3 flex justify-center [&_.btn]:min-h-11 [&_.btn]:px-5">
         <LogoutButton />

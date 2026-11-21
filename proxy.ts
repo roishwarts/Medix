@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { DEFAULT_PREFS, PREFS_COOKIE, serializePrefs, type Lang } from "@/lib/prefs";
+import { IMP_COOKIE, verifyImpersonationForWriteBlock } from "@/lib/impersonation";
 import { NextResponse, type NextRequest } from "next/server";
 
 export const UID_HEADER = "x-medix-uid";
@@ -31,21 +32,21 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = isLogin || path.startsWith("/invite/") || path.startsWith("/join/") || path.startsWith("/reset/") || path.startsWith("/forgot") || path.startsWith("/accessibility") || path.startsWith("/privacy");
 
-  // "View as" can be made read-only (set VIEW_AS_READ_ONLY=1 in Vercel, e.g. once real patients are using the system).
-  // By default the admin can do everything the user can, to test the system from their side.
-  if (process.env.VIEW_AS_READ_ONLY === "1" && signedIn && request.method === "POST" && !isLogin) {
-    const raw = request.cookies.get("medix_view_as")?.value;
-    try {
-      const body = raw?.split(".")[0];
-      const target = body ? JSON.parse(atob(body.replace(/-/g, "+").replace(/_/g, "/"))).target : null;
-      if (target && target === data?.claims?.sub) {
-        // Answer in the format a server action expects, so the page shows a message instead of an error page:
-        // the action "returns" { error }, and the header tells the client to open the explanation popup.
-        const flight = `0:{"a":"$@1"}\n1:${JSON.stringify({ error: VIEW_ONLY_MESSAGE })}\n`;
-        return new NextResponse(flight, { status: 200, headers: { "content-type": "text/x-component", "x-view-as-blocked": "1" } });
-      }
-    } catch {
-      // A malformed cookie is simply ignored.
+  // "View as" is read-only by default: an admin viewing a patient/staff/doctor account cannot write
+  // on their behalf. Set VIEW_AS_READ_ONLY=0 in Vercel only for a deliberate, temporary exception
+  // (e.g. end-to-end testing against a non-production clinic) — never as the normal running mode,
+  // since this is what stands between "view as" and a full account takeover of any real user.
+  if (process.env.VIEW_AS_READ_ONLY !== "0" && signedIn && request.method === "POST" && !isLogin) {
+    // Verified by signature rather than by re-decoding the cookie's JSON by hand (a previous
+    // version of this check parsed the unsigned payload directly). Deliberately ignores the
+    // cookie's own `exp`: the underlying Supabase session created for "view as" outlives it, so
+    // this restriction must keep applying even once the cookie is stale, not fall away with it.
+    const imp = verifyImpersonationForWriteBlock(request.cookies.get(IMP_COOKIE)?.value);
+    if (imp && imp.target === data?.claims?.sub) {
+      // Answer in the format a server action expects, so the page shows a message instead of an error page:
+      // the action "returns" { error }, and the header tells the client to open the explanation popup.
+      const flight = `0:{"a":"$@1"}\n1:${JSON.stringify({ error: VIEW_ONLY_MESSAGE })}\n`;
+      return new NextResponse(flight, { status: 200, headers: { "content-type": "text/x-component", "x-view-as-blocked": "1" } });
     }
   }
 

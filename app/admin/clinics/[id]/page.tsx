@@ -8,6 +8,7 @@ import { UserRow } from "./user-row";
 import { AddUserForm } from "./add-user-form";
 import { AddTemplate } from "./add-template";
 import { MfaToggle } from "./mfa-toggle";
+import { FeatureToggle } from "./feature-toggle";
 import { ClinicOptions } from "./clinic-options";
 import { ClinicAddress } from "./clinic-address";
 
@@ -62,6 +63,19 @@ export default async function ClinicPage({ params }: { params: Promise<{ id: str
 
       <section className="mt-10" aria-label={t("אימות דו-שלבי")}>
         <MfaToggle clinicId={id} initial={!!clinic.mfa_required} />
+      </section>
+
+      <section className="mt-10 space-y-4" aria-label={t("תכונות")}>
+        <FeatureToggle
+          clinicId={id} feature="proms" initial={clinic.proms_enabled !== false}
+          title={t("שאלוני תוצאות (OKS / EQ-5D)")}
+          description={t("כשהם כבויים, המשימות של השאלונים לא מופיעות למטופלים ולצוות, ולא נספרות במוכנות.")}
+        />
+        <FeatureToggle
+          clinicId={id} feature="red_flags" initial={clinic.red_flags_enabled !== false}
+          title={t("מתי להתקשר דחוף")}
+          description={t("כשהן כבויות, הרשימה לא מוצגת למטופלים ולא ניתן לערוך אותה בעמוד התוכן.")}
+        />
       </section>
 
       <section className="mt-10" aria-labelledby="options-h">

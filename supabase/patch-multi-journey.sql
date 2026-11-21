@@ -4,3 +4,6 @@
 -- second journey was this index. Run any time. Safe to re-run.
 
 drop index if exists journeys_one_per_patient;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-multi-journey.sql') on conflict (name) do nothing;

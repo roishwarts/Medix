@@ -45,6 +45,7 @@ export function SubmitPanel({
     setError(null);
     start(async () => {
       const file = requiresEvidence ? fileRef.current?.files?.[0] : undefined;
+      if (requiresEvidence && !file) return setError(t("יש לבחור קובץ לפני השליחה"));
       if (file && file.size > MAX_BYTES) { clearFile(); return setError(t("הקובץ גדול מדי (עד 10MB)")); }
       if (file && !isAllowedFile(file)) { clearFile(); return setError(t("סוג הקובץ לא נתמך. יש לבחור תמונה או PDF.")); }
 

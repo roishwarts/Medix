@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/ui";
 import { getT } from "@/lib/i18n/server";
+import { oneOrNull } from "@/lib/supabase-row";
 import { JoinForm } from "./form";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,8 +29,8 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
       .is("used_at", null)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
-    const patient = (Array.isArray(data?.patients) ? data?.patients[0] : data?.patients) as { full_name: string; user_id: string | null } | null | undefined;
-    const clinic = (Array.isArray(data?.clinics) ? data?.clinics[0] : data?.clinics) as { name: string } | null | undefined;
+    const patient = oneOrNull<{ full_name: string; user_id: string | null }>(data?.patients);
+    const clinic = oneOrNull<{ name: string }>(data?.clinics);
     if (patient && !patient.user_id) info = { firstName: patient.full_name.split(" ")[0], clinic: clinic?.name ?? "" };
   }
 

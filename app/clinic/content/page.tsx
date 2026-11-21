@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClinicLinks, getClinicVideos } from "@/lib/clinic-content";
+import { optionalColumn } from "@/lib/supabase-row";
 import { ContactForm } from "./contact-form";
 import { SocialForm } from "./social-form";
 import { LogoForm } from "./logo-form";
@@ -37,11 +38,12 @@ export default async function ClinicContentPage() {
     supabase.from("clinics").select("name, name_en").eq("id", profile.clinic_id).maybeSingle()
       .then((res) => (res.error ? supabase.from("clinics").select("name").eq("id", profile.clinic_id).maybeSingle() : res)),
   ]);
-  const clinicNameEn = (clinicNameRes.data as { name_en?: string | null } | null)?.name_en ?? null;
+  const clinicNameEn = clinicNameRes.data ? optionalColumn<string>(clinicNameRes.data, "name_en") : null;
 
   const sections = [
     { id: "logo", label: t("מיתוג") },
     { id: "contact", label: t("הצוות שלי") },
+    { id: "social", label: t("רשתות חברתיות") },
     { id: "general-info", label: t("מידע כללי לניתוח") },
     { id: "red-flags", label: t("דגלים אדומים") },
     { id: "links", label: t("קישורים") },
@@ -89,9 +91,11 @@ export default async function ClinicContentPage() {
         <div id="general-info" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <GeneralInfoForm templates={templates ?? []} />
         </div>
-        <div id="red-flags" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
-          <RedFlagsForm templates={templates ?? []} />
-        </div>
+        {profile.red_flags_enabled && (
+          <div id="red-flags" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
+            <RedFlagsForm templates={templates ?? []} />
+          </div>
+        )}
         <div id="links" className="scroll-mt-[calc(env(safe-area-inset-top)+4.5rem)] md:scroll-mt-20">
           <LinksForm links={links} />
         </div>

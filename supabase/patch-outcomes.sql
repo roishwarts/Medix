@@ -80,3 +80,6 @@ begin
 end $$;
 
 revoke execute on function uncancel_journey(uuid) from public, anon;
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-outcomes.sql') on conflict (name) do nothing;

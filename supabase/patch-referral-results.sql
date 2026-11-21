@@ -51,9 +51,15 @@ end $$;
 insert into storage.buckets (id, name, public) values ('referral-results', 'referral-results', false)
 on conflict (id) do nothing;
 
+-- Wrapped in (select ...) so Postgres evaluates it once per query, not once per row - the same
+-- pattern patch-performance.sql applied to every other storage policy (evidence, clinic-logos,
+-- clinic-videos); this one was added after that patch and missed it.
 drop policy if exists referral_results_select on storage.objects;
 create policy referral_results_select on storage.objects for select to authenticated
-  using (bucket_id = 'referral-results' and referral_result_access(name));
+  using (bucket_id = 'referral-results' and (select referral_result_access(name)));
 drop policy if exists referral_results_insert on storage.objects;
 create policy referral_results_insert on storage.objects for insert to authenticated
-  with check (bucket_id = 'referral-results' and referral_result_access(name));
+  with check (bucket_id = 'referral-results' and (select referral_result_access(name)));
+
+-- Records that this patch ran, for _migrations-table.sql's applied-patches query.
+insert into _migrations (name) values ('patch-referral-results.sql') on conflict (name) do nothing;

@@ -29,7 +29,9 @@ export function AddUserForm({ clinicId }: { clinicId: string }) {
           <p id="add-user-username-hint" className="mt-1 text-sm text-muted">{t("3–30 תווים באנגלית, מספרים או")} <bdi dir="ltr">. _ -</bdi></p>
         </div>
         <div>
-          <PasswordField label={t("סיסמה זמנית")} />
+          {/* Remounted on success so the just-used temporary password doesn't linger on screen when
+              adding the next person - full_name/username are uncontrolled and already reset by React. */}
+          <PasswordField key={state?.ok ?? "pw"} label={t("סיסמה זמנית")} />
           <p className="mt-1 text-sm text-muted">{t("לפחות 8 תווים")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">

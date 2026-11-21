@@ -136,6 +136,18 @@ export async function setClinicMfa(clinicId: string, required: boolean): Promise
   return {};
 }
 
+// Switches a feature on or off for one clinic (patch-feature-flags.sql): the stored data stays, the app just hides it.
+export async function setClinicFeature(clinicId: string, feature: "proms" | "red_flags", enabled: boolean): Promise<{ error?: string }> {
+  const t = await getT();
+  const { db } = await requireAdmin();
+  if (feature !== "proms" && feature !== "red_flags") return { error: t("העדכון נכשל") };
+  const { error } = await db.from("clinics").update({ [`${feature}_enabled`]: enabled }).eq("id", clinicId);
+  if (error) return { error: t("העדכון נכשל. ודאו שהורצה התוספת supabase/patch-feature-flags.sql.") };
+  revalidatePath(`/admin/clinics/${clinicId}`);
+  revalidatePath("/", "layout");
+  return {};
+}
+
 // For a lost phone: removes the user's authenticator, so they set up a new one at the next login.
 export async function resetUserMfa(userId: string): Promise<{ error?: string }> {
   const t = await getT();

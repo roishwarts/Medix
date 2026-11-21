@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getT } from "@/lib/i18n/server";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { countOf } from "@/lib/supabase-row";
 import type { EditorTask } from "@/components/editor/types";
 import { TemplateForm } from "@/components/template-form";
 import { Icon } from "@/components/ui";
@@ -42,7 +43,7 @@ export default async function TemplatePage({
       supabase.from("template_tasks").select("*").eq("template_id", sourceId).order("position"),
     ]);
     if (!tpl) notFound();
-    if (!isNew) usedBy = (tpl.journeys as { count: number }[] | null)?.[0]?.count ?? 0;
+    if (!isNew) usedBy = countOf(tpl.journeys as { count: number }[] | null);
 
     // Not a copy (duplicating starts clean) and not brand new: show where real patients are currently
     // stuck on this protocol — a task a lot of people bounce off is a signal the instructions are unclear.
