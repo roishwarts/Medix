@@ -175,7 +175,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {t("חיפוש מטופל")}
           </Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
-          <Link href="/clinic/weekly" className="btn btn-sm btn-primary md:h-10 md:min-h-10">{t("סיכום השבוע")}</Link>
+          <Link href="/clinic/weekly" className="btn btn-sm md:h-10 md:min-h-10">{t("סיכום השבוע")}</Link>
         </div>
       </header>
 
