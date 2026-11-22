@@ -7,7 +7,7 @@ import { useT } from "@/components/i18n-provider";
 import { markActivitySeen } from "@/app/clinic/activity/actions";
 
 // Items marked "new" stay marked while the page is open, even though opening it counts them as seen.
-export function ActivityList({ items, showPatient = true, markSeen = false }: { items: ActivityItem[]; showPatient?: boolean; markSeen?: boolean }) {
+export function ActivityList({ items, showPatient = true, markSeen = false, bare = false }: { items: ActivityItem[]; showPatient?: boolean; markSeen?: boolean; bare?: boolean }) {
   const t = useT();
   const [newIds] = useState(() => new Set(items.filter((i) => i.isNew).map((i) => i.id)));
 
@@ -15,10 +15,10 @@ export function ActivityList({ items, showPatient = true, markSeen = false }: { 
     if (markSeen) void markActivitySeen();
   }, [markSeen]);
 
-  if (items.length === 0) return <p role="status" className="card px-4 py-10 text-center text-muted">{t("אין עדכונים להצגה.")}</p>;
+  if (items.length === 0) return <p role="status" className={`${bare ? "border-t border-line" : "card"} px-4 py-10 text-center text-muted`}>{t("אין עדכונים להצגה.")}</p>;
 
   return (
-    <ul className="card divide-y divide-line">
+    <ul className={`divide-y divide-line ${bare ? "border-t border-line" : "card"}`}>
       {items.map((i) => (
         <li key={i.id}>
           <Link href={i.href} className="flex items-start gap-3 px-4 py-3 link-row">

@@ -242,13 +242,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
         <div className="min-w-0 space-y-8 lg:col-span-3">
-          <section aria-labelledby="h-attention">
-            <SectionTitle id="h-attention" count={attentionTotal} href="/clinic/tasks" linkLabel={t("לכל המשימות")}>{t("דורש טיפול")}</SectionTitle>
+          <section aria-labelledby="h-attention" className="card overflow-hidden">
+            <div className="px-5 pt-5 md:px-6 md:pt-6">
+              <SectionTitle id="h-attention" count={attentionTotal} href="/clinic/tasks" linkLabel={t("לכל המשימות")}>{t("דורש טיפול")}</SectionTitle>
+            </div>
             {attention.length === 0 ? (
-              <p className="card px-4 py-8 text-center text-muted">{t("אין משימות שממתינות לטיפול. הכול מעודכן.")}</p>
+              <p className="border-t border-line px-4 py-8 text-center text-muted">{t("אין משימות שממתינות לטיפול. הכול מעודכן.")}</p>
             ) : (
               <>
-                <div className="card divide-y divide-line">
+                <div className="divide-y divide-line border-t border-line">
                   {attention.map((i, idx) => (
                     <HomeTaskRow
                       key={i.task.id}
@@ -267,7 +269,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   ))}
                 </div>
                 {attentionTotal > 3 && (
-                  <p className="mt-2 flex items-center justify-between px-1 text-sm text-muted sm:hidden">
+                  <p className="flex items-center justify-between border-t border-line px-5 text-sm text-muted sm:hidden">
                     <span>{t("עוד {n} משימות", { n: attentionTotal - 3 })}</span>
                     <Link href="/clinic/tasks" className="inline-flex min-h-11 items-center text-accent">{t("לכל המשימות")}</Link>
                   </p>
@@ -276,21 +278,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             )}
           </section>
 
-          <section aria-labelledby="h-updates">
-            <SectionTitle id="h-updates" href="/clinic/activity" linkLabel={t("לכל העדכונים")}>{t("עדכונים אחרונים")}</SectionTitle>
-            <ActivityList items={updates} />
+          <section aria-labelledby="h-updates" className="card overflow-hidden">
+            <div className="px-5 pt-5 md:px-6 md:pt-6">
+              <SectionTitle id="h-updates" href="/clinic/activity" linkLabel={t("לכל העדכונים")}>{t("עדכונים אחרונים")}</SectionTitle>
+            </div>
+            <ActivityList items={updates} bare />
           </section>
         </div>
 
         <div className="min-w-0 space-y-8 lg:col-span-2">
-          <section aria-labelledby="h-strip">
-            <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
+          <section aria-labelledby="h-strip" className="card overflow-hidden">
+            <div className="px-5 pt-5 md:px-6 md:pt-6">
+              <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
+            </div>
             <WeekCard today={t0} surgeries={weekSurgeries} locale={LOCALE[lang]} />
           </section>
 
-          <section aria-labelledby="h-ready">
-            <SectionTitle id="h-ready" count={upcoming.length} href="/clinic/patients" linkLabel={t("למטופלים")}>{t("מוכנות המטופלים")}</SectionTitle>
-            <div className="card p-5">
+          <section aria-labelledby="h-ready" className="card overflow-hidden">
+            <div className="px-5 pt-5 md:px-6 md:pt-6">
+              <SectionTitle id="h-ready" count={upcoming.length} href="/clinic/patients" linkLabel={t("למטופלים")}>{t("מוכנות המטופלים")}</SectionTitle>
+            </div>
+            <div className="border-t border-line p-5 md:px-6">
               {upcoming.length === 0 ? (
                 <p className="py-4 text-center text-muted">{t("אין מטופלים עם ניתוח עתידי.")}</p>
               ) : (
