@@ -39,10 +39,9 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
   const maxCount = Math.max(1, ...perMonth.map((p) => p.count));
 
   return (
-    <main className="max-w-3xl space-y-8 pb-6">
+    <main className="space-y-8 pb-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">{t(RANGE_LABEL[range])}</p>
           <h1 className="display mt-1 text-4xl">{t("תובנות ניהול")}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">

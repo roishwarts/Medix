@@ -51,8 +51,7 @@ export default async function ClinicContentPage() {
   ];
 
   return (
-    <main className="max-w-3xl pb-6">
-      <p className="eyebrow">{t("מטופלים")}</p>
+    <main className="pb-6">
       <h1 className="display mt-1 text-4xl">{t("תוכן למטופלים")}</h1>
       <p className="mt-2 max-w-prose text-muted">
         {t("מידע, קישורים וסרטונים שמופיעים בעמוד המסלול של המטופלים. שינוי כאן משפיע מיד על כל מטופלי המרפאה.")}
