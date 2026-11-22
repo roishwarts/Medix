@@ -14,9 +14,9 @@ export type NavItem = { href: string; label: string; icon: NavIconName; exact?: 
 // The top bar of every signed-in area: tabs on wide screens. On phones the navigation is a bar at the bottom
 // of the screen, with a settings button that opens a sheet (more pages, accessibility, sign out).
 export function AppHeader({
-  items, brand, logo, logout, languages = true, greeting, home, phoneSheet = true,
+  items, brand, logo, logout, languages = true, greeting, home, phoneSheet = true, desktopBar = true,
 }: {
-  phoneSheet?: boolean; items: NavItem[]; brand: string; logo?: string | null; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
+  phoneSheet?: boolean; desktopBar?: boolean; items: NavItem[]; brand: string; logo?: string | null; logout: React.ReactNode; languages?: boolean; greeting?: string; home?: string; maxWidth?: string;
 }) {
   const t = useT();
   const path = usePathname();
@@ -50,7 +50,7 @@ export function AppHeader({
 
   return (
     <>
-      <header className="topbar hidden md:block">
+      {desktopBar && <header className="topbar hidden md:block">
         <div className="mx-auto flex max-w-6xl items-center gap-1.5 px-3 py-1 sm:px-5">
           {/* Tabs. They stay on the page (hidden on phones) so their pages keep loading in the background. */}
           <div className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
@@ -71,7 +71,7 @@ export function AppHeader({
             <span className="hidden md:block">{logout}</span>
           </div>
         </div>
-      </header>
+      </header>}
 
       {/* Phone navigation */}
       <nav aria-label={t("ניווט ראשי")} className="bottom-bar fixed inset-x-0 bottom-0 z-40 md:hidden">

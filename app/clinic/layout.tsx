@@ -2,6 +2,7 @@ import { BackButton } from "@/components/back-button";
 import type { Metadata } from "next";
 import { getT } from "@/lib/i18n/server";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getClinicName, requireProfile } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
 import { ImpersonationBanner } from "@/components/impersonation-banner";
@@ -9,6 +10,8 @@ import { BrandTheme } from "@/components/brand-theme";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { ClinicMobileTopbar } from "@/components/clinic-mobile-topbar";
 import { ClinicSideMenu } from "@/components/clinic-side-menu";
+import { ClinicSidebar } from "@/components/clinic-sidebar";
+import { RAIL_COOKIE } from "@/lib/rail";
 import { IdleLogoutModal } from "@/components/idle-logout-modal";
 import { ActivityBadge } from "./activity-badge";
 import { QuestionsBadge } from "./questions-badge";
@@ -23,6 +26,7 @@ export default async function ClinicLayout({ children }: { children: React.React
   const t = await getT();
   const profile = await requireProfile(["staff", "doctor"]);
   const clinicName = await getClinicName();
+  const collapsed = (await cookies()).get(RAIL_COOKIE)?.value === "0";
   const items: NavItem[] = [
     { href: "/clinic", label: t("ראשי"), icon: "home", exact: true },
     { href: "/clinic/tasks", label: t("משימות"), icon: "tasks" },
@@ -38,17 +42,20 @@ export default async function ClinicLayout({ children }: { children: React.React
     { href: "/clinic/content", label: t("תוכן למטופלים"), icon: "content", more: true },
   ];
   return (
-    <div className="min-h-dvh pb-24 md:pb-0">
+    <div className="clinic-shell min-h-dvh pb-24 md:pb-0" data-rail={collapsed ? "0" : "1"}>
       <BrandTheme brand={{ color: profile.brand_color, dark: profile.brand_dark, gold: profile.brand_gold }} />
       <div className="print:hidden">
         <ImpersonationBanner />
         <ClinicMobileTopbar brand={clinicName} logo={profile.logo_url} />
         <ClinicSideMenu items={items.filter((i) => i.more)} brand={clinicName} logo={profile.logo_url} userName={profile.full_name} roleLabel={profile.role === "doctor" ? t("רופא") : t("צוות")} logout={<LogoutButton />} />
-        <AppHeader phoneSheet={false} items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+        <ClinicSidebar items={items} brand={clinicName} logo={profile.logo_url} userName={profile.full_name} roleLabel={profile.role === "doctor" ? t("רופא") : t("צוות")} logout={<LogoutButton variant="rail" />} collapsed={collapsed} />
+        <AppHeader phoneSheet={false} desktopBar={false} items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
-      <div className="mx-auto max-w-6xl px-4 pb-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-5 sm:pb-8 md:pt-8">
+      <div className="clinic-main relative z-[1] md:ps-[var(--rail-w)]">
+      <div className="mx-auto max-w-[80rem] px-4 pb-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-5 sm:pb-8 md:px-10 md:pt-10">
         <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
         {children}
+      </div>
       </div>
       <IdleLogoutModal />
     </div>

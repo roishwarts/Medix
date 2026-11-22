@@ -436,6 +436,117 @@ p { text-wrap: pretty; }
   .link-row { transition: background 0.12s; }
   .link-row:hover { background: var(--color-paper); }
   .num { font-variant-numeric: tabular-nums; }
+
+  /* ---- Staff area: the "calm glass" look. Light mode only; dark mode keeps its own colors. ---- */
+  .clinic-shell { --rail-w: 16.5rem; position: relative; }
+  .clinic-shell[data-rail="0"] { --rail-w: 4.75rem; }
+  html[data-theme="light"] .clinic-shell {
+    --color-page: #edf2f5;
+    --color-paper: #f2f5f7;
+    --color-glass: rgb(255 255 255 / 0.55);
+    --color-line: rgb(12 60 80 / 0.1);
+    --color-line-strong: rgb(12 60 80 / 0.18);
+    --edge: rgb(12 60 80 / 0.14);
+    --edge-soft: rgb(12 60 80 / 0.1);
+    --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 12px 28px -18px rgb(16 72 90 / 0.35);
+    --hover-tint: rgb(12 60 80 / 0.06);
+    background: linear-gradient(170deg, #e7eef1 0%, #eef2f5 55%, #f3f4f5 100%);
+  }
+  html[data-theme="light"] .clinic-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(42rem 42rem at 100% -8%, rgb(60 150 165 / 0.16), transparent 70%),
+      radial-gradient(36rem 36rem at 0% 78%, rgb(150 175 190 / 0.2), transparent 70%);
+  }
+  @media (prefers-color-scheme: light) {
+    html[data-theme="system"] .clinic-shell {
+    --color-page: #edf2f5;
+    --color-paper: #f2f5f7;
+    --color-glass: rgb(255 255 255 / 0.55);
+    --color-line: rgb(12 60 80 / 0.1);
+    --color-line-strong: rgb(12 60 80 / 0.18);
+    --edge: rgb(12 60 80 / 0.14);
+    --edge-soft: rgb(12 60 80 / 0.1);
+    --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 12px 28px -18px rgb(16 72 90 / 0.35);
+    --hover-tint: rgb(12 60 80 / 0.06);
+    background: linear-gradient(170deg, #e7eef1 0%, #eef2f5 55%, #f3f4f5 100%);
+    }
+    html[data-theme="system"] .clinic-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(42rem 42rem at 100% -8%, rgb(60 150 165 / 0.16), transparent 70%),
+      radial-gradient(36rem 36rem at 0% 78%, rgb(150 175 190 / 0.2), transparent 70%);
+    }
+  }
+  .clinic-shell .card {
+    border-radius: 1.6rem;
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: saturate(170%) blur(26px);
+    backdrop-filter: saturate(170%) blur(26px);
+  }
+  .clinic-main { transition: padding-inline-start 0.26s cubic-bezier(0.3, 0.7, 0.2, 1); }
+
+  /* ---- The staff side menu ---- */
+  .rail {
+    position: fixed; inset-block: 0; inset-inline-start: 0; z-index: 30;
+    width: var(--rail-w);
+    display: flex; flex-direction: column;
+    padding: 0.75rem 0.65rem;
+    background: color-mix(in srgb, var(--color-surface) 64%, transparent);
+    -webkit-backdrop-filter: blur(30px) saturate(170%);
+    backdrop-filter: blur(30px) saturate(170%);
+    border-inline-end: 1px solid var(--color-line);
+    transition: width 0.26s cubic-bezier(0.3, 0.7, 0.2, 1);
+  }
+  .rail-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 3rem; padding-inline: 0.5rem 0.15rem; margin-bottom: 0.4rem; }
+  .rail-brand { min-width: 0; flex: 1; display: flex; align-items: center; overflow: hidden; white-space: nowrap; color: var(--color-ink); }
+  .rail-toggle { position: relative; display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: 0.8rem; color: var(--color-muted); transition: background 0.15s, color 0.15s; cursor: pointer; }
+  .rail-toggle:hover { background: var(--hover-tint); color: var(--color-ink); }
+  .rail-nav { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-block: 0.25rem; scrollbar-width: thin; }
+  .rail-rule { border: 0; border-top: 1px solid var(--color-line); margin: 0.7rem 0.4rem; }
+  .rail-item {
+    position: relative; display: flex; align-items: center; gap: 0.8rem;
+    min-height: 2.75rem; padding: 0 0.8rem; border-radius: 0.95rem;
+    font-size: 0.97rem; font-weight: 500; text-align: start;
+    color: color-mix(in srgb, var(--color-ink) 84%, transparent);
+    background: none; border: 1px solid transparent; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .rail-item:hover { background: var(--hover-tint); color: var(--color-ink); }
+  .rail-item-on, .rail-item-on:hover { background: linear-gradient(180deg, var(--on-a), var(--on-b)); border-color: var(--edge); box-shadow: var(--glass-shadow); color: var(--color-accent); font-weight: 600; }
+  .rail-item-new { background: var(--color-accent-soft); color: var(--color-accent); }
+  .rail-item-new:hover { background: var(--color-accent-soft); filter: brightness(0.97); }
+  .rail-label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rail-badge { flex: none; margin-inline-start: auto; }
+  .rail-badge > span { margin: 0 !important; }
+  .rail-user { position: relative; display: flex; align-items: center; gap: 0.7rem; padding: 0.4rem 0.8rem; }
+  .rail-avatar { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex: none; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent); font-weight: 600; }
+  /* Narrow: icons only. The page name appears next to the icon on hover or keyboard focus. */
+  .clinic-shell[data-rail="0"] .rail { padding-inline: 0.55rem; }
+  .clinic-shell[data-rail="0"] .rail-brand,
+  .clinic-shell[data-rail="0"] .rail-label { display: none; }
+  .clinic-shell[data-rail="0"] .rail-top { justify-content: center; padding-inline: 0; }
+  .clinic-shell[data-rail="0"] .rail-item,
+  .clinic-shell[data-rail="0"] .rail-user { justify-content: center; padding-inline: 0; }
+  .clinic-shell[data-rail="0"] .rail-nav { overflow: visible; }
+  .clinic-shell[data-rail="0"] .rail-badge { position: absolute; top: 0.55rem; inset-inline-end: calc(50% - 1rem); margin: 0; }
+  .clinic-shell[data-rail="0"] .rail-badge > span { min-width: 0.7rem !important; width: 0.7rem; height: 0.7rem; padding: 0 !important; font-size: 0 !important; line-height: 0 !important; box-shadow: 0 0 0 2px var(--color-surface); }
+  .clinic-shell[data-rail="0"] .rail [data-tip]:hover::after,
+  .clinic-shell[data-rail="0"] .rail [data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    position: absolute; inset-inline-start: calc(100% + 0.9rem); top: 50%; transform: translateY(-50%); z-index: 60;
+    padding: 0.45rem 0.8rem; border-radius: 0.7rem; white-space: nowrap; pointer-events: none;
+    background: #17202b; color: #fff; font-size: 0.875rem; font-weight: 500;
+    box-shadow: 0 10px 24px -8px rgb(10 40 55 / 0.55);
+  }
 }
 
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

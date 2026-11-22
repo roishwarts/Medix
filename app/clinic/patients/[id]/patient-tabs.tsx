@@ -43,7 +43,7 @@ export function PatientTabs({ tabs, initial, panels }: { tabs: TabDef[]; initial
 
   return (
     <div ref={root}>
-      <div role="tablist" aria-label={t("פרטי המטופל")} className="sticky top-14 z-10 -mx-4 flex gap-1 border-b border-line bg-[var(--color-page)]/90 px-4 backdrop-blur-xl sm:-mx-5 sm:px-5 md:top-14">
+      <div role="tablist" aria-label={t("פרטי המטופל")} className="sticky top-14 z-10 -mx-4 flex gap-1 border-b border-line bg-[var(--color-page)]/90 px-4 backdrop-blur-xl sm:-mx-5 sm:px-5 md:top-0 md:mx-0 md:px-1">
         {tabs.map((x, i) => (
           <button
             key={x.id} id={`tab-${x.id}`} type="button" role="tab" aria-selected={active === x.id} aria-controls={`panel-${x.id}`}

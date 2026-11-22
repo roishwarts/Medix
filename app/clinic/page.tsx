@@ -24,16 +24,13 @@ export const dynamic = "force-dynamic";
 const DEFAULT_READY_DAYS = 14;
 
 function Kpi({ href, label, value, tone, alert, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean }) {
-  const color = tone === "bad" ? "text-bad" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-ink";
+  // Calm: only what is late or returned is coloured. Everything else is plain ink.
+  const color = tone === "bad" ? "text-bad" : "text-ink";
   return (
-    <Link
-      href={href}
-      className={`${className} card block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-4 ${alert ? "border-bad/30 bg-bad-soft" : ""}`}
-    >
-      <p className="flex items-start gap-1.5 text-xs text-muted sm:text-sm">
-        <span>{label}</span>
-      </p>
-      <p className={`display num mt-1 text-3xl sm:text-4xl ${color}`}>{value}</p>
+    <Link href={href} className={`${className} card relative block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-5 lg:min-h-36`}>
+      {alert && <span aria-hidden className="absolute inset-y-6 start-0 hidden w-1 rounded-full bg-bad sm:block" />}
+      <p className="text-xs text-muted sm:text-sm">{label}</p>
+      <p className={`display num mt-1 text-3xl sm:mt-2 sm:text-5xl ${color}`}>{value}</p>
     </Link>
   );
 }
@@ -145,7 +142,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     : hourIL < 12 ? t("בוקר טוב, {name}", { name: firstName })
     : hourIL < 18 ? t("צהריים טובים, {name}", { name: firstName })
     : t("ערב טוב, {name}", { name: firstName });
-  const seg = (n: number) => (upcoming.length ? (n / upcoming.length) * 100 : 0);
+  // The donut of patient readiness (three segments) and the week strip (Sunday to Saturday, with the surgeries on each day).
+  const DONUT_R = 46;
+  const DONUT_C = 2 * Math.PI * DONUT_R;
+  let acc = 0;
+  const donut = [{ n: readyN, color: "var(--color-ok)" }, { n: progressN, color: "var(--color-accent)" }, { n: lateN, color: "var(--color-bad)" }]
+    .filter((x) => x.n > 0)
+    .map((x) => { const len = (x.n / Math.max(upcoming.length, 1)) * DONUT_C; const part = { color: x.color, len: Math.max(len - 2, 1), offset: acc }; acc += len; return part; });
+  const noon = (iso: string) => new Date(`${iso}T12:00:00Z`);
+  const weekStart = new Date(noon(t0).getTime() - noon(t0).getUTCDay() * 86400000);
+  const surgeriesOn = new Map<string, number>();
+  for (const j of journeys) surgeriesOn.set(j.surgery_date.slice(0, 10), (surgeriesOn.get(j.surgery_date.slice(0, 10)) ?? 0) + 1);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart.getTime() + i * 86400000);
+    const iso = d.toISOString().slice(0, 10);
+    return {
+      iso, day: d.getUTCDate(), today: iso === t0, surgeries: surgeriesOn.get(iso) ?? 0,
+      label: d.toLocaleDateString(LOCALE[lang], { weekday: "narrow", timeZone: "UTC" }),
+    };
+  });
 
   return (
     <main className="space-y-8">
@@ -158,9 +173,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </p>
           <h1 className="display mt-0.5 text-2xl sm:text-4xl">{greeting}</h1>
         </div>
-        <div className="order-2 flex min-w-0 basis-full items-center gap-3 md:basis-auto">
-          <Link href="/clinic/weekly" className="btn btn-sm">{t("סיכום השבוע")}</Link>
+        <div className="order-2 flex min-w-0 basis-full flex-wrap items-center gap-3 md:basis-auto">
+          <Link href="/clinic/patients?find=1" className="btn btn-sm max-md:hidden md:min-w-56 md:justify-start md:text-muted">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+            {t("חיפוש מטופל")}
+          </Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
+          <Link href="/clinic/weekly" className="btn btn-sm btn-primary">{t("סיכום השבוע")}</Link>
         </div>
       </header>
 
@@ -265,11 +284,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <section aria-labelledby="h-week">
             <SectionTitle id="h-week" count={thisWeek.length} href="/clinic/calendar" linkLabel={t("ליומן")}>{t("ניתוחים השבוע")}</SectionTitle>
             {notReadyThisWeek.length > 0 && (
-              <Link href="/clinic/patients" className="card mb-3 flex min-h-12 items-center justify-between gap-3 border-bad/30 bg-bad-soft px-4 py-2.5">
+              <Link href="/clinic/patients" className="card relative mb-3 flex min-h-12 items-center justify-between gap-3 px-5 py-2.5">
+                <span aria-hidden className="absolute inset-y-3 start-0 w-1 rounded-full bg-bad" />
                 <span className="font-medium text-bad">
                   {t("{n} מתוך {total} הניתוחים השבוע עדיין לא מוכנים", { n: notReadyThisWeek.length, total: thisWeek.length })}
                 </span>
-                <span className="shrink-0 text-sm text-bad">{t("לצפייה")}</span>
+                <span className="shrink-0 text-sm text-accent">{t("לצפייה")}</span>
               </Link>
             )}
             {thisWeek.length === 0 ? (
@@ -302,28 +322,50 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
 
         <div className="min-w-0 space-y-8 lg:col-span-2">
+          <section aria-labelledby="h-strip">
+            <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
+            <div className="card p-4" aria-hidden="true">
+              <ol className="grid grid-cols-7 gap-1.5 text-center">
+                {weekDays.map((d) => (
+                  <li key={d.iso} className="min-w-0">
+                    <span className="block text-xs text-muted">{d.label}</span>
+                    <span className={`num mt-1 grid h-11 place-items-center rounded-2xl text-sm font-medium ${d.today ? "bg-accent text-white" : d.surgeries ? "bg-accent-soft text-accent" : "bg-[var(--hover-tint)]"}`}>
+                      {d.day}
+                    </span>
+                    <span className={`num mt-1 block h-4 text-[11px] ${d.surgeries ? "text-accent" : "text-transparent"}`}>{d.surgeries ? `● ${d.surgeries}` : "·"}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
           <section aria-labelledby="h-ready">
             <SectionTitle id="h-ready" count={upcoming.length} href="/clinic/patients" linkLabel={t("למטופלים")}>{t("מוכנות המטופלים")}</SectionTitle>
-            <div className="card p-4">
+            <div className="card p-5">
               {upcoming.length === 0 ? (
                 <p className="py-4 text-center text-muted">{t("אין מטופלים עם ניתוח עתידי.")}</p>
               ) : (
-                <>
-                  <div
-                    role="img"
-                    aria-label={t("{ready} מוכנים, {progress} בהכנה, {late} באיחור, מתוך {total} מטופלים", { ready: readyN, progress: progressN, late: lateN, total: upcoming.length })}
-                    className="flex h-3 overflow-hidden rounded-full bg-line"
-                  >
-                    <div className="bg-ok" style={{ width: `${seg(readyN)}%` }} />
-                    <div className="bg-accent" style={{ width: `${seg(progressN)}%` }} />
-                    <div className="bg-bad" style={{ width: `${seg(lateN)}%` }} />
+                <div className="flex items-center gap-6">
+                  <div className="relative size-28 shrink-0">
+                    <svg
+                      viewBox="0 0 116 116" role="img" className="size-full -rotate-90"
+                      aria-label={t("{ready} מוכנים, {progress} בהכנה, {late} באיחור, מתוך {total} מטופלים", { ready: readyN, progress: progressN, late: lateN, total: upcoming.length })}
+                    >
+                      <circle cx="58" cy="58" r={DONUT_R} fill="none" stroke="var(--color-line)" strokeWidth="14" />
+                      {donut.map((p) => (
+                        <circle key={p.color} cx="58" cy="58" r={DONUT_R} fill="none" stroke={p.color} strokeWidth="14" strokeDasharray={`${p.len} ${DONUT_C - p.len}`} strokeDashoffset={-p.offset} />
+                      ))}
+                    </svg>
+                    <div className="absolute inset-0 grid place-items-center text-center" aria-hidden="true">
+                      <div><div className="display num text-3xl leading-none">{upcoming.length}</div><div className="mt-0.5 text-xs text-muted">{t("מטופלים")}</div></div>
+                    </div>
                   </div>
-                  <ul className="mt-4 space-y-2 text-sm">
-                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-ok" /> <span className="flex-1">{t("מוכנים")}</span><span className="num font-medium">{readyN}</span></li>
-                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-accent" /> <span className="flex-1">{t("בהכנה")}</span><span className="num font-medium">{progressN}</span></li>
-                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-bad" /> <span className="flex-1">{t("יש משימות באיחור")}</span><span className="num font-medium">{lateN}</span></li>
+                  <ul className="min-w-0 flex-1 space-y-3 text-sm">
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-ok" /> <span className="flex-1">{t("מוכנים")}</span><span className="num font-semibold">{readyN}</span></li>
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-accent" /> <span className="flex-1">{t("בהכנה")}</span><span className="num font-semibold">{progressN}</span></li>
+                    <li className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-full bg-bad" /> <span className="flex-1">{t("יש משימות באיחור")}</span><span className="num font-semibold">{lateN}</span></li>
                   </ul>
-                </>
+                </div>
               )}
             </div>
           </section>
