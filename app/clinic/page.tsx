@@ -2,6 +2,7 @@ import Link from "next/link";
 import { loadJourneys } from "@/lib/queries";
 import { blockerLabel, actionItems, type ActionItem } from "@/lib/journey";
 import { getClinicOptions } from "@/lib/clinic-options";
+import { WeekCard } from "@/components/week-card";
 import { HomeTaskRow } from "@/components/home-task-row";
 import { getOrigin } from "@/lib/account-links";
 import { loadPatientExtras } from "@/lib/patient-extras";
@@ -151,18 +152,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const donut = [{ n: readyN, color: "var(--color-ok)" }, { n: progressN, color: "var(--color-accent)" }, { n: lateN, color: "var(--color-bad)" }]
     .filter((x) => x.n > 0)
     .map((x) => { const len = (x.n / Math.max(upcoming.length, 1)) * DONUT_C; const part = { color: x.color, len: Math.max(len - 2, 1), offset: acc }; acc += len; return part; });
-  const noon = (iso: string) => new Date(`${iso}T12:00:00Z`);
-  const weekStart = new Date(noon(t0).getTime() - noon(t0).getUTCDay() * 86400000);
-  const surgeriesOn = new Map<string, number>();
-  for (const j of journeys) surgeriesOn.set(j.surgery_date.slice(0, 10), (surgeriesOn.get(j.surgery_date.slice(0, 10)) ?? 0) + 1);
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart.getTime() + i * 86400000);
-    const iso = d.toISOString().slice(0, 10);
-    return {
-      iso, day: d.getUTCDate(), today: iso === t0, surgeries: surgeriesOn.get(iso) ?? 0,
-      label: d.toLocaleDateString(LOCALE[lang], { weekday: "narrow", timeZone: "UTC" }),
-    };
-  });
+  // Every surgery within about half a year each way, for the week card (it moves between weeks without going back to the server).
+  const weekSurgeries = journeys
+    .filter((j) => Math.abs(diffDays(j.surgery_date, t0)) <= 190)
+    .map((j) => ({
+      id: j.id, date: j.surgery_date.slice(0, 10), name: j.patient.full_name,
+      detail: j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : j.procedure || t("ההכנות הושלמו"),
+      ready: j.summary.readiness === 100,
+    }));
 
   return (
     <main className="space-y-8">
@@ -292,46 +289,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="min-w-0 space-y-8 lg:col-span-2">
           <section aria-labelledby="h-strip">
             <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
-            <div className="card p-4">
-              <ol className="grid grid-cols-7 gap-1.5 text-center" aria-hidden="true">
-                {weekDays.map((d) => (
-                  <li key={d.iso} className="min-w-0">
-                    <span className="block text-xs text-muted">{d.label}</span>
-                    <span className={`num mt-1 grid h-11 place-items-center rounded-2xl text-sm font-medium ${d.today ? "bg-accent text-white" : d.surgeries ? "bg-accent-soft text-accent" : "bg-[var(--hover-tint)]"}`}>
-                      {d.day}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-              {thisWeek.length === 0 ? (
-                <p className="mt-4 px-2 py-3 text-center text-sm text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
-              ) : (
-                <ul className="mt-4 space-y-2">
-                  {thisWeek.map((j) => {
-                    const day = j.surgery_date.slice(8, 10).replace(/^0/, "");
-                    const month = new Date(`${j.surgery_date}T12:00:00`).toLocaleDateString(LOCALE[lang], { month: "short" });
-                    const ready = j.summary.readiness === 100;
-                    return (
-                      <li key={j.id}>
-                        <Link href={`/clinic/patients/${j.id}`} className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/45 px-3 py-2.5 transition hover:bg-white/70">
-                          <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent-soft text-center leading-tight text-accent">
-                            <span><span className="num block text-base font-semibold">{day}</span><span className="block text-[11px]">{month}</span></span>
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block break-words font-semibold">{j.patient.full_name}</span>
-                            <span className="block break-words text-sm text-muted">
-                              {j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : j.procedure || t("ההכנות הושלמו")}
-                              <span className="sr-only"> · {relativeDays(j.surgery_date, t0, lang)}</span>
-                            </span>
-                          </span>
-                          <span className={`pill shrink-0 ${ready ? "pill-ok" : "pill-bad"}`}>{ready ? t("מוכן") : t("לא מוכן")}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            <WeekCard today={t0} surgeries={weekSurgeries} locale={LOCALE[lang]} />
           </section>
 
           <section aria-labelledby="h-ready">
