@@ -410,12 +410,7 @@ export default async function PatientPage({
           <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""}
             nationalId={medicalInfo?.national_id ?? ""} hmo={medicalInfo?.hmo ?? ""} insuranceCompany={medicalInfo?.insurance_company ?? ""} insurancePolicyNumber={medicalInfo?.insurance_policy_number ?? ""} insurancePhone={medicalInfo?.insurance_phone ?? ""}
             hospitals={options.hospitals} companies={options.companies}
-            autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
-            journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
-        </section>
-        <section aria-label={tr("גישת המטופל לאפליקציה")}>
-          <h2 className="mb-3 text-lg font-semibold">{tr("גישת המטופל לאפליקציה")}</h2>
-          <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
+            autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"} />
         </section>
                 </div>
                 <div className="min-w-0 space-y-8">
@@ -438,9 +433,14 @@ export default async function PatientPage({
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
-        <section aria-label={tr("פעולות על המסלול")}>
-          <h2 className="mb-3 text-lg font-semibold">{tr("פעולות על המסלול")}</h2>
+        <section aria-label={tr("גישת המטופל למערכת")}>
+          <h2 className="mb-3 text-lg font-semibold">{tr("גישת המטופל למערכת")}</h2>
+          <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
+        </section>
+        <section aria-label={tr("פעולות נוספות")}>
+          <h2 className="mb-3 text-lg font-semibold">{tr("פעולות נוספות")}</h2>
           <div className="flex flex-wrap items-start gap-3">
+            <Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-4 sm:min-h-10">{tr("עריכת המסלול של המטופל")}</Link>
             <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
             {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
           </div>

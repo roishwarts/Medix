@@ -11,13 +11,13 @@ import { updatePatientDetails } from "../actions";
 type Props = {
   patientId: string; name: string; phone: string; email: string; hospital: string; company: string;
   nationalId: string; hmo: string; insuranceCompany: string; insurancePolicyNumber: string; insurancePhone: string;
-  hospitals: string[]; companies: string[]; autoStage: Stage; stage: Stage | null; lang: Lang; journeyEdit?: React.ReactNode;
+  hospitals: string[]; companies: string[]; autoStage: Stage; stage: Stage | null; lang: Lang;
 };
 
 export function PatientDetails({
   patientId, name, phone, email, hospital, company,
   nationalId, hmo, insuranceCompany, insurancePolicyNumber, insurancePhone,
-  hospitals, companies, autoStage, stage, lang, journeyEdit,
+  hospitals, companies, autoStage, stage, lang,
 }: Props) {
   const t = useT();
   const [editing, setEditing] = useState(false);
@@ -64,6 +64,12 @@ export function PatientDetails({
 
   return (
     <>
+      <div className="mb-3 flex items-center gap-1">
+        <h2 className="text-lg font-semibold">{t("פרטים כלליים")}</h2>
+        <button ref={openButtonRef} type="button" onClick={() => setEditing(true)} className="btn btn-quiet btn-icon size-10" aria-label={t("עריכת פרטים")} title={t("עריכת פרטים")}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" /><path d="m14.5 7.5 3 3" /></svg>
+        </button>
+      </div>
       <div className="card divide-y divide-line text-sm">
         <div className={row}><span className="shrink-0 text-muted">{t("שם")}</span><span className="min-w-0 break-words font-medium">{name}</span></div>
         <div className={row}><span className="shrink-0 text-muted">{t("טלפון")}</span>{phone ? <a href={`tel:${phone}`} dir="ltr" className="num inline-flex min-h-11 items-center font-medium sm:min-h-0">{phone}</a> : none}</div>
@@ -84,10 +90,6 @@ export function PatientDetails({
           <span className={`pill ${STAGE_PILL[shown]}`}>{t(STAGE_LABEL[shown])}{stage ? ` · ${t("ידני")}` : ""}</span>
         </div>
         <div className={row}><span className="shrink-0 text-muted">{t("שפה")}</span><span lang={lang} className="font-medium">{LANGS.find((l) => l.code === lang)?.label}</span></div>
-        <div className="flex flex-wrap gap-2 px-3 py-2">
-          <button ref={openButtonRef} className="btn btn-sm min-h-11 !px-3 sm:min-h-9" onClick={() => setEditing(true)}>{t("עריכת פרטים")}</button>
-          {journeyEdit}
-        </div>
       </div>
 
       {editing && (
