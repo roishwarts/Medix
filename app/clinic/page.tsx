@@ -283,51 +283,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             )}
           </section>
 
-          <section aria-labelledby="h-week">
-            <SectionTitle id="h-week" count={thisWeek.length} href="/clinic/calendar" linkLabel={t("ליומן")}>{t("ניתוחים השבוע")}</SectionTitle>
-            {notReadyThisWeek.length > 0 && (
-              <Link href="/clinic/patients" className="card relative mb-3 flex min-h-12 items-center justify-between gap-3 px-5 py-2.5">
-                <span aria-hidden className="absolute inset-y-3 start-0 w-1 rounded-full bg-bad" />
-                <span className="font-medium text-bad">
-                  {t("{n} מתוך {total} הניתוחים השבוע עדיין לא מוכנים", { n: notReadyThisWeek.length, total: thisWeek.length })}
-                </span>
-                <span className="shrink-0 text-sm text-accent">{t("לצפייה")}</span>
-              </Link>
-            )}
-            {thisWeek.length === 0 ? (
-              <p className="card px-4 py-8 text-center text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
-            ) : (
-              <div className="card divide-y divide-line">
-                {thisWeek.map((j) => {
-                  const day = j.surgery_date.slice(8, 10).replace(/^0/, "");
-                  const month = new Date(`${j.surgery_date}T12:00:00`).toLocaleDateString(LOCALE[lang], { month: "short" });
-                  const ready = j.summary.readiness === 100;
-                  return (
-                    <Link key={j.id} href={`/clinic/patients/${j.id}`} className="flex items-center gap-3 px-4 py-3 link-row">
-                      <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent text-center leading-tight text-white">
-                        <span><span className="num block text-base font-semibold">{day}</span><span className="block text-[11px]">{month}</span></span>
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block break-words font-medium">{j.patient.full_name}</span>
-                        <span className="block break-words text-sm text-muted">
-                          {j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : j.procedure || t("ההכנות הושלמו")}
-                          <span className="sr-only"> · {relativeDays(j.surgery_date, t0, lang)}</span>
-                        </span>
-                      </span>
-                      <span className={`pill shrink-0 ${ready ? "pill-ok" : "pill-bad"}`}>{ready ? t("מוכן") : t("לא מוכן")}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+          <section aria-labelledby="h-updates">
+            <SectionTitle id="h-updates" href="/clinic/activity" linkLabel={t("לכל העדכונים")}>{t("עדכונים אחרונים")}</SectionTitle>
+            <ActivityList items={updates} />
           </section>
         </div>
 
         <div className="min-w-0 space-y-8 lg:col-span-2">
           <section aria-labelledby="h-strip">
             <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
-            <div className="card p-4" aria-hidden="true">
-              <ol className="grid grid-cols-7 gap-1.5 text-center">
+            <div className="card p-4">
+              <ol className="grid grid-cols-7 gap-1.5 text-center" aria-hidden="true">
                 {weekDays.map((d) => (
                   <li key={d.iso} className="min-w-0">
                     <span className="block text-xs text-muted">{d.label}</span>
@@ -338,6 +304,34 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   </li>
                 ))}
               </ol>
+              {thisWeek.length === 0 ? (
+                <p className="mt-4 px-2 py-3 text-center text-sm text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
+              ) : (
+                <ul className="mt-4 space-y-2">
+                  {thisWeek.map((j) => {
+                    const day = j.surgery_date.slice(8, 10).replace(/^0/, "");
+                    const month = new Date(`${j.surgery_date}T12:00:00`).toLocaleDateString(LOCALE[lang], { month: "short" });
+                    const ready = j.summary.readiness === 100;
+                    return (
+                      <li key={j.id}>
+                        <Link href={`/clinic/patients/${j.id}`} className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/45 px-3 py-2.5 transition hover:bg-white/70">
+                          <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent-soft text-center leading-tight text-accent">
+                            <span><span className="num block text-base font-semibold">{day}</span><span className="block text-[11px]">{month}</span></span>
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block break-words font-semibold">{j.patient.full_name}</span>
+                            <span className="block break-words text-sm text-muted">
+                              {j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : j.procedure || t("ההכנות הושלמו")}
+                              <span className="sr-only"> · {relativeDays(j.surgery_date, t0, lang)}</span>
+                            </span>
+                          </span>
+                          <span className={`pill shrink-0 ${ready ? "pill-ok" : "pill-bad"}`}>{ready ? t("מוכן") : t("לא מוכן")}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </section>
 
@@ -370,11 +364,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 </div>
               )}
             </div>
-          </section>
-
-          <section aria-labelledby="h-updates">
-            <SectionTitle id="h-updates" href="/clinic/activity" linkLabel={t("לכל העדכונים")}>{t("עדכונים אחרונים")}</SectionTitle>
-            <ActivityList items={updates} />
           </section>
         </div>
       </div>
