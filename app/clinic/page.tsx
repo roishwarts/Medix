@@ -203,10 +203,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       )}
 
       {/* The numbers: three on a phone, five on a desktop (returned-for-fix and ready join there). */}
-      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3 lg:grid-cols-5">
+      <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3 lg:grid-cols-4">
         <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} hint={overdueCount > 0 ? t("הישנה ביותר: {when}", { when: relativeDays(oldestOverdue, t0, lang) }) : undefined} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
         <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} hint={reviewCount > 0 ? t("מחכים לאישור שלך") : undefined} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
-        <Kpi className="max-lg:hidden" href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
         <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים השבוע")} hint={thisWeek.length > 0 ? t("{n} מתוך {total} עדיין לא מוכנים", { n: notReadyThisWeek.length, total: thisWeek.length }) : undefined} value={String(thisWeek.length)} />
         <Kpi className="max-lg:hidden" href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("מוכנים לניתוח")} hint={t("ב־{days} הימים הקרובים", { days: readyDays })} value={String(soonReady)} tone={soon.length === 0 ? undefined : soonReady === soon.length ? "ok" : "warn"} />
       </section>
