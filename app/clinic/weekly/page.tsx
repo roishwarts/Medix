@@ -26,83 +26,84 @@ export default async function WeeklySummaryPage() {
   const review = items.filter((i) => i.kind === "review");
   const journeyByPatient = new Map(journeys.map((j) => [j.patient_id, j.id]));
 
-  const stat = (n: number) => (n === 0 ? "text-ok" : "text-bad");
-  // Pending review isn't a failure like rejected/overdue, so it never goes bad/red - but it
-  // should still read as "nothing pending" (ok) at zero, matching its sibling tiles' language.
-  const reviewStat = (n: number) => (n === 0 ? "text-ok" : "text-warn");
+  // Calm numbers: only what is late or returned is coloured.
+  const tone = (n: number) => (n > 0 ? "text-bad" : "text-ink");
+  const tile = "card relative block min-h-36 min-w-0 p-5 transition hover:border-line-strong sm:p-6";
 
   return (
-    <main className="max-w-2xl space-y-8 pb-6">
+    <main className="space-y-8 pb-6">
       <header>
         <h1 className="display text-4xl">{t("סיכום השבוע")}</h1>
+        <p className="mt-2 text-muted">{t("בכל המטופלים הפעילים, לא רק מי שמנותח השבוע")}</p>
       </header>
 
-      <section className="card space-y-3 p-5">
-        <p className="text-lg">
-          {t("השבוע: ")}
-          <span className="num font-semibold">{thisWeek.length}</span> {thisWeek.length === 1 ? t("ניתוח") : t("ניתוחים")}
-          {thisWeek.length > 0 && (
-            <>
-              {", "}
-              <span className={`num font-semibold ${stat(notReady.length)}`}>{thisWeek.length - notReady.length}</span> {t("מוכנים")}
-              {notReady.length > 0 && (
-                <>
-                  {" · "}
-                  <span className="num font-semibold text-bad">{notReady.length}</span> {t("עדיין לא")}
-                </>
-              )}
-            </>
+      <section aria-label={t("סיכום השבוע")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/clinic/patients?days=7" className={tile}>
+          <p className="text-sm text-muted">{t("ניתוחים השבוע")}</p>
+          <p className="display num mt-2 text-5xl sm:text-6xl">{thisWeek.length}</p>
+          {thisWeek.length > 0 && <p className="mt-1 text-[13px] text-muted">{t("{n} מתוך {total} עדיין לא מוכנים", { n: notReady.length, total: thisWeek.length })}</p>}
+        </Link>
+        <Link href="/clinic/tasks?status=rejected" className={tile}>
+          {rejected.length > 0 && <span aria-hidden className="absolute inset-y-6 start-0 w-1 rounded-full bg-bad" />}
+          <p className="text-sm text-muted">{t("הוחזר לתיקון")}</p>
+          <p className={`display num mt-2 text-5xl sm:text-6xl ${tone(rejected.length)}`}>{rejected.length}</p>
+        </Link>
+        <Link href="/clinic/tasks?status=overdue" className={tile}>
+          {overdue.length > 0 && <span aria-hidden className="absolute inset-y-6 start-0 w-1 rounded-full bg-bad" />}
+          <p className="text-sm text-muted">{t("באיחור")}</p>
+          <p className={`display num mt-2 text-5xl sm:text-6xl ${tone(overdue.length)}`}>{overdue.length}</p>
+        </Link>
+        <Link href="/clinic/tasks?status=review" className={tile}>
+          <p className="text-sm text-muted">{t("ממתין לבדיקה")}</p>
+          <p className="display num mt-2 text-5xl sm:text-6xl">{review.length}</p>
+          {review.length > 0 && <p className="mt-1 text-[13px] text-muted">{t("מחכים לאישור שלך")}</p>}
+        </Link>
+      </section>
+
+      <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
+        <section aria-labelledby="h-surgeries" className={`min-w-0 ${rejected.length > 0 ? "lg:col-span-3" : "lg:col-span-5"}`}>
+          <h2 id="h-surgeries" className="mb-3 text-xl font-semibold sm:text-2xl">{t("ניתוחי השבוע")}</h2>
+          {thisWeek.length === 0 ? (
+            <p className="card px-4 py-8 text-center text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
+          ) : (
+            <div className="card divide-y divide-line">
+              {thisWeek.map((j) => {
+                const ready = j.summary.readiness === 100;
+                const day = j.surgery_date.slice(8, 10).replace(/^0/, "");
+                return (
+                  <Link key={j.id} href={`/clinic/patients/${j.id}`} className="flex items-center gap-4 px-4 py-3.5 link-row md:px-6 md:py-4">
+                    <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent text-center leading-tight text-white">
+                      <span><span className="num block text-base font-semibold">{day}</span><span className="block text-[11px]">{formatDate(j.surgery_date, lang).replace(/^\d+\s*/, "")}</span></span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block break-words font-semibold">{j.patient.full_name}</span>
+                      <span className="block break-words text-sm text-muted">{j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : t("ההכנות הושלמו")}</span>
+                      <span className="block text-xs text-muted">{formatDate(j.surgery_date, lang)} · {relativeDays(j.surgery_date, t0, lang)}</span>
+                    </span>
+                    <span className="num shrink-0 text-sm font-medium text-muted">{j.summary.readiness}%</span>
+                    <span className={`pill shrink-0 ${ready ? "pill-ok" : "pill-bad"}`}>{ready ? t("מוכן") : t("לא מוכן")}</span>
+                  </Link>
+                );
+              })}
+            </div>
           )}
-        </p>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <Link href="/clinic/tasks?status=rejected" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
-            <p className={`num display text-3xl ${stat(rejected.length)}`}>{rejected.length}</p>
-            <p className="text-sm text-muted">{t("הוחזר לתיקון")}</p>
-          </Link>
-          <Link href="/clinic/tasks?status=overdue" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
-            <p className={`num display text-3xl ${stat(overdue.length)}`}>{overdue.length}</p>
-            <p className="text-sm text-muted">{t("באיחור")}</p>
-          </Link>
-          <Link href="/clinic/tasks?status=review" className="block min-h-11 rounded-xl py-1 transition hover:bg-paper">
-            <p className={`num display text-3xl ${reviewStat(review.length)}`}>{review.length}</p>
-            <p className="text-sm text-muted">{t("ממתין לבדיקה")}</p>
-          </Link>
-        </div>
-        <p className="text-xs text-muted">{t("בכל המטופלים הפעילים, לא רק מי שמנותח השבוע")}</p>
-      </section>
-
-      <section aria-labelledby="h-surgeries">
-        <h2 id="h-surgeries" className="mb-3 text-lg font-medium">{t("ניתוחי השבוע")}</h2>
-        {thisWeek.length === 0 ? (
-          <p className="card px-4 py-8 text-center text-muted">{t("אין ניתוחים ב־7 הימים הקרובים.")}</p>
-        ) : (
-          <div className="card divide-y divide-line">
-            {thisWeek.map((j) => (
-              <Link key={j.id} href={`/clinic/patients/${j.id}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row">
-                <span className="min-w-0 break-words font-medium">{j.patient.full_name}</span>
-                <span className={`num text-sm font-medium ${j.summary.readiness === 100 ? "text-ok" : "text-bad"}`}>{j.summary.readiness}%</span>
-                <span className="min-w-0 break-words text-sm text-muted">{j.summary.topBlocker ? blockerLabel(j.summary.topBlocker, t) : t("ההכנות הושלמו")}</span>
-                <span className="text-sm text-muted sm:whitespace-nowrap">{formatDate(j.surgery_date, lang)} · {relativeDays(j.surgery_date, t0, lang)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {rejected.length > 0 && (
-        <section aria-labelledby="h-rejected">
-          <h2 id="h-rejected" className="mb-3 text-lg font-medium text-bad">{t("הוחזר לתיקון")}</h2>
-          <div className="card divide-y divide-line">
-            {rejected.map((i) => (
-              <Link key={i.task.id} href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 link-row">
-                <span className="min-w-0 break-words font-medium">{i.patientName}</span>
-                <span className="text-sm text-bad">{relativeDays(i.task.dueDate, t0, lang)}</span>
-                <span className="col-span-2 min-w-0 break-words text-sm text-muted">{i.task.title}</span>
-              </Link>
-            ))}
-          </div>
         </section>
-      )}
+
+        {rejected.length > 0 && (
+          <section aria-labelledby="h-rejected" className="min-w-0 lg:col-span-2">
+            <h2 id="h-rejected" className="mb-3 text-xl font-semibold text-bad sm:text-2xl">{t("הוחזר לתיקון")}</h2>
+            <div className="card divide-y divide-line">
+              {rejected.map((i) => (
+                <Link key={i.task.id} href={`/clinic/patients/${journeyByPatient.get(i.patientId)}`} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3.5 link-row md:px-6">
+                  <span className="min-w-0 break-words font-semibold">{i.patientName}</span>
+                  <span className="text-sm text-bad">{relativeDays(i.task.dueDate, t0, lang)}</span>
+                  <span className="col-span-2 min-w-0 break-words text-sm text-muted">{i.task.title}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
