@@ -36,7 +36,8 @@ export async function proxy(request: NextRequest) {
   // on their behalf. Set VIEW_AS_READ_ONLY=0 in Vercel only for a deliberate, temporary exception
   // (e.g. end-to-end testing against a non-production clinic) — never as the normal running mode,
   // since this is what stands between "view as" and a full account takeover of any real user.
-  if (process.env.VIEW_AS_READ_ONLY !== "0" && signedIn && request.method === "POST" && !isLogin) {
+  // Signing out is never blocked (see app/logout/route.ts): a stale "view as" session must always be escapable.
+  if (process.env.VIEW_AS_READ_ONLY !== "0" && signedIn && request.method === "POST" && !isLogin && path !== "/logout") {
     // Verified by signature rather than by re-decoding the cookie's JSON by hand (a previous
     // version of this check parsed the unsigned payload directly). Deliberately ignores the
     // cookie's own `exp`: the underlying Supabase session created for "view as" outlives it, so

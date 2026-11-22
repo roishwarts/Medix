@@ -2,13 +2,17 @@
 
 import { useT } from "@/components/i18n-provider";
 import { useIdleLogout } from "@/lib/idle-logout";
-import { logout } from "@/app/login/actions";
+// Signs out through the /logout route (never blocked, also in a read-only "view as" session), then shows the login page.
+async function signOutNow() {
+  try { await fetch("/logout", { method: "POST", redirect: "manual" }); } catch { /* offline: the login page below still loads when back online */ }
+  window.location.assign("/login");
+}
 
 // Mounted once per signed-in area that handles patient data (currently just /clinic). Not shown
 // to patients themselves - the scope this round is staff/secretary only.
 export function IdleLogoutModal() {
   const t = useT();
-  const { warning, stay } = useIdleLogout(true, () => { void logout(); });
+  const { warning, stay } = useIdleLogout(true, () => { void signOutNow(); });
 
   if (warning <= 0) return null;
   return (
