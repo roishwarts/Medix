@@ -8,9 +8,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { error } = await searchParams;
   const t = await getT();
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
+    <div className="clinic-shell min-h-dvh">
+    <main className="relative z-[1] mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
       <PublicBrand logo />
-      <div className="card p-6 sm:p-8">
+      <div className="card p-7 sm:p-9">
         <h1 className="display mb-6 text-3xl">{t("כניסה")}</h1>
         {error === "profile" && (
           <p role="alert" className="mb-5 flex items-start gap-2 rounded-xl bg-bad-soft px-4 py-3 text-sm leading-relaxed text-bad">
@@ -24,5 +25,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         {t("שכחתי סיסמה")}
       </Link>
     </main>
+    </div>
   );
 }
