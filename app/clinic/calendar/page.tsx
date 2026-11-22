@@ -68,7 +68,7 @@ export default async function ClinicCalendarPage({
           <p className="text-sm font-semibold text-accent">{t("הבא בתור")}</p>
           {next ? (
             <>
-              <Link href={next.href} className="mt-0.5 block min-h-11 py-2 text-[17px] font-medium">{next.title}</Link>
+              <Link prefetch href={next.href} className="mt-0.5 block min-h-11 py-2 text-[17px] font-medium">{next.title}</Link>
               <p className="text-sm text-muted">
                 {formatDateLong(next.date, lang)}{next.time ? <> · <span className="num" dir="ltr">{next.time}</span></> : null}
                 {next.sub ? ` · ${next.sub}` : ""} ({relativeDays(next.date, t0, lang)})
@@ -96,7 +96,7 @@ export default async function ClinicCalendarPage({
               <ul className="card divide-y divide-line">
                 {selected.map((e) => (
                   <li key={e.id + e.kind}>
-                    <Link href={e.href} className="link-row block px-4 py-3">
+                    <Link prefetch href={e.href} className="link-row block px-4 py-3">
                       <span className="block font-medium">{e.title}</span>
                       <span className="block text-sm text-muted">
                         {e.patient && e.kind !== "surgery" ? `${e.patient} · ` : ""}

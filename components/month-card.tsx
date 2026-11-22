@@ -32,9 +32,9 @@ export function MonthCard({
   return (
     <div className="card p-3.5 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
-        <Link href={navHref(addMonths(d, -1))} aria-label={t("חודש קודם")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m15 6-6 6 6 6" /></svg></Link>
+        <Link prefetch href={navHref(addMonths(d, -1))} aria-label={t("חודש קודם")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m15 6-6 6 6 6" /></svg></Link>
         <h2 className="display text-base font-semibold sm:text-lg">{monthTitle(d, lang)}</h2>
-        <Link href={navHref(addMonths(d, 1))} aria-label={t("חודש הבא")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m9 6 6 6-6 6" /></svg></Link>
+        <Link prefetch href={navHref(addMonths(d, 1))} aria-label={t("חודש הבא")} className="btn btn-sm btn-icon size-11 min-h-11 sm:size-9 sm:min-h-9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="rtl:-scale-x-100"><path d="m9 6 6 6-6 6" /></svg></Link>
       </div>
       <div role="grid" aria-label={monthTitle(d, lang)} className="grid grid-cols-7 gap-1 text-center sm:gap-1.5">
         {names.map((n, i) => <span key={i} className="py-1 text-xs text-muted">{n}</span>)}
@@ -45,7 +45,7 @@ export function MonthCard({
           const cls = `num grid min-h-11 aspect-square place-items-center rounded-xl text-sm sm:aspect-[2/1] ${kind ? CELL[kind] : inMonth ? "" : "text-line-strong"} ${day === t0 ? "ring-2 ring-accent/45 ring-offset-1 ring-offset-transparent" : ""}`;
           const label = list.length ? `${formatDateLong(day, lang)}: ${list.map((e) => e.title).join(", ")}` : undefined;
           return list.length ? (
-            <Link key={day} href={dayHref(day, list)} aria-label={label} className={`${cls} hover:brightness-95`}>{+day.slice(8)}</Link>
+            <Link prefetch key={day} href={dayHref(day, list)} aria-label={label} className={`${cls} hover:brightness-95`}>{+day.slice(8)}</Link>
           ) : (
             <span key={day} className={cls}>{+day.slice(8)}</span>
           );
@@ -73,7 +73,7 @@ export function UpcomingList({ events, lang, t, googleOnly, showPatient }: { eve
             <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-center leading-tight ${box}`} aria-hidden="true">
               <span><span className="num block text-base font-semibold">{day}</span><span className="block text-[11px]">{month}</span></span>
             </span>
-            <Link href={e.href} className="min-w-0 flex-1 break-words">
+            <Link prefetch href={e.href} className="min-w-0 flex-1 break-words">
               <span className="block font-medium">{e.title}</span>
               <span className="block text-sm text-muted">
                 {showPatient && e.patient && e.kind !== "surgery" ? `${e.patient} · ` : ""}
