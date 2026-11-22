@@ -170,12 +170,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <h1 className="display text-2xl sm:text-4xl">{greeting}</h1>
         </div>
         <div className="order-2 flex min-w-0 basis-full flex-wrap items-center gap-3 md:basis-auto">
-          <Link href="/clinic/patients?find=1" className="btn btn-sm max-md:hidden md:min-w-56 md:justify-start md:text-muted">
+          <Link href="/clinic/patients?find=1" className="btn btn-sm max-md:hidden md:h-10 md:min-h-10 md:min-w-56 md:justify-start md:text-muted">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
             {t("חיפוש מטופל")}
           </Link>
           <HospitalFilter hospitals={hospitals} hospital={sp.hospital} />
-          <Link href="/clinic/weekly" className="btn btn-sm btn-primary">{t("סיכום השבוע")}</Link>
+          <Link href="/clinic/weekly" className="btn btn-sm btn-primary md:h-10 md:min-h-10">{t("סיכום השבוע")}</Link>
         </div>
       </header>
 
