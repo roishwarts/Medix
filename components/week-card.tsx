@@ -36,7 +36,7 @@ export function WeekCard({ today, surgeries, locale }: { today: string; surgerie
   const arrow = "btn btn-quiet btn-icon size-10";
 
   return (
-    <div className="border-t border-line px-4 pb-4 pt-4 md:px-5 md:pb-5">
+    <div className="px-4 pb-4 md:px-5 md:pb-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <button type="button" className={arrow} aria-label={t("השבוע הקודם")} onClick={() => setOffset((o) => o - 1)}><Chevron dir="prev" /></button>
         <div className="flex min-w-0 flex-col items-center">

@@ -15,10 +15,10 @@ export function ActivityList({ items, showPatient = true, markSeen = false, bare
     if (markSeen) void markActivitySeen();
   }, [markSeen]);
 
-  if (items.length === 0) return <p role="status" className={`${bare ? "border-t border-line" : "card"} px-4 py-10 text-center text-muted`}>{t("אין עדכונים להצגה.")}</p>;
+  if (items.length === 0) return <p role="status" className={`${bare ? "" : "card"} px-4 py-10 text-center text-muted`}>{t("אין עדכונים להצגה.")}</p>;
 
   return (
-    <ul className={`divide-y divide-line ${bare ? "border-t border-line" : "card"}`}>
+    <ul className={`divide-y divide-line ${bare ? "" : "card"}`}>
       {items.map((i) => (
         <li key={i.id}>
           <Link href={i.href} className="flex items-start gap-3 px-4 py-3 link-row">

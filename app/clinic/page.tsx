@@ -244,13 +244,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="min-w-0 space-y-8 lg:col-span-3">
           <section aria-labelledby="h-attention" className="card overflow-hidden">
             <div className="px-5 pt-5 md:px-6 md:pt-6">
-              <SectionTitle id="h-attention" count={attentionTotal} href="/clinic/tasks" linkLabel={t("לכל המשימות")}>{t("דורש טיפול")}</SectionTitle>
+              <SectionTitle id="h-attention" count={attentionTotal}>{t("דורש טיפול")}</SectionTitle>
             </div>
             {attention.length === 0 ? (
-              <p className="border-t border-line px-4 py-8 text-center text-muted">{t("אין משימות שממתינות לטיפול. הכול מעודכן.")}</p>
+              <p className="px-4 py-8 text-center text-muted">{t("אין משימות שממתינות לטיפול. הכול מעודכן.")}</p>
             ) : (
               <>
-                <div className="divide-y divide-line border-t border-line">
+                <div className="divide-y divide-line">
                   {attention.map((i, idx) => (
                     <HomeTaskRow
                       key={i.task.id}
@@ -280,7 +280,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
           <section aria-labelledby="h-updates" className="card overflow-hidden">
             <div className="px-5 pt-5 md:px-6 md:pt-6">
-              <SectionTitle id="h-updates" href="/clinic/activity" linkLabel={t("לכל העדכונים")}>{t("עדכונים אחרונים")}</SectionTitle>
+              <SectionTitle id="h-updates">{t("עדכונים אחרונים")}</SectionTitle>
             </div>
             <ActivityList items={updates} bare />
           </section>
@@ -289,16 +289,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="min-w-0 space-y-8 lg:col-span-2">
           <section aria-labelledby="h-strip" className="card overflow-hidden">
             <div className="px-5 pt-5 md:px-6 md:pt-6">
-              <SectionTitle id="h-strip" href="/clinic/calendar" linkLabel={t("ליומן")}>{t("השבוע במרפאה")}</SectionTitle>
+              <SectionTitle id="h-strip">{t("השבוע במרפאה")}</SectionTitle>
             </div>
             <WeekCard today={t0} surgeries={weekSurgeries} locale={LOCALE[lang]} />
           </section>
 
           <section aria-labelledby="h-ready" className="card overflow-hidden">
             <div className="px-5 pt-5 md:px-6 md:pt-6">
-              <SectionTitle id="h-ready" count={upcoming.length} href="/clinic/patients" linkLabel={t("למטופלים")}>{t("מוכנות המטופלים")}</SectionTitle>
+              <SectionTitle id="h-ready" count={upcoming.length}>{t("מוכנות המטופלים")}</SectionTitle>
             </div>
-            <div className="border-t border-line p-5 md:px-6">
+            <div className="px-5 pb-5 md:px-6 md:pb-6">
               {upcoming.length === 0 ? (
                 <p className="py-4 text-center text-muted">{t("אין מטופלים עם ניתוח עתידי.")}</p>
               ) : (
