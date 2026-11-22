@@ -167,10 +167,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {/* The logo and a settings entry point already sit in the persistent mobile top bar
             (app/clinic/layout.tsx) on every page, this one included - no need to repeat them here. */}
         <div className="order-1 min-w-0 flex-1">
-          <p className="text-sm font-medium text-muted sm:text-base">
-            {new Date().toLocaleDateString(LOCALE[lang], { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jerusalem" })}
-          </p>
-          <h1 className="display mt-0.5 text-2xl sm:text-4xl">{greeting}</h1>
+          <h1 className="display text-2xl sm:text-4xl">{greeting}</h1>
         </div>
         <div className="order-2 flex min-w-0 basis-full flex-wrap items-center gap-3 md:basis-auto">
           <Link href="/clinic/patients?find=1" className="btn btn-sm max-md:hidden md:min-w-56 md:justify-start md:text-muted">

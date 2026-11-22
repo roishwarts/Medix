@@ -517,14 +517,16 @@ p { text-wrap: pretty; }
 
   /* ---- The staff side menu ---- */
   .rail {
-    position: fixed; inset-block: 0; inset-inline-start: 0; z-index: 30;
+    position: fixed; inset-block: 0.75rem; inset-inline-start: 0.75rem; z-index: 30;
     width: var(--rail-w);
     display: flex; flex-direction: column;
     padding: 0.75rem 0.65rem;
-    background: color-mix(in srgb, var(--color-surface) 64%, transparent);
+    border-radius: 2rem;
+    background: var(--card-bg, color-mix(in srgb, var(--color-surface) 64%, transparent));
+    border: 1px solid var(--card-border, var(--color-line));
+    box-shadow: var(--card-shadow, var(--glass-shadow));
     -webkit-backdrop-filter: blur(30px) saturate(170%);
     backdrop-filter: blur(30px) saturate(170%);
-    border-inline-end: 1px solid var(--color-line);
     transition: width 0.26s cubic-bezier(0.3, 0.7, 0.2, 1);
   }
   .rail-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 3rem; padding-inline: 0.5rem 0.15rem; margin-bottom: 0.4rem; }

@@ -51,7 +51,7 @@ export default async function ClinicLayout({ children }: { children: React.React
         <ClinicSidebar items={items} brand={clinicName} logo={profile.logo_url} userName={profile.full_name} roleLabel={profile.role === "doctor" ? t("רופא") : t("צוות")} logout={<LogoutButton variant="rail" />} collapsed={collapsed} />
         <AppHeader phoneSheet={false} desktopBar={false} items={items} home="/clinic" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
       </div>
-      <div className="clinic-main relative z-[1] md:ps-[var(--rail-w)]">
+      <div className="clinic-main relative z-[1] md:ps-[calc(var(--rail-w)+1.5rem)]">
       <div className="mx-auto max-w-[80rem] px-4 pb-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-5 sm:pb-8 md:px-10 md:pt-10">
         <div className="print:hidden"><BackButton home="/clinic" roots={items.map((i) => i.href)} /></div>
         {children}
