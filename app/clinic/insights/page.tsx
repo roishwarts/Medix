@@ -9,8 +9,6 @@ import { InsightsRange } from "@/components/insights-range";
 
 export const dynamic = "force-dynamic";
 
-const RANGE_LABEL: Record<RangeKey, string> = { "3m": "3 החודשים האחרונים", "6m": "6 החודשים האחרונים", "12m": "12 החודשים האחרונים" };
-
 export default async function InsightsPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const [t, lang] = await Promise.all([getT(), getLang()]);
   await requireProfile(["staff", "doctor"]);
