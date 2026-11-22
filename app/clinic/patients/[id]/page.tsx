@@ -90,7 +90,7 @@ export default async function PatientPage({
   // Every task is on the page; the status chips (task-filter.tsx) only hide the ones that do not match.
   const visibleTasks = [...summary.tasks].sort((x, y) => actionRank(x) - actionRank(y));
 
-  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }, { data: cancelRow }, extras] = await Promise.all([
+  const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }, { data: cancelRow }, extras, clinicalRes, questions, questionsAvailabilityRes, promsRes] = await Promise.all([
     supabase
       .from("patient_caregivers")
       .select("id, user_id, full_name, relation, can_act, created_at")
@@ -146,12 +146,12 @@ export default async function PatientPage({
     // Separate query so the page still works before patch-outcomes.sql is applied.
     supabase.from("journeys").select("cancelled_at, cancelled_reason").eq("id", journey.id).maybeSingle(),
     patientExtras(journey.patient_id),
-  ]);
-  // Same for the clinical summary and the questions for the doctor (patch-doctor-queue.sql).
-  const [clinicalRes, questions, questionsAvailabilityRes] = await Promise.all([
+    // The clinical summary and the questions for the doctor (patch-doctor-queue.sql), the health questionnaires: all
+    // in the same round as everything above instead of one after the other.
     supabase.from("clinical_summaries").select("diagnosis, side, allergies, medications, medical_history, notes, updated_at").eq("journey_id", journey.id).maybeSingle(),
     loadQuestions({ patientId: journey.patient_id, limit: 50 }),
     supabase.from("doctor_questions").select("id", { head: true, count: "exact" }).limit(1),
+    profile.proms_enabled ? supabase.from("proms_responses").select("instrument, timepoint, score").eq("journey_id", journey.id) : Promise.resolve(null),
   ]);
   const clinicalAvailable = !clinicalRes.error;
   const clinical: ClinicalData | null = clinicalRes.data
@@ -398,7 +398,7 @@ export default async function PatientPage({
         </TaskFilter>
       </section>
 
-      {profile.proms_enabled && <PromsCard journeyId={journey.id} />}
+      {profile.proms_enabled && <PromsCard rows={promsRes?.data ?? []} />}
 
       <AllDocuments items={allDocs} />
               </div>

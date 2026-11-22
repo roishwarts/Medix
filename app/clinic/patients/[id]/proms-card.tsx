@@ -1,17 +1,14 @@
 import { getT } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 import { TIMEPOINT_LABEL, instrumentTitle, scoreLabel, type Instrument, type Timepoint } from "@/lib/proms";
 
 type Row = { instrument: Instrument; timepoint: Timepoint; score: number | null };
 
 const TIMEPOINTS: Timepoint[] = ["baseline", "month3", "year1"];
 
-export async function PromsCard({ journeyId }: { journeyId: string }) {
+// The rows are loaded by the patient page together with everything else (a failed query, e.g. before patch-proms.sql, gives none).
+export async function PromsCard({ rows: data }: { rows: unknown[] }) {
   const t = await getT();
-  const supabase = await createClient();
-  // Separate, tolerant query so the patient card still works before patch-proms.sql is applied.
-  const { data } = await supabase.from("proms_responses").select("instrument, timepoint, score").eq("journey_id", journeyId);
-  const rows = (data ?? []) as Row[];
+  const rows = data as Row[];
   if (rows.length === 0) return null;
 
   const instruments = [...new Set(rows.map((r) => r.instrument))];

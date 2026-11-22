@@ -92,6 +92,7 @@ export async function loadJourneys(): Promise<PatientJourney[]> {
   const page = (select: string, from: number, to: number) =>
     supabase.from("journeys").select(select).order("surgery_date").range(from, to);
 
+  const flagsPromise = getClinicFlags(); // fetched alongside the journeys, not after them
   let rows: JourneyRow[] = [];
   let select = journeySelect(0);
   for (const tier of [4, 3, 2, 1, 0]) {
@@ -110,12 +111,15 @@ export async function loadJourneys(): Promise<PatientJourney[]> {
     if (more.length < PAGE) break;
   }
 
-  const flags = await getClinicFlags();
+  const flags = await flagsPromise;
   return rows.map((r) => toJourney(r, flags));
 }
 
 export async function loadJourney(journeyId: string): Promise<PatientJourney | null> {
   const supabase = await createClient();
-  const data = await runJourneysQuery((select) => supabase.from("journeys").select(select).eq("id", journeyId).maybeSingle());
-  return data ? toJourney(data as unknown as JourneyRow, await getClinicFlags()) : null;
+  const [data, flags] = await Promise.all([
+    runJourneysQuery((select) => supabase.from("journeys").select(select).eq("id", journeyId).maybeSingle()),
+    getClinicFlags(),
+  ]);
+  return data ? toJourney(data as unknown as JourneyRow, flags) : null;
 }
