@@ -64,16 +64,14 @@ export function CancelTrigger({ journeyId }: { journeyId: string }) {
 
   if (!open) {
     return (
-      <div className="flex justify-end px-4 py-2">
-        <button type="button" onClick={() => setOpen(true)} className="min-h-11 text-sm text-muted hover:text-bad hover:underline sm:min-h-0">
-          {t("ביטול הניתוח")}
-        </button>
-      </div>
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-danger btn-sm min-h-11 !px-4 sm:min-h-10">
+        {t("ביטול הניתוח")}
+      </button>
     );
   }
 
   return (
-    <div className="space-y-3 px-4 py-3">
+    <div className="card w-full basis-full space-y-3 p-4">
       <p className="font-medium">{t("סימון הניתוח כמבוטל")}</p>
       <div>
         <label htmlFor="cancel-reason" className="lbl">{t("סיבת הביטול")}</label>

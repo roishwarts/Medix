@@ -34,6 +34,7 @@ import { StartJourney } from "./start-journey";
 import { ClinicalSummary, type ClinicalData } from "./clinical-summary";
 import { DoctorQuestions } from "./doctor-questions";
 import { PatientTabs } from "./patient-tabs";
+import { TaskFilter } from "./task-filter";
 import { loadQuestions } from "@/lib/doctor-questions";
 import type { CancelReason } from "@/lib/cancel-reasons";
 
@@ -86,10 +87,8 @@ export default async function PatientPage({
   // (which stay in surgery-date order); within a single-status filter the order is unchanged.
   const actionRank = (t: (typeof summary.tasks)[number]) => (t.overdue ? 0 : t.state === "rejected" ? 0 : t.state === "review" ? 1 : 2);
   const needsAttention = summary.tasks.filter((t) => t.overdue || t.state === "rejected" || t.state === "review").length;
-  const visibleTasks =
-    active === "all"
-      ? [...summary.tasks].sort((a, b) => actionRank(a) - actionRank(b))
-      : summary.tasks.filter((t) => matches(t, active));
+  // Every task is on the page; the status chips (task-filter.tsx) only hide the ones that do not match.
+  const visibleTasks = [...summary.tasks].sort((x, y) => actionRank(x) - actionRank(y));
 
   const [{ data: caregivers }, { data: patientRow }, { data: placement }, { data: medicalInfo }, { data: openInvites }, { data: historyRows }, urlEntries, { data: summaryRows }, { data: referralRows }, { data: teamRows }, { data: cancelRow }, extras] = await Promise.all([
     supabase
@@ -229,16 +228,10 @@ export default async function PatientPage({
           </div>
           <p className="mt-1 text-muted">{journey.procedure || journey.template_name}</p>
         </div>
-        {/* Rare actions live in a small menu so they do not crowd the header. */}
-        <details className="relative shrink-0">
-          <summary className="btn btn-quiet btn-icon size-11 min-h-11 cursor-pointer list-none [&::-webkit-details-marker]:hidden" aria-label={tr("פעולות")}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
-          </summary>
-          <div className="card absolute end-0 top-full z-20 mt-1 w-56 divide-y divide-line overflow-hidden p-0 shadow-lg">
-            <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="link-row block px-4 py-3 text-sm">{tr("דף סיכום להדפסה")}</Link>
-            {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="link-row block px-4 py-3 text-sm">{tr("ייצוא כל הנתונים")}</Link>}
-          </div>
-        </details>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <Link href={`/clinic/patients/${id}/summary/print`} target="_blank" className="btn btn-sm md:h-10 md:min-h-10">{tr("דף סיכום להדפסה")}</Link>
+          {isDoctor && <Link href={`/clinic/patients/${id}/export`} className="btn btn-sm md:h-10 md:min-h-10">{tr("ייצוא כל הנתונים")}</Link>}
+        </div>
       </div>
 
       {/* The situation at a glance: when, how ready, and what the next step is waiting for. */}
@@ -290,32 +283,22 @@ export default async function PatientPage({
           {tr("כל המשימות")}
           {needsAttention > 0 && <span className="pill pill-bad">{tr("{n} דורשות תשומת לב", { n: needsAttention })}</span>}
         </h2>
-        <nav aria-label={tr("סינון משימות לפי סטטוס")} className="chip-row">
-          {FILTERS.map(([key, label]) => {
+        <TaskFilter
+          initial={active}
+          navLabel={tr("סינון משימות לפי סטטוס")}
+          emptyText={tr("אין משימות בסטטוס הזה.")}
+          chips={FILTERS.map(([key, label]) => {
             const count = summary.tasks.filter((t) => matches(t, key)).length;
-            const on = key === active;
-            const isAttentionFilter = (key === "review" || key === "rejected" || key === "overdue") && count > 0;
-            return (
-              <Link
-                key={key}
-                href={key === "all" ? `/clinic/patients/${id}` : `/clinic/patients/${id}?status=${key}`}
-                scroll={false}
-                aria-current={on ? "page" : undefined}
-                className="chip min-h-11"
-              >
-                {tr(label)}{" "}
-                <span className={`num text-xs ${isAttentionFilter ? (key === "review" ? "text-warn font-semibold" : "text-bad font-semibold") : ""}`}>{count}</span>
-              </Link>
-            );
+            const attention = (key === "review" || key === "rejected" || key === "overdue") && count > 0;
+            return { key, label: tr(label), count, tone: attention ? (key === "review" ? "warn" : "bad") : null };
           })}
-        </nav>
-        {visibleTasks.length === 0 && <p className="mt-3 px-1 py-10 text-center text-muted">{tr("אין משימות בסטטוס הזה.")}</p>}
+        >
         {/* The journey as the patient sees it (a timeline, no boxes), with the clinic's small actions under each step. */}
         <ol className="mt-4">
           {visibleTasks.map((t, idx) => {
             const nowId = nowTask(summary.tasks)?.id;
             const isNow = t.id === nowId;
-            const showSurgeryDay = active === "all" && !t.preop && (idx === 0 || visibleTasks[idx - 1].preop);
+            const showSurgeryDay = !t.preop && (idx === 0 || visibleTasks[idx - 1].preop);
             const bad = t.overdue || t.state === "rejected";
             let node: React.ReactNode;
             if (t.state === "done") node = <span className="grid size-7 place-items-center rounded-full bg-ok text-white"><Icon name="check" size={14} /></span>;
@@ -327,16 +310,16 @@ export default async function PatientPage({
             return (
               <Fragment key={t.id}>
                 {showSurgeryDay && (
-                  <li className="relative pb-6 ps-11">
+                  <li data-sd className="relative pb-6 ps-11">
                     <span className="absolute start-0 top-0 grid size-7 place-items-center rounded-full bg-accent text-surface" aria-hidden="true"><span className="size-2 rounded-full bg-surface" /></span>
-                    <span className="absolute start-[13px] top-7 bottom-0 w-px bg-line" aria-hidden="true" />
+                    <span className="tl-line absolute start-[13px] top-7 bottom-0 w-px bg-line" aria-hidden="true" />
                     <p className="display text-lg">{tr("יום הניתוח")}</p>
                     <p className="text-sm text-muted">{formatDateLong(journey.surgery_date, lang)}</p>
                   </li>
                 )}
-                <li id={`task-${t.id}`} className="relative scroll-mt-32 pb-6 ps-11" aria-current={isNow ? "step" : undefined}>
+                <li id={`task-${t.id}`} data-task data-m={`all ${t.state}${t.overdue ? " overdue" : ""}`} className="relative scroll-mt-32 pb-6 ps-11" aria-current={isNow ? "step" : undefined}>
                   <span className="absolute start-0 top-0" aria-hidden="true">{node}</span>
-                  {idx < visibleTasks.length - 1 && <span className="absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />}
+                  {idx < visibleTasks.length - 1 && <span className="tl-line absolute start-[13px] top-8 bottom-0 w-px bg-line" aria-hidden="true" />}
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -412,6 +395,7 @@ export default async function PatientPage({
             );
           })}
         </ol>
+        </TaskFilter>
       </section>
 
       {profile.proms_enabled && <PromsCard journeyId={journey.id} />}
@@ -420,7 +404,7 @@ export default async function PatientPage({
               </div>
             ),
             details: (
-              <div className="space-y-10 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:space-y-0">
+              <div className="space-y-10 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:gap-y-10 lg:space-y-0">
                 <div className="min-w-0 space-y-6">
         <section aria-label={tr("פרטי המטופל")}>
           <PatientDetails patientId={journey.patient_id} name={journey.patient.full_name} phone={journey.patient.phone ?? ""} email={patientRow?.email ?? ""} hospital={placement?.hospital ?? ""} company={placement?.company ?? ""}
@@ -428,13 +412,15 @@ export default async function PatientPage({
             hospitals={options.hospitals} companies={options.companies}
             autoStage={autoStage} stage={extras?.stage ?? null} lang={extras?.lang ?? "he"}
             journeyEdit={<Link href={`/clinic/patients/${id}/edit`} className="btn btn-sm min-h-11 !px-3 sm:min-h-9">{tr("עריכת המסלול של המטופל")}</Link>} />
-          <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
+        </section>
+        <section aria-label={tr("גישת המטופל לאפליקציה")}>
+          <h2 className="mb-3 text-lg font-semibold">{tr("גישת המטופל לאפליקציה")}</h2>
           <InvitationPanel patientId={journey.patient_id} joined={!!patientRow?.user_id} />
         </section>
                 </div>
-                <div className="min-w-0 space-y-6">
+                <div className="min-w-0 space-y-8">
         <section aria-label={tr("בני משפחה")}>
-          <h2 className="eyebrow mb-2">{tr("בני משפחה")}</h2>
+          <h2 className="mb-3 text-lg font-semibold">{tr("בני משפחה")}</h2>
           <CaregiverList
             isPatient={false}
             items={(caregivers ?? []).map((c) => ({
@@ -452,11 +438,17 @@ export default async function PatientPage({
           <AddCaregiver patientId={journey.patient_id} />
           <p className="mt-2 text-xs text-muted">{tr("בני משפחה מוזמנים על ידי המטופל או על ידי הצוות. הצוות יכול להסיר גישה.")}</p>
         </section>
-        {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
+        <section aria-label={tr("פעולות על המסלול")}>
+          <h2 className="mb-3 text-lg font-semibold">{tr("פעולות על המסלול")}</h2>
+          <div className="flex flex-wrap items-start gap-3">
+            <StartJourney patientId={journey.patient_id} templates={templates ?? []} />
+            {!cancelRow?.cancelled_at && <CancelTrigger journeyId={journey.id} />}
+          </div>
+        </section>
                 </div>
                 <div className="min-w-0 lg:col-span-2">
       <section>
-        <h2 className="eyebrow mb-3">{tr("היסטוריה")}</h2>
+        <h2 className="mb-3 text-lg font-semibold">{tr("היסטוריה")}</h2>
         <ActivityList items={history} showPatient={false} />
         {(historyRows ?? []).length >= 20 && <p className="mt-2 text-xs text-muted">{tr("מוצגות 20 הפעולות האחרונות בלבד.")}</p>}
       </section>

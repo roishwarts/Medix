@@ -18,14 +18,14 @@ export function StartJourney({ patientId, templates, first }: { patientId: strin
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="btn btn-sm mt-3 min-h-11 !px-3 sm:min-h-9">
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-sm min-h-11 !px-4 sm:min-h-10">
         {first ? t("התחלת מסלול ניתוח") : t("התחלת מסלול נוסף")}
       </button>
     );
   }
 
   return (
-    <div className="card mt-2 space-y-3 p-4">
+    <div className="card w-full basis-full space-y-3 p-4">
       <p className="font-medium">{first ? t("מסלול ניתוח למטופל הזה") : t("מסלול נוסף למטופל הזה")}</p>
       {!first && <p className="text-sm text-muted">{t("לדוגמה: ניתוח בברך השנייה, או ניתוח חוזר — המטופל יראה את שני המסלולים בנפרד.")}</p>}
       <div>

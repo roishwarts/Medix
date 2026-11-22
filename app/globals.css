@@ -438,6 +438,16 @@ p { text-wrap: pretty; }
   .link-row:hover { background: var(--color-paper); }
   .num { font-variant-numeric: tabular-nums; }
 
+  /* Patient card: the status chips hide the tasks that do not match (task-filter.tsx). */
+  .tfilter[data-f="todo"] [data-task]:not([data-m~="todo"]),
+  .tfilter[data-f="review"] [data-task]:not([data-m~="review"]),
+  .tfilter[data-f="rejected"] [data-task]:not([data-m~="rejected"]),
+  .tfilter[data-f="overdue"] [data-task]:not([data-m~="overdue"]),
+  .tfilter[data-f="locked"] [data-task]:not([data-m~="locked"]),
+  .tfilter[data-f="done"] [data-task]:not([data-m~="done"]) { display: none; }
+  .tfilter:not([data-f="all"]) .tl-line,
+  .tfilter:not([data-f="all"]) [data-sd] { display: none; }
+
   /* ---- Staff area: the "calm glass" look. Light mode only; dark mode keeps its own colors. ---- */
   .clinic-shell { --rail-w: 16.5rem; position: relative; }
   .clinic-shell[data-rail="0"] { --rail-w: 4.75rem; }

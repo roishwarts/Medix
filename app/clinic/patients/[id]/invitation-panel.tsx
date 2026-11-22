@@ -17,7 +17,7 @@ export function InvitationPanel({ patientId, joined }: { patientId: string; join
   }
 
   return (
-    <div className="card mt-4 space-y-3 p-4">
+    <div className="card space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">{joined ? t("המטופל הצטרף ויש לו משתמש") : t("ממתין להצטרפות")}</p>
