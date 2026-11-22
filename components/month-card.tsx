@@ -42,7 +42,7 @@ export function MonthCard({
           const list = map.get(day) ?? [];
           const kind = PRIORITY.find((k) => list.some((e) => e.kind === k));
           const inMonth = day.startsWith(month);
-          const cls = `num grid min-h-11 aspect-square place-items-center rounded-xl text-sm sm:aspect-[2/1] ${kind ? CELL[kind] : inMonth ? "" : "text-line-strong"} ${day === t0 ? "ring-2 ring-accent ring-offset-1" : ""}`;
+          const cls = `num grid min-h-11 aspect-square place-items-center rounded-xl text-sm sm:aspect-[2/1] ${kind ? CELL[kind] : inMonth ? "" : "text-line-strong"} ${day === t0 ? "ring-2 ring-accent/45 ring-offset-1 ring-offset-transparent" : ""}`;
           const label = list.length ? `${formatDateLong(day, lang)}: ${list.map((e) => e.title).join(", ")}` : undefined;
           return list.length ? (
             <Link key={day} href={dayHref(day, list)} aria-label={label} className={`${cls} hover:brightness-95`}>{+day.slice(8)}</Link>

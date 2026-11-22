@@ -63,9 +63,9 @@ a, button, summary, label, input, select, textarea, [role="button"], [role="swit
   --bar-on: #ffffff;
   --bar-on-bg: #17606f;
   /* Calendar event colours (surgery, appointment, deadline): one set per theme. */
-  --cal-surgery-bg: #f7a801; --cal-surgery-fg: #171e29;
+  --cal-surgery-bg: #0b7285; --cal-surgery-fg: #ffffff;
   --cal-appt-bg: #e3f1f4; --cal-appt-fg: #17606f; --cal-appt-line: #9ccbd6;
-  --cal-deadline-bg: #fff3dc; --cal-deadline-fg: #8a5300; --cal-deadline-line: #e8c98a;
+  --cal-deadline-bg: rgb(12 60 80 / 0.08); --cal-deadline-fg: #3d5a6b; --cal-deadline-line: rgb(12 60 80 / 0.22);
   color-scheme: light;
 }
 html[data-theme="dark"] {
@@ -103,9 +103,9 @@ html[data-theme="dark"] {
   --page-bg: var(--color-page);
   --btn-p-a: #0b7285;
   --btn-p-b: #0b7285;
-  --cal-surgery-bg: #d99700; --cal-surgery-fg: #14161a;
+  --cal-surgery-bg: #2f7a8c; --cal-surgery-fg: #ffffff;
   --cal-appt-bg: #1d3a42; --cal-appt-fg: #8fd0df; --cal-appt-line: #2f5963;
-  --cal-deadline-bg: #3d2f14; --cal-deadline-fg: #f0c27a; --cal-deadline-line: #6b5326;
+  --cal-deadline-bg: #2a2d33; --cal-deadline-fg: #a3a9b3; --cal-deadline-line: #3d4149;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -144,9 +144,9 @@ html[data-theme="dark"] {
     --page-bg: var(--color-page);
     --btn-p-a: #0b7285;
     --btn-p-b: #0b7285;
-    --cal-surgery-bg: #d99700; --cal-surgery-fg: #14161a;
+    --cal-surgery-bg: #2f7a8c; --cal-surgery-fg: #ffffff;
     --cal-appt-bg: #1d3a42; --cal-appt-fg: #8fd0df; --cal-appt-line: #2f5963;
-    --cal-deadline-bg: #3d2f14; --cal-deadline-fg: #f0c27a; --cal-deadline-line: #6b5326;
+    --cal-deadline-bg: #2a2d33; --cal-deadline-fg: #a3a9b3; --cal-deadline-line: #3d4149;
     color-scheme: dark;
   }
 }
