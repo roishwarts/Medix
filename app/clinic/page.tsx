@@ -300,7 +300,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     <span className={`num mt-1 grid h-11 place-items-center rounded-2xl text-sm font-medium ${d.today ? "bg-accent text-white" : d.surgeries ? "bg-accent-soft text-accent" : "bg-[var(--hover-tint)]"}`}>
                       {d.day}
                     </span>
-                    <span className={`num mt-1 block h-4 text-[11px] ${d.surgeries ? "text-accent" : "text-transparent"}`}>{d.surgeries ? `● ${d.surgeries}` : "·"}</span>
                   </li>
                 ))}
               </ol>
