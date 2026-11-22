@@ -171,6 +171,10 @@ export const en: Record<string, string> = {
   "פתיחת התפריט": "Open the menu",
   "סגירת התפריט": "Close the menu",
   "השבוע במרפאה": "This week at the clinic",
+  "הישנה ביותר: {when}": "Oldest: {when}",
+  "מחכים לאישור שלך": "Waiting for your approval",
+  "{n} מתוך {total} עדיין לא מוכנים": "{n} of {total} not ready yet",
+  "ב־{days} הימים הקרובים": "In the next {days} days",
 };
 
 export const ru: Record<string, string> = {
@@ -344,6 +348,10 @@ export const ru: Record<string, string> = {
   "פתיחת התפריט": "Открыть меню",
   "סגירת התפריט": "Закрыть меню",
   "השבוע במרפאה": "Эта неделя в клинике",
+  "הישנה ביותר: {when}": "Самая старая: {when}",
+  "מחכים לאישור שלך": "Ждут вашего подтверждения",
+  "{n} מתוך {total} עדיין לא מוכנים": "{n} из {total} ещё не готовы",
+  "ב־{days} הימים הקרובים": "В ближайшие {days} дн.",
 };
 
 export const ar: Record<string, string> = {
@@ -517,4 +525,8 @@ export const ar: Record<string, string> = {
   "פתיחת התפריט": "فتح القائمة",
   "סגירת התפריט": "إغلاق القائمة",
   "השבוע במרפאה": "هذا الأسبوع في العيادة",
+  "הישנה ביותר: {when}": "الأقدم: {when}",
+  "מחכים לאישור שלך": "بانتظار موافقتك",
+  "{n} מתוך {total} עדיין לא מוכנים": "{n} من {total} غير جاهزة بعد",
+  "ב־{days} הימים הקרובים": "خلال {days} أيام القادمة",
 };

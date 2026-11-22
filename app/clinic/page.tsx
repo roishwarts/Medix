@@ -23,14 +23,15 @@ export const dynamic = "force-dynamic";
 
 const DEFAULT_READY_DAYS = 14;
 
-function Kpi({ href, label, value, tone, alert, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean }) {
+function Kpi({ href, label, value, tone, alert, hint, className = "" }: { className?: string; href: string; label: string; value: string; tone?: "bad" | "warn" | "ok"; alert?: boolean; hint?: string }) {
   // Calm: only what is late or returned is coloured. Everything else is plain ink.
   const color = tone === "bad" ? "text-bad" : "text-ink";
   return (
-    <Link href={href} className={`${className} card relative block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-5 lg:min-h-36`}>
+    <Link href={href} className={`${className} card relative block min-h-28 min-w-0 p-3 transition hover:border-line-strong sm:p-6 lg:min-h-40`}>
       {alert && <span aria-hidden className="absolute inset-y-6 start-0 hidden w-1 rounded-full bg-bad sm:block" />}
       <p className="text-xs text-muted sm:text-sm">{label}</p>
-      <p className={`display num mt-1 text-3xl sm:mt-2 sm:text-5xl ${color}`}>{value}</p>
+      <p className={`display num mt-1 text-3xl sm:mt-2 sm:text-6xl ${color}`}>{value}</p>
+      {hint && <p className="mt-1 text-xs text-muted max-sm:hidden sm:text-[13px]">{hint}</p>}
     </Link>
   );
 }
@@ -38,7 +39,7 @@ function Kpi({ href, label, value, tone, alert, className = "" }: { className?: 
 function SectionTitle({ id, children, count, href, linkLabel }: { id: string; children: React.ReactNode; count?: number; href?: string; linkLabel?: string }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h2 id={id} className="flex items-baseline gap-2 text-lg font-medium">
+      <h2 id={id} className="flex items-baseline gap-2 text-xl font-semibold sm:text-2xl">
         {children}
         {count !== undefined && <span className="num text-sm text-muted">{count}</span>}
       </h2>
@@ -125,6 +126,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const msg = taskReminderMessage(i.patientName, clinicName, i.task.title, `${origin}/journey`, extras.get(i.patientId)?.lang ?? "he");
     return phone ? whatsAppUrl(phone, msg) : mailtoUrl(email, t("תזכורת מ{clinic}", { clinic: clinicName }), msg);
   };
+  const oldestOverdue = items.filter((i) => i.kind === "overdue").map((i) => i.task.dueDate).sort()[0] ?? t0;
   const notReadyThisWeek = thisWeek.filter((j) => j.summary.readiness < 100);
 
   const updates = toItems(((eventsRes.data ?? []) as ActivityRow[]).slice(0, 5), {
@@ -205,11 +207,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* The numbers: three on a phone, five on a desktop (returned-for-fix and ready join there). */}
       <section aria-label={t("דורש טיפול עכשיו")} className="grid grid-cols-3 gap-3 lg:grid-cols-5">
-        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
-        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
+        <Kpi href="/clinic/tasks?status=overdue" label={t("משימות באיחור")} hint={overdueCount > 0 ? t("הישנה ביותר: {when}", { when: relativeDays(oldestOverdue, t0, lang) }) : undefined} value={String(overdueCount)} tone={overdueCount > 0 ? "bad" : "ok"} alert={overdueCount > 0} />
+        <Kpi href="/clinic/tasks?status=review" label={t("ממתין לבדיקה")} hint={reviewCount > 0 ? t("מחכים לאישור שלך") : undefined} value={String(reviewCount)} tone={reviewCount > 0 ? "warn" : "ok"} />
         <Kpi className="max-lg:hidden" href="/clinic/tasks?status=rejected" label={t("הוחזר לתיקון")} value={String(rejectedCount)} tone={rejectedCount > 0 ? "bad" : "ok"} alert={rejectedCount > 0} />
-        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים השבוע")} value={String(thisWeek.length)} />
-        <Kpi className="max-lg:hidden" href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("מוכנים לניתוח")} value={String(soonReady)} tone={soon.length === 0 ? undefined : soonReady === soon.length ? "ok" : "warn"} />
+        <Kpi href={`/clinic/patients?days=7${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("ניתוחים השבוע")} hint={thisWeek.length > 0 ? t("{n} מתוך {total} עדיין לא מוכנים", { n: notReadyThisWeek.length, total: thisWeek.length }) : undefined} value={String(thisWeek.length)} />
+        <Kpi className="max-lg:hidden" href={`/clinic/patients?stage=ready&days=${readyDays}${sp.hospital ? `&hospital=${encodeURIComponent(sp.hospital)}` : ""}`} label={t("מוכנים לניתוח")} hint={t("ב־{days} הימים הקרובים", { days: readyDays })} value={String(soonReady)} tone={soon.length === 0 ? undefined : soonReady === soon.length ? "ok" : "warn"} />
       </section>
 
       {openQuestions.length > 0 && (

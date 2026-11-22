@@ -49,7 +49,7 @@ export function HomeTaskRow({
   const pillTone = tone === "bad" ? "pill-bad" : tone === "warn" ? "pill-warn" : "pill-neutral";
   const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
   return (
-    <div className={`px-4 py-3 ${hidden ? "max-sm:hidden" : ""} ${selected && bulkPending ? "opacity-50" : ""}`}>
+    <div className={`px-4 py-3 md:px-6 md:py-4 ${hidden ? "max-sm:hidden" : ""} ${selected && bulkPending ? "opacity-50" : ""}`}>
       <div className={`flex flex-wrap items-center gap-x-3 gap-y-2.5 ${stacked ? "" : "sm:flex-nowrap"}`}>
         {selectable && (
           <label className="-ms-2 flex size-11 shrink-0 cursor-pointer items-center justify-center max-sm:order-none">
