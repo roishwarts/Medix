@@ -40,3 +40,19 @@ export function TaskStatePill({ state, overdue }: { state: TaskState; overdue?: 
   const [text, cls] = STATE_TEXT[state];
   return <span className={`pill ${cls}`}><Tr k={text} /></span>;
 }
+
+// A round progress meter with the number in the middle (the patient's readiness for surgery).
+export function ProgressRing({ value, state, size = 88 }: { value: number; state: Readiness; size?: number }) {
+  const r = 40;
+  const c = 2 * Math.PI * r;
+  const color = state === "ready" ? "var(--color-ok)" : state === "not_ready" ? "var(--color-bad)" : "var(--color-accent)";
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+      <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden="true">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--color-line)" strokeWidth="10" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(Math.max(value, value > 0 ? 2 : 0) / 100) * c} ${c}`} />
+      </svg>
+      <span className="num display absolute inset-0 grid place-items-center text-xl">{value}%</span>
+    </div>
+  );
+}

@@ -120,7 +120,7 @@ export function TemplateForm({
 
       <TaskEditor tasks={tasks} onChange={(next) => { setTasks(next); setError(null); markDirty(); }} focusTask={focusTask} />
 
-      <div className="sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-4 py-3 sm:-mx-5 sm:px-5 md:bottom-0 md:py-4 backdrop-blur">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 -mx-4 flex flex-wrap items-center gap-3 border-t border-line bg-surface/95 px-4 py-3 sm:-mx-5 sm:px-5 md:bottom-0 md:py-4 backdrop-blur">
         <button className="btn btn-primary" onClick={save} disabled={pending} aria-busy={pending}>{pending ? t("שומר…") : t("שמירת תבנית")}</button>
         {templateId && <button className="btn btn-danger btn-sm" onClick={remove} disabled={pending}>{t("מחיקה")}</button>}
         <div aria-live="polite" className="basis-full sm:basis-auto">

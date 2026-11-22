@@ -20,8 +20,8 @@ export function JourneyTimeline({ journey, t, lang, className }: { journey: Pati
   const visiblePreop = preop.slice(folded.length);
 
   return (
-  <section className={className} aria-labelledby="timeline-title">
-    <h2 id="timeline-title" className="mb-4 text-sm font-medium text-muted">{t("המסע שלך")}</h2>
+  <section className={`card p-5 sm:p-6 ${className ?? ""}`} aria-labelledby="timeline-title">
+    <h2 id="timeline-title" className="mb-5 text-xl font-semibold">{t("המסע שלך")}</h2>
     <ol>
       {folded.length > 0 && (
         <li className="relative pb-7 ps-11">

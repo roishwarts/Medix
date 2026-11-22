@@ -9,7 +9,7 @@ import { OPEN_SETTINGS_EVENT } from "@/components/home-settings";
 export function ClinicMobileTopbar({ brand, logo }: { brand: string; logo: string | null }) {
   const t = useT();
   return (
-    <header className="fixed inset-x-0 top-0 z-30 flex min-h-14 items-center justify-between gap-2 border-b border-line bg-[var(--color-page)]/90 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:hidden">
+    <header className="phone-top fixed inset-x-0 top-0 z-30 flex min-h-14 items-center justify-between gap-2 px-2 md:hidden">
       <div className="flex min-w-0 items-center gap-1">
         <button
           type="button" aria-label={t("תפריט")} aria-haspopup="dialog" aria-controls="side-menu" className="btn btn-quiet btn-icon size-11 shrink-0"

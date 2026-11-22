@@ -7,7 +7,7 @@ import { nowTask, pickActiveJourney } from "@/lib/journey";
 import { formatDate, formatDateLong, relativeDays, today } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { getLang } from "@/lib/prefs-server";
-import { Icon, ReadinessBar } from "@/components/ui";
+import { Icon, ProgressRing } from "@/components/ui";
 import { SocialLinks } from "@/components/social-links";
 import { NavigateButtons } from "@/components/navigate-buttons";
 import { resolvePlace } from "@/lib/location";
@@ -90,22 +90,19 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
         {!surgeryPassed && (() => {
           const readiness = (
             <>
-              <div className="mb-2 flex items-baseline justify-between gap-3">
-                <span className="font-medium">{t("מוכנות לניתוח")}</span>
-                <span className="num text-lg font-medium">{summary.readiness}%</span>
+              <ProgressRing value={summary.readiness} state={summary.readinessState} />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">{t("מוכנות לניתוח")}</p>
+                <p className="mt-0.5 text-sm text-muted">{t("הושלמו {done} מתוך {total} שלבים", { done: preopDone, total: preop.length })}</p>
+                <span className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-accent lg:hidden">{t("המסע שלך: לכל השלבים")} ›</span>
               </div>
-              <ReadinessBar value={summary.readiness} state={summary.readinessState} />
-              <p className="mt-2 flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted">{t("הושלמו {done} מתוך {total} שלבים", { done: preopDone, total: preop.length })}</span>
-                <span className="font-medium text-accent lg:hidden">{t("המסע שלך: לכל השלבים")} ›</span>
-              </p>
             </>
           );
           return (
             <div className="mt-6">
-              {/* On a phone the whole block opens the journey; on a wide screen the journey is already beside it. */}
-              <Link href={journey.id === pickActiveJourney(journeys)!.id ? "/journey/steps" : `/journey/steps?j=${journey.id}`} className="block min-h-11 lg:hidden">{readiness}</Link>
-              <div className="hidden lg:block">{readiness}</div>
+              {/* On a phone the whole card opens the journey; on a wide screen the journey is already beside it. */}
+              <Link href={journey.id === pickActiveJourney(journeys)!.id ? "/journey/steps" : `/journey/steps?j=${journey.id}`} className="card flex min-h-11 items-center gap-4 p-4 lg:hidden">{readiness}</Link>
+              <div className="card hidden items-center gap-4 p-4 lg:flex">{readiness}</div>
             </div>
           );
         })()}
@@ -114,7 +111,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
         {!surgeryPassed && (
           <section className="mt-8" aria-labelledby="now-title">
             {now ? (
-              <Link href={`/journey/tasks/${now.id}`} className="card block border-accent-line p-5 transition hover:border-accent" style={{ background: "linear-gradient(180deg, var(--color-accent-soft), var(--color-surface))" }}>
+              <Link href={`/journey/tasks/${now.id}`} className="card card-warm block p-5 transition hover:brightness-[0.99]">
                 <p className="text-sm font-medium text-accent">{t("הצעד הבא שלך")}</p>
                 <h2 id="now-title" className="display mt-1 break-words text-2xl">{now.title}</h2>
                 {now.state === "rejected" && now.review_note && (
@@ -129,7 +126,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
                 </span>
               </Link>
             ) : (
-              <div className="card p-5">
+              <div className="card card-warm p-5">
                 <p className="text-sm font-medium text-muted">{t("הצעד הבא שלך")}</p>
                 <h2 id="now-title" className="display mt-1 text-2xl">
                   {waiting.length > 0 ? t("הכול אצל הצוות") : summary.readiness === 100 ? t("הכול מוכן") : t("אין כרגע משימה פתוחה")}
@@ -202,7 +199,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
 
         {/* RED FLAGS */}
         {journey.red_flags && (
-          <div className="mt-4 rounded-2xl bg-bad-soft p-4">
+          <div className="mt-4 rounded-[1.6rem] border border-bad/15 bg-bad-soft p-4">
             <p className="flex items-center gap-1.5 text-sm font-medium text-bad">
               <Icon name="alert" size={14} /> {t("מתי להתקשר דחוף")}
             </p>

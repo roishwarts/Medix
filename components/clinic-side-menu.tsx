@@ -72,7 +72,7 @@ export function ClinicSideMenu({
     <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("תפריט")}>
       {warmLinks}
       <button type="button" aria-label={t("סגירה")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
-      <div ref={panel} id="side-menu" className="absolute inset-y-0 start-0 flex w-[min(20rem,86vw)] flex-col bg-[var(--color-page)] shadow-2xl">
+      <div ref={panel} id="side-menu" className="absolute inset-y-3 start-3 flex w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-[var(--color-page)] shadow-2xl">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <div className="flex min-w-0 items-center gap-2">
             {logo ? (

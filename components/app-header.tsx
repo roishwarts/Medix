@@ -90,7 +90,7 @@ export function AppHeader({
       {open && phoneSheet && (
         <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label={t("הגדרות")}>
           <button type="button" aria-label={t("סגירה")} className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} tabIndex={-1} />
-          <div ref={sheet} id="settings-sheet" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl bg-[var(--color-page)] shadow-2xl">
+          <div ref={sheet} id="settings-sheet" className="absolute inset-x-2 bottom-2 flex max-h-[85dvh] flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-[var(--color-page)] shadow-2xl">
             <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
                 {logo && (

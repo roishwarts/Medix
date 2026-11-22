@@ -208,6 +208,16 @@ p { text-wrap: pretty; }
   }
   .topbar .btn-quiet { color: var(--tb-muted, var(--color-muted)); }
   .topbar .btn-quiet:hover { color: var(--tb-fg, var(--color-ink)); background: var(--tb-hover, var(--hover-tint)); }
+  /* Wide screens: the top bar of the patient and admin areas floats as a rounded glass strip. */
+  @media (min-width: 768px) {
+    .topbar {
+      top: 0.75rem;
+      margin: 0.75rem 0.75rem 0;
+      border: 1px solid var(--tb-line, var(--color-line));
+      border-radius: 2rem;
+      box-shadow: var(--card-shadow, none);
+    }
+  }
   .tb-muted { color: var(--tb-muted, var(--color-muted)); }
   /* Top-bar tabs: a clinic with a deep brand color gets a dark bar with a highlighted selected tab. */
   .tab { color: var(--tb-muted, var(--color-muted)); }
@@ -236,6 +246,7 @@ p { text-wrap: pretty; }
   .topbar::before {
     content: "";
     position: absolute;
+    border-radius: inherit;
     inset: 0;
     z-index: -1;
     background: var(--tb-bg, var(--topbar-bg));
@@ -250,11 +261,24 @@ p { text-wrap: pretty; }
   }
   /* Phone navigation bar (bottom of the screen) */
   .bottom-bar {
-    border-top: var(--tb-bw, 1px) solid var(--tb-line, var(--color-line));
+    margin-inline: 0.75rem;
+    margin-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    border: 1px solid var(--tb-line, var(--color-line));
+    border-radius: 2rem;
     background: var(--bar-bg, var(--topbar-bg));
-    -webkit-backdrop-filter: saturate(180%) blur(12px);
-    backdrop-filter: saturate(180%) blur(12px);
-    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: var(--card-shadow, 0 12px 30px -14px rgb(0 0 0 / 0.5));
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+  }
+  /* The phone's top bar of the staff area: a floating glass strip. */
+  .phone-top {
+    margin: calc(env(safe-area-inset-top) + 0.5rem) 0.75rem 0;
+    border: 1px solid var(--tb-line, var(--color-line));
+    border-radius: 1.6rem;
+    background: var(--bar-bg, var(--topbar-bg));
+    box-shadow: var(--card-shadow, 0 12px 30px -14px rgb(0 0 0 / 0.5));
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
   }
   .bar-item {
     margin: 0.3rem 0.2rem;
@@ -262,7 +286,7 @@ p { text-wrap: pretty; }
     min-height: 3.5rem; padding: 0.4rem 0.25rem; font-size: 0.6875rem; line-height: 1.1;
     color: var(--tb-muted, var(--color-muted)); background: none; border: 0;
   }
-  .bar-item-on { color: var(--bar-on, var(--color-accent)); background: var(--bar-on-bg, transparent); border-radius: 1rem; font-weight: 600; }
+  .bar-item-on { color: var(--bar-on, var(--color-accent)); background: var(--bar-on-bg, transparent); border-radius: 1.4rem; font-weight: 600; box-shadow: var(--tab-on-shadow, none); }
   .btn {
     --btn-edge-x: var(--btn-edge, var(--edge));
     max-width: 100%;
@@ -448,10 +472,11 @@ p { text-wrap: pretty; }
   .tfilter:not([data-f="all"]) .tl-line,
   .tfilter:not([data-f="all"]) [data-sd] { display: none; }
 
-  /* ---- Staff area: the "calm glass" look. Light mode only; dark mode keeps its own colors. ---- */
+  /* ---- The "calm glass" look: every screen, light mode only (dark mode keeps its own colors). ---- */
+  body { isolation: isolate; }
   .clinic-shell { --rail-w: 16.5rem; position: relative; }
   .clinic-shell[data-rail="0"] { --rail-w: 4.75rem; }
-  html[data-theme="light"] .clinic-shell {
+  html[data-theme="light"] body {
     --color-page: #edf2f5;
     --color-paper: #f2f5f7;
     --color-glass: rgb(255 255 255 / 0.55);
@@ -469,13 +494,28 @@ p { text-wrap: pretty; }
     --btn-edge: rgb(255 255 255 / 0.9);
     --btn-p-a: #14879a;
     --btn-p-b: #0b6577;
+    --warm-bg: linear-gradient(180deg, rgb(255 240 226 / 0.9), rgb(255 255 255 / 0.5));
+    /* top bar (wide screens, patient and admin) and the phone's floating bars: light glass, the chosen item is a white pill */
+    --tb-bg: rgb(255 255 255 / 0.6);
+    --tb-fg: #0b2540;
+    --tb-muted: #4a6073;
+    --tb-line: rgb(255 255 255 / 0.85);
+    --tb-bw: 1px;
+    --tb-hover: rgb(12 60 80 / 0.06);
+    --bar-bg: rgb(255 255 255 / 0.66);
+    --tab-on-bg: linear-gradient(180deg, #ffffff, rgb(255 255 255 / 0.7));
+    --tab-on-fg: #0b6577;
+    --tab-on-border: rgb(255 255 255 / 0.95);
+    --tab-on-shadow: 0 8px 18px -10px rgb(16 72 90 / 0.5);
+    --bar-on: #0b6577;
+    --bar-on-bg: linear-gradient(180deg, #ffffff, rgb(255 255 255 / 0.7));
     background: linear-gradient(170deg, #e7eef1 0%, #eef2f5 55%, #f3f4f5 100%);
   }
-  html[data-theme="light"] .clinic-shell::before {
+  html[data-theme="light"] body::before {
     content: "";
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: -1;
     pointer-events: none;
     background:
       radial-gradient(40rem 40rem at 8% -12%, rgb(40 160 170 / 0.3), transparent 68%),
@@ -483,7 +523,7 @@ p { text-wrap: pretty; }
       radial-gradient(30rem 30rem at 48% 108%, rgb(80 160 170 / 0.18), transparent 70%);
   }
   @media (prefers-color-scheme: light) {
-    html[data-theme="system"] .clinic-shell {
+    html[data-theme="system"] body {
     --color-page: #edf2f5;
     --color-paper: #f2f5f7;
     --color-glass: rgb(255 255 255 / 0.55);
@@ -501,13 +541,28 @@ p { text-wrap: pretty; }
     --btn-edge: rgb(255 255 255 / 0.9);
     --btn-p-a: #14879a;
     --btn-p-b: #0b6577;
+    --warm-bg: linear-gradient(180deg, rgb(255 240 226 / 0.9), rgb(255 255 255 / 0.5));
+    /* top bar (wide screens, patient and admin) and the phone's floating bars: light glass, the chosen item is a white pill */
+    --tb-bg: rgb(255 255 255 / 0.6);
+    --tb-fg: #0b2540;
+    --tb-muted: #4a6073;
+    --tb-line: rgb(255 255 255 / 0.85);
+    --tb-bw: 1px;
+    --tb-hover: rgb(12 60 80 / 0.06);
+    --bar-bg: rgb(255 255 255 / 0.66);
+    --tab-on-bg: linear-gradient(180deg, #ffffff, rgb(255 255 255 / 0.7));
+    --tab-on-fg: #0b6577;
+    --tab-on-border: rgb(255 255 255 / 0.95);
+    --tab-on-shadow: 0 8px 18px -10px rgb(16 72 90 / 0.5);
+    --bar-on: #0b6577;
+    --bar-on-bg: linear-gradient(180deg, #ffffff, rgb(255 255 255 / 0.7));
     background: linear-gradient(170deg, #e7eef1 0%, #eef2f5 55%, #f3f4f5 100%);
     }
-    html[data-theme="system"] .clinic-shell::before {
+    html[data-theme="system"] body::before {
     content: "";
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: -1;
     pointer-events: none;
     background:
       radial-gradient(40rem 40rem at 8% -12%, rgb(40 160 170 / 0.3), transparent 68%),
@@ -515,7 +570,7 @@ p { text-wrap: pretty; }
       radial-gradient(30rem 30rem at 48% 108%, rgb(80 160 170 / 0.18), transparent 70%);
     }
   }
-  .clinic-shell .card {
+  .card {
     border-radius: 2rem;
     background: var(--card-bg, var(--color-glass));
     border-color: var(--card-border, var(--color-line));
@@ -523,6 +578,7 @@ p { text-wrap: pretty; }
     -webkit-backdrop-filter: saturate(170%) blur(30px);
     backdrop-filter: saturate(170%) blur(30px);
   }
+  .card-warm { background: var(--warm-bg, linear-gradient(180deg, var(--color-accent-soft), var(--color-surface))); }
   .clinic-main { transition: padding-inline-start 0.26s cubic-bezier(0.3, 0.7, 0.2, 1); }
 
   /* ---- The staff side menu ---- */

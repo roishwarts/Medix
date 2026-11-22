@@ -8,7 +8,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { error } = await searchParams;
   const t = await getT();
   return (
-    <div className="clinic-shell min-h-dvh">
+    <div className="min-h-dvh">
     <main className="relative z-[1] mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-4 py-10 sm:px-6">
       <PublicBrand logo />
       <div className="card p-7 sm:p-9">

@@ -35,7 +35,7 @@ export function TasksFilter({ options, value, variant }: { options: Option[]; va
   return (
     <div
       ref={strip} role="tablist" aria-label={t("סינון פעולות לפי סטטוס")}
-      className="sticky top-14 z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-line bg-[var(--color-page)]/90 px-4 backdrop-blur-xl md:top-0 md:mx-0 md:px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="sticky top-[calc(env(safe-area-inset-top)+4rem)] z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-line bg-[var(--color-page)]/85 px-4 backdrop-blur-xl md:top-0 md:mx-0 md:px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {options.map((o) => {
         const on = current === o.key;
