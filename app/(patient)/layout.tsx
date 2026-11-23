@@ -9,6 +9,9 @@ import { BrandTheme } from "@/components/brand-theme";
 import { FloatingSettingsButton } from "@/components/home-settings";
 import { AppHeader, type NavItem } from "@/components/app-header";
 import { getT } from "@/lib/i18n/server";
+import { cookies } from "next/headers";
+import { ClinicSidebar } from "@/components/clinic-sidebar";
+import { RAIL_COOKIE } from "@/lib/rail";
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = await getClinicName();
@@ -23,18 +26,21 @@ export default async function PatientLayout({ children }: { children: React.Reac
   const caregiver = profile.role === "caregiver" ? await getCaregiverLink() : null;
   const clinicName = await getClinicName();
   const t = await getT();
+  const collapsed = (await cookies()).get(RAIL_COOKIE)?.value === "0";
   const items: NavItem[] = [
     { href: "/journey", label: t("ראשי"), icon: "home" },
     { href: "/calendar", label: t("יומן"), icon: "calendar" },
     ...(profile.role === "patient" ? [{ href: "/family", label: t("משפחה"), icon: "family" as const }] : []),
   ];
   return (
-    <div className="min-h-dvh pb-24 md:pb-16">
+    <div className="clinic-shell min-h-dvh pb-24 md:pb-16" data-rail={collapsed ? "0" : "1"}>
       <BrandTheme brand={{ color: profile.brand_color, dark: profile.brand_dark, gold: profile.brand_gold }} />
       <ImpersonationBanner />
       <FloatingSettingsButton hideOn="/journey" />
-      <AppHeader items={items} home="/journey" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
-      <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6">
+      <ClinicSidebar quick={false} items={items} brand={clinicName} logo={profile.logo_url} userName={profile.full_name} roleLabel={profile.role === "caregiver" ? t("בן משפחה") : t("מטופל")} logout={<LogoutButton variant="rail" />} collapsed={collapsed} />
+      <AppHeader desktopBar={false} items={items} home="/journey" brand={clinicName} logo={profile.logo_url} logout={<LogoutButton />} greeting={t("שלום {name}", { name: profile.full_name })} />
+      <div className="clinic-main md:ps-[calc(var(--rail-w)+1.5rem)]">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-5 sm:pt-6 md:px-10 md:pt-8">
       {profile.role === "caregiver" && (
         <p className="mb-6 rounded-xl bg-accent-soft px-4 py-3 text-sm">
           {caregiver ? (
@@ -49,6 +55,7 @@ export default async function PatientLayout({ children }: { children: React.Reac
       )}
       <BackButton home="/journey" roots={items.map((i) => i.href)} />
       {children}
+      </div>
       </div>
     </div>
   );

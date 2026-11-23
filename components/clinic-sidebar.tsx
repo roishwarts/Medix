@@ -16,9 +16,11 @@ const SVG = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke:
 // middle, who is signed in at the bottom. It opens wide (icons and words) or narrow (icons only, with the page
 // name shown on hover or focus). The choice is remembered in a cookie so the next page already has the right width.
 export function ClinicSidebar({
-  items, brand, logo, userName, roleLabel, logout, collapsed: initial,
+  items, brand, logo, userName, roleLabel, logout, collapsed: initial, quick = true,
 }: {
   items: NavItem[]; brand: string; logo?: string | null; userName: string; roleLabel: string; logout: React.ReactNode; collapsed: boolean;
+  // The "new patient" and "search" entries are for the clinic team; the patient's menu leaves them out.
+  quick?: boolean;
 }) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(initial);
@@ -74,6 +76,8 @@ export function ClinicSidebar({
       </div>
 
       <nav aria-label={t("ניווט ראשי")} className="rail-nav">
+        {quick && (
+          <>
         <ul className="space-y-1">
           <li>
             <Link href="/clinic/patients/new" data-tip={t("מטופל חדש")} aria-label={collapsed ? t("מטופל חדש") : undefined} className="rail-item rail-item-new">
@@ -89,6 +93,8 @@ export function ClinicSidebar({
           </li>
         </ul>
         <hr className="rail-rule" />
+          </>
+        )}
         <ul className="space-y-1">{main.map(row)}</ul>
         {more.length > 0 && (
           <>

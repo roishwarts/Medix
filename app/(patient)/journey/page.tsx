@@ -65,7 +65,7 @@ export default async function JourneyPage({ searchParams }: { searchParams: Prom
 
   return (
     <main className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-16">
-      <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-2">
+      <div className="min-w-0 lg:sticky lg:top-8 lg:col-span-2">
         <div>
         <p className="mb-1 text-muted">{t("שלום {name}", { name: profile.full_name })}</p>
         <div className="flex items-start justify-between gap-3">
